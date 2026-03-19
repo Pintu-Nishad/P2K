@@ -1,57 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Secure Chat</title>
+  <title>Hacker Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      background: black;
-      color: #00ff00;
+      margin: 0;
       font-family: monospace;
+      background: url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f') no-repeat center center/cover;
+      color: #00ff00;
       text-align: center;
     }
 
-    h2 {
-      text-shadow: 0 0 10px #00ff00;
+    .box {
+      background: rgba(0,0,0,0.8);
+      margin: 20px;
+      padding: 15px;
+      border-radius: 10px;
     }
 
-    input, button {
+    input, button, select {
+      width: 90%;
       padding: 10px;
       margin: 5px;
       background: black;
       border: 1px solid #00ff00;
       color: #00ff00;
+      border-radius: 5px;
     }
 
-    #chat {
+    ul {
       list-style: none;
-      max-height: 300px;
+      max-height: 200px;
       overflow-y: auto;
-      border: 1px solid #00ff00;
-      padding: 10px;
+      padding: 0;
     }
 
     video {
-      width: 45%;
-      border: 1px solid #00ff00;
-      margin: 5px;
-    }
-  </style>
-</head>
-<body>
-
-<h2>💀 Hacker Private Chat 💀</h2>
-
-<div id="login">
-  <input id="room" placeholder="Enter Secret Password">
-  <button onclick="joinRoom()">ENTER</button>
-</div>
-
-<div id="chatBox" style="display:none;">
-  <h3 id="roomName"></h3>
-
-  <input id="msg" placeholder="Type message">
-  <button onclick="sendMsg()">Send</button>
-
-  <ul id="chat"></ul>
-
-  <
