@@ -6,7 +6,7 @@
 
 <style>
 body{background:#0f172a;color:#e2e8f0;font-family:system-ui;margin:0;}
-h2{background:#111827;padding:15px;margin:0;border-bottom:1px solid #1f2937;}
+h2{background:#111827;padding:15px;margin:0;}
 
 input,select{
 width:100%;padding:12px;margin:8px 0;border-radius:10px;
@@ -73,9 +73,12 @@ background:#020617;padding:10px;
 <button onclick="endCall()">❌ End</button>
 </div>
 
+<!-- 🔊 RINGTONE -->
+<audio id="ringtone" src="ring.mp3" loop></audio>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, set, get, onValue, remove } 
+import { getDatabase, ref, push, onChildAdded, set, get, onValue, remove, onChildAdded as childAdd } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const firebaseConfig={
@@ -87,6 +90,7 @@ const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 
 let name,roomId,chatRef,pc,localStream,currentCamera="user",flashOn=false;
+let ringtone=document.getElementById("ringtone");
 
 // notification
 if(Notification.permission!=="granted"){
@@ -140,20 +144,36 @@ setTimeout(()=>li.remove(),60000);
 onValue(ref(db,"call/"+roomId),(snap)=>{
 if(snap.exists()){
 let data=snap.val();
-if(data.caller!==name){
+
+if(data.caller===name) return;
+
 document.getElementById("incoming").style.display="block";
 document.getElementById("callerName").innerText=data.caller+" calling...";
-new Notification("Call",{body:data.caller});
-}
+
+// 🔊 ring
+ringtone.play();
+
+new Notification("Incoming Call",{body:data.caller});
+}else{
+ringtone.pause();
+ringtone.currentTime=0;
 }
 });
 
-// answer listener (caller fix)
+// answer listener
 onValue(ref(db,"webrtc/"+roomId+"/answer"),async snap=>{
 if(snap.exists() && pc){
 let ans=new RTCSessionDescription(JSON.parse(snap.val()));
 await pc.setRemoteDescription(ans);
 document.getElementById("callWindow").style.display="block";
+}
+});
+
+// ICE receive
+childAdd(ref(db,"webrtc/"+roomId+"/candidates"), async snap=>{
+if(pc){
+let c=new RTCIceCandidate(JSON.parse(snap.val()));
+try{await pc.addIceCandidate(c);}catch(e){}
 }
 });
 }
@@ -191,6 +211,9 @@ credential:"openrelayproject"
 
 // call
 window.callUser=async()=>{
+let snap=await get(ref(db,"call/"+roomId));
+if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
+
 set(ref(db,"call/"+roomId),{caller:name});
 
 localStream=await navigator.mediaDevices.getUserMedia(getQuality());
@@ -206,7 +229,8 @@ document.getElementById("remote").srcObject=e.streams[0];
 
 pc.onicecandidate=e=>{
 if(e.candidate){
-set(ref(db,"webrtc/"+roomId+"/candidate"),JSON.stringify(e.candidate));
+push(ref(db,"webrtc/"+roomId+"/candidates"),
+JSON.stringify(e.candidate));
 }
 };
 
@@ -217,6 +241,9 @@ set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
 
 // accept
 window.acceptCall=async()=>{
+ringtone.pause();
+ringtone.currentTime=0;
+
 document.getElementById("incoming").style.display="none";
 
 localStream=await navigator.mediaDevices.getUserMedia(getQuality());
@@ -241,14 +268,15 @@ set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(answer));
 }
 });
 
-onValue(ref(db,"webrtc/"+roomId+"/candidate"),async snap=>{
-if(snap.exists()){
-let c=new RTCIceCandidate(JSON.parse(snap.val()));
-await pc.addIceCandidate(c);
-}
-});
-
 document.getElementById("callWindow").style.display="block";
+}
+
+// reject
+window.rejectCall=()=>{
+ringtone.pause();
+ringtone.currentTime=0;
+set(ref(db,"call/"+roomId),null);
+document.getElementById("incoming").style.display="none";
 }
 
 // camera
