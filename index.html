@@ -3,11 +3,10 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secret Chat</title>
-
 <style>
 body{background:#0f172a;color:#e2e8f0;font-family:system-ui;margin:0;}
 h2{background:#111827;padding:15px;margin:0;}
-input,button{
+input,button,select{
 width:100%;padding:12px;margin:8px 0;border-radius:10px;
 border:1px solid #1f2937;background:#111827;color:white;
 }
@@ -21,7 +20,6 @@ background:#020617;padding:10px;
 }
 </style>
 </head>
-
 <body>
 
 <h2 id="title">🔐 Secret Chat</h2>
@@ -35,10 +33,8 @@ background:#020617;padding:10px;
 <div id="chatBox" style="display:none;">
 <h3 id="status"></h3>
 <div id="users"></div>
-
 <input id="msg"><button onclick="sendMsg()">Send</button>
 <ul id="chat"></ul>
-
 <button onclick="callUser()">📞 Call</button>
 </div>
 
@@ -52,7 +48,6 @@ background:#020617;padding:10px;
 <h3>📞 Call</h3>
 <video id="local" autoplay muted playsinline></video>
 <video id="remote" autoplay playsinline></video>
-
 <button onclick="toggleMute(event)">🔇 Mute</button>
 <button onclick="endCall()">❌ End</button>
 </div>
@@ -61,7 +56,7 @@ background:#020617;padding:10px;
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, push, set, get, onValue, onChildAdded, remove } 
+import { getDatabase, ref, push, onChildAdded, onValue, set, get, remove } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
 const app=initializeApp({
@@ -77,10 +72,10 @@ function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
 
 // JOIN
 window.joinRoom=async()=>{
-name=nameInput.value;
-roomId=room.value;
+name=document.getElementById("name").value;
+roomId=document.getElementById("room").value;
 
-if(!validName(name)) return alert("4 letter name");
+if(!validName(name)) return alert("4 letter name required");
 if(!roomId) return alert("Enter room");
 
 let userRef=ref(db,"users/"+roomId+"/"+name);
@@ -91,26 +86,23 @@ set(userRef,true);
 
 document.getElementById("menu").style.display="none";
 document.getElementById("chatBox").style.display="block";
-title.innerText="🔐 Secret Chat - "+name;
+document.getElementById("title").innerText="🔐 Secret Chat - "+name;
 
 // users list
 onValue(ref(db,"users/"+roomId),(s)=>{
-let data=s.val();
-let html="<b>Online:</b><br>";
+let data=s.val(); let html="<b>Online:</b><br>";
 for(let u in data){html+="🟢 "+u+"<br>";}
-users.innerHTML=html;
+document.getElementById("users").innerHTML=html;
 });
 
 // leave
-window.addEventListener("beforeunload",()=>{
-remove(userRef);
-});
+window.addEventListener("beforeunload",()=>{remove(userRef);});
 
-// chat
+// chat listener
 onChildAdded(ref(db,"chat/"+roomId),(d)=>{
 let li=document.createElement("li");
 li.innerText=d.val().user+": "+d.val().msg;
-chat.appendChild(li);
+document.getElementById("chat").appendChild(li);
 setTimeout(()=>li.remove(),60000);
 });
 
@@ -120,8 +112,8 @@ if(snap.exists()){
 let data=snap.val();
 if(data.caller===name) return;
 
-incoming.style.display="block";
-callerName.innerText=data.caller+" calling...";
+document.getElementById("incoming").style.display="block";
+document.getElementById("callerName").innerText=data.caller+" calling...";
 ringtone.currentTime=0;
 ringtone.play().catch(()=>{});
 }else{
@@ -129,12 +121,15 @@ ringtone.pause();
 ringtone.currentTime=0;
 }
 });
+
+// ICE candidates listener
+onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"), async snap=>{
+if(pc){try{await pc.addIceCandidate(JSON.parse(snap.val()));}catch(e){}}
+});
 }
 
 // SEND MSG
-window.sendMsg=()=>{
-push(ref(db,"chat/"+roomId),{user:name,msg:msg.value});
-}
+window.sendMsg=()=>{push(ref(db,"chat/"+roomId),{user:name,msg:msg.value});}
 
 // MEDIA
 async function getStream(){
@@ -146,18 +141,11 @@ audio:{echoCancellation:true,noiseSuppression:true}
 
 // PEER
 function createPeer(){
-pc=new RTCPeerConnection({
-iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-});
-
-pc.ontrack=e=>{remote.srcObject=e.streams[0];};
-
+pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+pc.ontrack=e=>{document.getElementById("remote").srcObject=e.streams[0];};
 pc.onicecandidate=e=>{
-if(e.candidate){
-push(ref(db,"webrtc/"+roomId+"/candidates"),
-JSON.stringify(e.candidate));
+if(e.candidate) push(ref(db,"webrtc/"+roomId+"/candidates"),JSON.stringify(e.candidate));
 }
-};
 }
 
 // CALL
@@ -166,51 +154,36 @@ let snap=await get(ref(db,"call/"+roomId));
 if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
 
 set(ref(db,"call/"+roomId),{caller:name});
+document.getElementById("status").innerText="📡 Ringing...";
 
-status.innerText="📡 Ringing...";
 let time=30;
-
 let timer=setInterval(()=>{
 time--;
-status.innerText="📡 Ringing... ("+time+"s)";
-if(time<=0){
-clearInterval(timer);
-set(ref(db,"call/"+roomId),null);
-status.innerText="❌ No Answer";
-}
+document.getElementById("status").innerText="📡 Ringing... ("+time+"s)";
+if(time<=0){clearInterval(timer);set(ref(db,"call/"+roomId),null);document.getElementById("status").innerText="❌ No Answer";}
 },1000);
 
-onValue(ref(db,"webrtc/"+roomId+"/answer"),()=>{clearInterval(timer);status.innerText="✅ Connected";});
+onValue(ref(db,"webrtc/"+roomId+"/answer"),()=>{clearInterval(timer);document.getElementById("status").innerText="✅ Connected";});
 
 localStream=await getStream();
-local.srcObject=localStream;
+document.getElementById("local").srcObject=localStream;
 
 createPeer();
 localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
 
 let offer=await pc.createOffer();
 await pc.setLocalDescription(offer);
-
 set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
-
-// ICE receive
-onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
-if(pc){
-try{
-await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));
-}catch(e){}
-}
-});
 }
 
 // ACCEPT
 window.acceptCall=async()=>{
 ringtone.pause();
-incoming.style.display="none";
-status.innerText="✅ Connected";
+document.getElementById("incoming").style.display="none";
+document.getElementById("status").innerText="✅ Connected";
 
 localStream=await getStream();
-local.srcObject=localStream;
+document.getElementById("local").srcObject=localStream;
 
 createPeer();
 localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
@@ -223,40 +196,20 @@ await pc.setRemoteDescription(offer);
 let ans=await pc.createAnswer();
 await pc.setLocalDescription(ans);
 set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(ans));
-callWindow.style.display="block";
-}
-});
 
-// ICE receive
-onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
-if(pc){
-try{
-await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));
-}catch(e){}
+document.getElementById("callWindow").style.display="block";
 }
 });
 }
 
 // REJECT
-window.rejectCall=()=>{
-ringtone.pause();
-incoming.style.display="none";
-set(ref(db,"call/"+roomId),null);
-}
+window.rejectCall=()=>{ringtone.pause();document.getElementById("incoming").style.display="none";set(ref(db,"call/"+roomId),null);}
 
 // MUTE
-window.toggleMute=(e)=>{
-let t=localStream.getAudioTracks()[0];
-t.enabled=!t.enabled;
-e.target.innerText=t.enabled?"🔇 Mute":"🤫 Muted";
-}
+window.toggleMute=(e)=>{let t=localStream.getAudioTracks()[0]; t.enabled=!t.enabled; e.target.innerText=t.enabled?"🔇 Mute":"🤫 Muted";}
 
 // END
-window.endCall=()=>{
-callWindow.style.display="none";
-set(ref(db,"call/"+roomId),null);
-status.innerText="";
-}
+window.endCall=()=>{document.getElementById("callWindow").style.display="none";set(ref(db,"call/"+roomId),null);document.getElementById("status").innerText="";}
 </script>
 
 </body>
