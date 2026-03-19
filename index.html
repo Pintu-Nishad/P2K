@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Video Chat</title>
+
+<style>
+body{
+background:black;color:#0f0;font-family:monospace;text-align:center;margin:0;
+}
+
+.box{margin:10px;padding:10px;border:1px solid #0f0;}
+
+input,button,select{
+width:90%;padding:10px;margin:5px;background:black;color:#0f0;border:1px solid #0f0;
+}
+
+video{width:45%;border:1px solid #0f0;margin:5px;}
+
+#callWindow{
+display:none;
+position:fixed;
+top:0;left:0;width:100%;height:100%;
+background:black;
+z-index:999;
+}
+</style>
+</head>
+
+<body>
+
+<h2>💀 PRO CALL SYSTEM 💀</h2>
+
+<div class="box" id="menu">
+<input id="room" type="password" inputmode="numeric" placeholder="Enter Room">
+<button onclick="createRoom()">Create</button>
+<button onclick="joinRoom()">Join</button>
+</div>
+
+<div id="chatBox" style="display:none;">
+<button onclick="callUser()">📞 Call</button>
+</div>
+
+<div id="incoming" style="display:none;">
+<p>Incoming Call...</p>
+<button onclick="acceptCall()">Accept</button>
+<button onclick="rejectCall()">Reject</button>
+</div>
+
+<!-- CALL WINDOW -->
+<div id="callWindow">
+<h3>📞 Call Active</h3>
+
+<video id="local" autoplay muted></video>
+<video id="remote" autoplay></video>
+
+<br>
+<button onclick="switchCamera()">🔄 Switch Camera</button>
+<button onclick="toggleMute()">🔇 Mute</button>
+<button onclick="toggleFlash()">🔦 Flash</button>
+<button onclick="endCall()">❌ End</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
+databaseURL:"https://p2kc-b0553-default-rtdb.firebaseio.com"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
+
+let roomId,pc,localStream,currentCamera="user";
+
+// ROOM
+window.createRoom=()=>{
+roomId=document.getElementById("room").value;
+set(ref(db,"rooms/"+roomId),{created:true});
+enterRoom();
+}
+
+window.joinRoom=async()=>{
+roomId=document.getElementById("room").value;
+let s=await get(ref(db,"rooms/"+roomId));
+if(s.exists()) enterRoom();
+else alert("Room not found");
+}
+
+function enterRoom(){
+document.getElementById("menu").style.display="none";
+document.getElementById("chatBox").style.display="block";
+
+onValue(ref(db,"call/"+roomId),(snap)=>{
+if(snap.exists()){
+document.getElementById("incoming").style.display="block";
+}
+});
+}
+
+// CALL
+window.callUser=()=>{
+set(ref(db,"call/"+roomId),{calling:true});
+}
+
+window.rejectCall=()=>{
+set(ref(db,"call/"+roomId),null);
+document.getElementById("incoming").style.display="none";
+}
+
+window.acceptCall=async()=>{
+document.getElementById("incoming").style.display="none";
+document.getElementById("callWindow").style.display="block";
+
+localStream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:currentCamera},
+audio:true
+});
+
+document.getElementById("local").srcObject=localStream;
+
+pc=new RTCPeerConnection({
+iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+});
+
+localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+
+pc.ontrack=e=>{
+document.getElementById("remote").srcObject=e.streams[0];
+};
+}
+
+// SWITCH CAMERA
+window.switchCamera=async()=>{
+currentCamera = currentCamera==="user" ? "environment" : "user";
+
+localStream.getTracks().forEach(t=>t.stop());
+
+localStream=await navigator.mediaDevices.getUserMedia({
+video:{facingMode:currentCamera},
+audio:true
+});
+
+document.getElementById("local").srcObject=localStream;
+}
+
+// MUTE
+window.toggleMute=()=>{
+localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
+}
+
+// FLASH
+window.toggleFlash=()=>{
+let track = localStream.getVideoTracks()[0];
+let cap = track.getCapabilities();
+
+if(cap.torch){
+track.applyConstraints({advanced:[{torch:true}]});
+}else{
+alert("Flash not supported");
+}
+}
+
+// END CALL
+window.endCall=()=>{
+document.getElementById("callWindow").style.display="none";
+set(ref(db,"call/"+roomId),null);
+}
+
+// BRIGHTNESS (front cam)
+if(currentCamera==="user"){
+document.body.style.filter="brightness(1.3)";
+}
+</script>
+
+</body>
+</html>
