@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat App</title>
+</head>
+<body>
+
+<h2>My Chat</h2>
+
+<input id="msg" placeholder="Type message">
+<button onclick="sendMsg()">Send</button>
+
+<ul id="chat"></ul>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+// 🔑 Tera Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
+  authDomain: "p2kc-b0553.firebaseapp.com",
+  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
+  projectId: "p2kc-b0553",
+};
+
+// 🔥 Initialize
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const chatRef = ref(db, "chat");
+
+// 💬 Send message
+window.sendMsg = function(){
+  let msg = document.getElementById("msg").value;
+  push(chatRef, msg);
+}
+
+// 📩 Receive message
+onChildAdded(chatRef, (data)=>{
+  let li = document.createElement("li");
+  li.innerText = data.val();
+  document.getElementById("chat").appendChild(li);
+});
+</script>
+
+</body>
+</html>
