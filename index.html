@@ -7,22 +7,14 @@
 <style>
 body{background:#0f172a;color:#e2e8f0;font-family:system-ui;margin:0;}
 h2{background:#111827;padding:15px;margin:0;}
-
-input,select{
+input,button{
 width:100%;padding:12px;margin:8px 0;border-radius:10px;
 border:1px solid #1f2937;background:#111827;color:white;
 }
-
-button{
-width:100%;padding:12px;margin-top:8px;border-radius:10px;
-border:none;background:#2563eb;color:white;font-weight:bold;
-}
-
+button{background:#2563eb;}
 ul{list-style:none;padding:0;}
 li{background:#111827;padding:10px;border-radius:10px;margin:5px 0;}
-
 video{width:48%;border-radius:10px;background:black;}
-
 #callWindow{
 display:none;position:fixed;top:0;left:0;width:100%;height:100%;
 background:#020617;padding:10px;
@@ -41,17 +33,11 @@ background:#020617;padding:10px;
 </div>
 
 <div id="chatBox" style="display:none;">
+<h3 id="status"></h3>
+<div id="users"></div>
+
 <input id="msg"><button onclick="sendMsg()">Send</button>
 <ul id="chat"></ul>
-
-<select id="quality">
-<option value="auto">Auto</option>
-<option value="144">144p</option>
-<option value="360">360p</option>
-<option value="720">720p</option>
-<option value="1080">1080p</option>
-<option value="2160">4K</option>
-</select>
 
 <button onclick="callUser()">📞 Call</button>
 </div>
@@ -64,49 +50,38 @@ background:#020617;padding:10px;
 
 <div id="callWindow">
 <h3>📞 Call</h3>
-<video id="local" autoplay muted></video>
-<video id="remote" autoplay></video>
+<video id="local" autoplay muted playsinline></video>
+<video id="remote" autoplay playsinline></video>
 
-<button onclick="switchCamera()">🔄 Camera</button>
-<button onclick="toggleFlash()">🔦 Flash</button>
 <button onclick="toggleMute(event)">🔇 Mute</button>
 <button onclick="endCall()">❌ End</button>
 </div>
 
-<!-- 🔊 RINGTONE -->
 <audio id="ringtone" src="ring.mp3" loop></audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, push, onChildAdded, set, get, onValue, remove, onChildAdded as childAdd } 
+import { getDatabase, ref, push, set, get, onValue, onChildAdded, remove } 
 from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-const firebaseConfig={
+const app=initializeApp({
 apiKey:"AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
 databaseURL:"https://p2kc-b0553-default-rtdb.firebaseio.com"
-};
-
-const app=initializeApp(firebaseConfig);
+});
 const db=getDatabase(app);
 
-let name,roomId,chatRef,pc,localStream,currentCamera="user",flashOn=false;
+let name,roomId,pc,localStream;
 let ringtone=document.getElementById("ringtone");
 
-// notification
-if(Notification.permission!=="granted"){
-Notification.requestPermission();
-}
-
-// validation
 function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
 
-// join
+// JOIN
 window.joinRoom=async()=>{
-name=document.getElementById("name").value;
-roomId=document.getElementById("room").value;
+name=nameInput.value;
+roomId=room.value;
 
-if(!validName(name)) return alert("4 alphabet name required");
-if(!roomId) return alert("Room daal");
+if(!validName(name)) return alert("4 letter name");
+if(!roomId) return alert("Enter room");
 
 let userRef=ref(db,"users/"+roomId+"/"+name);
 let snap=await get(userRef);
@@ -114,29 +89,28 @@ if(snap.exists()) return alert("Name already used");
 
 set(userRef,true);
 
-chatRef=ref(db,"chat/"+roomId);
-
 document.getElementById("menu").style.display="none";
 document.getElementById("chatBox").style.display="block";
-document.getElementById("title").innerText="🔐 Secret Chat - "+name;
+title.innerText="🔐 Secret Chat - "+name;
+
+// users list
+onValue(ref(db,"users/"+roomId),(s)=>{
+let data=s.val();
+let html="<b>Online:</b><br>";
+for(let u in data){html+="🟢 "+u+"<br>";}
+users.innerHTML=html;
+});
 
 // leave
 window.addEventListener("beforeunload",()=>{
 remove(userRef);
-push(chatRef,{user:"SYSTEM",msg:name+" left"});
 });
 
 // chat
-onChildAdded(chatRef,d=>{
-let data=d.val();
+onChildAdded(ref(db,"chat/"+roomId),(d)=>{
 let li=document.createElement("li");
-li.innerText=data.user+": "+data.msg;
-document.getElementById("chat").appendChild(li);
-
-if(data.user!==name){
-new Notification(data.user,{body:data.msg});
-}
-
+li.innerText=d.val().user+": "+d.val().msg;
+chat.appendChild(li);
 setTimeout(()=>li.remove(),60000);
 });
 
@@ -144,88 +118,39 @@ setTimeout(()=>li.remove(),60000);
 onValue(ref(db,"call/"+roomId),(snap)=>{
 if(snap.exists()){
 let data=snap.val();
-
 if(data.caller===name) return;
 
-document.getElementById("incoming").style.display="block";
-document.getElementById("callerName").innerText=data.caller+" calling...";
-
-// 🔊 ring
-ringtone.play();
-
-new Notification("Incoming Call",{body:data.caller});
+incoming.style.display="block";
+callerName.innerText=data.caller+" calling...";
+ringtone.currentTime=0;
+ringtone.play().catch(()=>{});
 }else{
 ringtone.pause();
 ringtone.currentTime=0;
 }
 });
-
-// answer listener
-onValue(ref(db,"webrtc/"+roomId+"/answer"),async snap=>{
-if(snap.exists() && pc){
-let ans=new RTCSessionDescription(JSON.parse(snap.val()));
-await pc.setRemoteDescription(ans);
-document.getElementById("callWindow").style.display="block";
-}
-});
-
-// ICE receive
-childAdd(ref(db,"webrtc/"+roomId+"/candidates"), async snap=>{
-if(pc){
-let c=new RTCIceCandidate(JSON.parse(snap.val()));
-try{await pc.addIceCandidate(c);}catch(e){}
-}
-});
 }
 
-// send msg
+// SEND MSG
 window.sendMsg=()=>{
-let m=document.getElementById("msg").value;
-if(m!=="") push(chatRef,{user:name,msg:m});
+push(ref(db,"chat/"+roomId),{user:name,msg:msg.value});
 }
 
-// quality
-function getQuality(){
-let q=document.getElementById("quality").value;
-if(q==="144") return {video:{width:256,height:144},audio:true};
-if(q==="360") return {video:{width:640,height:360},audio:true};
-if(q==="720") return {video:{width:1280,height:720},audio:true};
-if(q==="1080") return {video:{width:1920,height:1080},audio:true};
-if(q==="2160") return {video:{width:3840,height:2160},audio:true};
-return {video:true,audio:true};
-}
-
-// peer
-function createPeer(){
-return new RTCPeerConnection({
-iceServers:[
-{urls:"stun:stun.l.google.com:19302"},
-{
-urls:"turn:openrelay.metered.ca:80",
-username:"openrelayproject",
-credential:"openrelayproject"
-}
-]
+// MEDIA
+async function getStream(){
+return await navigator.mediaDevices.getUserMedia({
+video:true,
+audio:{echoCancellation:true,noiseSuppression:true}
 });
 }
 
-// call
-window.callUser=async()=>{
-let snap=await get(ref(db,"call/"+roomId));
-if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
+// PEER
+function createPeer(){
+pc=new RTCPeerConnection({
+iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+});
 
-set(ref(db,"call/"+roomId),{caller:name});
-
-localStream=await navigator.mediaDevices.getUserMedia(getQuality());
-document.getElementById("local").srcObject=localStream;
-
-pc=createPeer();
-
-localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-
-pc.ontrack=e=>{
-document.getElementById("remote").srcObject=e.streams[0];
-};
+pc.ontrack=e=>{remote.srcObject=e.streams[0];};
 
 pc.onicecandidate=e=>{
 if(e.candidate){
@@ -233,84 +158,104 @@ push(ref(db,"webrtc/"+roomId+"/candidates"),
 JSON.stringify(e.candidate));
 }
 };
+}
+
+// CALL
+window.callUser=async()=>{
+let snap=await get(ref(db,"call/"+roomId));
+if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
+
+set(ref(db,"call/"+roomId),{caller:name});
+
+status.innerText="📡 Ringing...";
+let time=30;
+
+let timer=setInterval(()=>{
+time--;
+status.innerText="📡 Ringing... ("+time+"s)";
+if(time<=0){
+clearInterval(timer);
+set(ref(db,"call/"+roomId),null);
+status.innerText="❌ No Answer";
+}
+},1000);
+
+onValue(ref(db,"webrtc/"+roomId+"/answer"),()=>{clearInterval(timer);status.innerText="✅ Connected";});
+
+localStream=await getStream();
+local.srcObject=localStream;
+
+createPeer();
+localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
 
 let offer=await pc.createOffer();
 await pc.setLocalDescription(offer);
+
 set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
+
+// ICE receive
+onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
+if(pc){
+try{
+await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));
+}catch(e){}
+}
+});
 }
 
-// accept
+// ACCEPT
 window.acceptCall=async()=>{
 ringtone.pause();
-ringtone.currentTime=0;
+incoming.style.display="none";
+status.innerText="✅ Connected";
 
-document.getElementById("incoming").style.display="none";
+localStream=await getStream();
+local.srcObject=localStream;
 
-localStream=await navigator.mediaDevices.getUserMedia(getQuality());
-document.getElementById("local").srcObject=localStream;
-
-pc=createPeer();
-
+createPeer();
 localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
 
-pc.ontrack=e=>{
-document.getElementById("remote").srcObject=e.streams[0];
-};
-
-onValue(ref(db,"webrtc/"+roomId+"/offer"),async snap=>{
-if(snap.exists()){
-let offer=new RTCSessionDescription(JSON.parse(snap.val()));
+onValue(ref(db,"webrtc/"+roomId+"/offer"),async s=>{
+if(s.exists()){
+let offer=new RTCSessionDescription(JSON.parse(s.val()));
 await pc.setRemoteDescription(offer);
 
-let answer=await pc.createAnswer();
-await pc.setLocalDescription(answer);
-set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(answer));
+let ans=await pc.createAnswer();
+await pc.setLocalDescription(ans);
+set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(ans));
+callWindow.style.display="block";
 }
 });
 
-document.getElementById("callWindow").style.display="block";
+// ICE receive
+onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
+if(pc){
+try{
+await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));
+}catch(e){}
+}
+});
 }
 
-// reject
+// REJECT
 window.rejectCall=()=>{
 ringtone.pause();
-ringtone.currentTime=0;
+incoming.style.display="none";
 set(ref(db,"call/"+roomId),null);
-document.getElementById("incoming").style.display="none";
 }
 
-// camera
-window.switchCamera=async()=>{
-currentCamera=currentCamera==="user"?"environment":"user";
-localStream.getTracks().forEach(t=>t.stop());
-
-localStream=await navigator.mediaDevices.getUserMedia({
-video:{facingMode:currentCamera},audio:true
-});
-document.getElementById("local").srcObject=localStream;
-}
-
-// flash
-window.toggleFlash=()=>{
-let track=localStream.getVideoTracks()[0];
-let cap=track.getCapabilities();
-if(cap.torch){
-flashOn=!flashOn;
-track.applyConstraints({advanced:[{torch:flashOn}]});
-}else alert("Flash not supported");
-}
-
-// mute
+// MUTE
 window.toggleMute=(e)=>{
 let t=localStream.getAudioTracks()[0];
 t.enabled=!t.enabled;
 e.target.innerText=t.enabled?"🔇 Mute":"🤫 Muted";
 }
 
-// end
+// END
 window.endCall=()=>{
-document.getElementById("callWindow").style.display="none";
+callWindow.style.display="none";
 set(ref(db,"call/"+roomId),null);
+status.innerText="";
 }
 </script>
 
