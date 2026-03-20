@@ -3,226 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Chat Fixed</title>
+    <title>P2K Master Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Mobile Viewport Fix */
-        body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; display: flex; flex-direction: column; margin: 0; padding: 0; overflow: hidden; }
-        
-        #chatBox { 
-            flex: 1; overflow-y: auto; padding: 15px; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            display: flex; flex-direction: column; gap: 8px;
-            padding-bottom: 80px; /* Space for input bar */
-        }
-
+        body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
         .msg { background: white; padding: 8px 12px; border-radius: 15px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; }
         .my-msg { background: #dcf8c6; align-self: flex-end; }
-        
-        /* Fixed Footer at Bottom */
-        .chat-footer {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: #f0f0f0; padding: 10px; display: flex; 
-            align-items: center; gap: 8px; border-top: 1px solid #ccc;
-            z-index: 1000;
-        }
-
-        .header-call-active { background: #128c7e !important; transition: 0.3s; }
-        
+        .chat-footer { background: #f0f0f0; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; z-index: 100; }
         #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .header-call-active { background: #128c7e !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .sent-img { max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: zoom-in; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
 <div id="loginDiv">
-  <div class="bg-white p-6 rounded-2xl w-[85%] max-w-sm text-center shadow-2xl">
-    <h2 class="text-xl font-bold mb-4 text-[#075e54]">P2K Chat Login</h2>
-    <input type="text" id="user" placeholder="Name..." class="w-full p-3 mb-3 border rounded-lg outline-none">
-    <input type="password" id="pass" placeholder="Room Pass..." class="w-full p-3 mb-4 border rounded-lg outline-none">
-    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold">Join Now</button>
+  <div class="bg-white p-8 rounded-2xl w-[90%] max-w-sm text-center shadow-2xl">
+    <h2 class="text-2xl font-bold mb-4 text-[#075e54]">P2K Secure</h2>
+    <input type="text" id="user" placeholder="अपना नाम..." class="w-full p-3 mb-3 border rounded-lg outline-none">
+    <input type="password" id="pass" placeholder="रूम पासवर्ड..." class="w-full p-3 mb-4 border rounded-lg outline-none">
+    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold">Join Room</button>
   </div>
 </div>
 
 <div id="chatDiv" class="hidden flex-col h-screen w-full">
-    <header id="mainHeader" class="h-[60px] bg-[#075e54] text-white flex justify-between items-center px-4 shrink-0 relative z-50">
+    <header id="mainHeader" class="h-[65px] bg-[#075e54] text-white flex justify-between items-center px-4 shrink-0 shadow-md transition-all">
         <div>
-            <b id="roomTitle" class="text-sm">Room</b>
-            <div id="callInfo" class="text-[10px] flex items-center gap-1">
-                <span id="callStatusText">Online</span>
-                <span id="callTimer" class="hidden bg-black/30 px-1 rounded">00:00</span>
+            <b id="roomTitle" class="block text-sm">Room</b>
+            <div class="flex items-center gap-2">
+                <span id="callStatusText" class="text-[10px] text-green-300">Online</span>
+                <span id="callTimer" class="hidden font-mono text-xs bg-black/20 px-2 py-0.5 rounded">00:00</span>
             </div>
         </div>
-        
         <div class="flex items-center gap-2">
-            <button id="callBtn" onclick="startWebRTCCall()" class="bg-[#25d366] px-3 py-1 rounded-full text-xs font-bold">📞 Call</button>
-            <button id="joinBtn" onclick="answerCall()" class="hidden bg-blue-500 px-3 py-1 rounded-full text-xs font-bold">Join</button>
-            <button id="endBtn" onclick="endCall()" class="hidden bg-red-500 px-3 py-1 rounded-full text-xs font-bold">End</button>
-            <span id="userCount" class="text-[10px] bg-white/20 p-1 rounded">0</span>
+            <button id="callBtn" onclick="startWebRTCCall()" class="bg-[#25d366] px-4 py-1.5 rounded-full text-xs font-bold">📞 Call</button>
+            <button id="joinBtn" onclick="answerCall()" class="hidden bg-blue-500 px-4 py-1.5 rounded-full text-xs font-bold animate-bounce">Join</button>
+            <button id="endBtn" onclick="endCall()" class="hidden bg-red-500 px-4 py-1.5 rounded-full text-xs font-bold">End</button>
+            <span id="userCount" class="text-[10px] bg-white/10 px-2 py-1 rounded">0</span>
         </div>
     </header>
 
     <div id="chatBox"></div>
 
     <div class="chat-footer">
-        <input type="file" id="fileInput" class="hidden" onchange="handleFile(this)">
-        <button onclick="document.getElementById('fileInput').click()" class="text-gray-600 text-2xl px-2">📎</button>
-        
-        <input type="text" id="msgInput" placeholder="Type a message..." 
-               class="flex-1 p-2 rounded-full border border-gray-400 px-4 outline-none text-sm bg-white">
-        
-        <button onclick="sendMsg()" class="bg-[#075e54] text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
-            ➤
-        </button>
-    </div>
-</div>
-
-<audio id="remoteAudio" autoplay></audio>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-// Firebase initialization (Same as before)
-const firebaseConfig = {
-  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
-  authDomain: "p2kc-b0553.firebaseapp.com",
-  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
-  projectId: "p2kc-b0553",
-  storageBucket: "p2kc-b0553.firebasestorage.app",
-  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let myName, myRoom, pc, timerInterval, seconds = 0;
-const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
-
-function enter() {
-    myName = document.getElementById('user').value.trim();
-    myRoom = document.getElementById('pass').value.trim();
-    if(!myName || !myRoom) return alert("Details bhariye!");
-
-    document.getElementById('loginDiv').style.display='none';
-    document.getElementById('chatDiv').style.display='flex';
-    document.getElementById('roomTitle').innerText = myRoom;
-
-    db.ref(`rooms/${myRoom}/users/${myName}`).set({ lastSeen: Date.now() });
-    db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
-    
-    db.ref(`rooms/${myRoom}/users`).on('value', s => {
-        document.getElementById('userCount').innerText = s.numChildren() || 0;
-    });
-
-    listenMsgs();
-    listenForCalls();
-}
-
-function handleFile(input) {
-    if(input.files && input.files[0]) {
-        alert("File selected: " + input.files[0].name + "\n(Upload logic can be added here)");
-    }
-}
-
-// UI & Timer Functions
-function updateCallUI(status) {
-    const h = document.getElementById('mainHeader');
-    const t = document.getElementById('callTimer');
-    if(status==='active') {
-        h.classList.add('header-call-active'); t.classList.remove('hidden');
-        document.getElementById('callBtn').classList.add('hidden');
-        document.getElementById('joinBtn').classList.add('hidden');
-        document.getElementById('endBtn').classList.remove('hidden');
-        startTimer();
-    } else if(status==='incoming') {
-        h.classList.add('header-call-active');
-        document.getElementById('callBtn').classList.add('hidden');
-        document.getElementById('joinBtn').classList.remove('hidden');
-        document.getElementById('endBtn').classList.add('hidden');
-    } else {
-        h.classList.remove('header-call-active'); t.classList.add('hidden');
-        document.getElementById('callBtn').classList.remove('hidden');
-        document.getElementById('joinBtn').classList.add('hidden');
-        document.getElementById('endBtn').classList.add('hidden');
-        stopTimer();
-    }
-}
-
-function startTimer() {
-    seconds = 0; clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        seconds++;
-        let m = Math.floor(seconds/60), s = seconds%60;
-        document.getElementById('callTimer').innerText = (m<10?'0'+m:m)+":"+(s<10?'0'+s:s);
-    }, 1000);
-}
-function stopTimer() { clearInterval(timerInterval); }
-
-// WebRTC logic (Same as requested)
-async function startWebRTCCall() {
-    updateCallUI('active');
-    document.getElementById('callStatusText').innerText = "Calling...";
-    pc = new RTCPeerConnection(servers);
-    const s = await navigator.mediaDevices.getUserMedia({audio:true});
-    s.getTracks().forEach(t => pc.addTrack(t, s));
-    pc.onicecandidate = e => e.candidate && db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
-    const o = await pc.createOffer();
-    await pc.setLocalDescription(o);
-    db.ref(`rooms/${myRoom}/call`).set({ offer: o, caller: myName, active: true });
-}
-
-function listenForCalls() {
-    db.ref(`rooms/${myRoom}/call`).on('value', snap => {
-        const d = snap.val();
-        if(d && d.active) {
-            if(d.caller !== myName) {
-                document.getElementById('callStatusText').innerText = d.caller + " is calling...";
-                updateCallUI('incoming');
-            }
-        } else {
-            updateCallUI('idle');
-            document.getElementById('callStatusText').innerText = "Online";
-        }
-    });
-}
-
-async function answerCall() {
-    updateCallUI('active');
-    document.getElementById('callStatusText').innerText = "On Call";
-    pc = new RTCPeerConnection(servers);
-    const s = await navigator.mediaDevices.getUserMedia({audio:true});
-    s.getTracks().forEach(t => pc.addTrack(t, s));
-    pc.ontrack = e => document.getElementById('remoteAudio').srcObject = e.streams[0];
-    const call = (await db.ref(`rooms/${myRoom}/call`).once('value')).val();
-    await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
-    const a = await pc.createAnswer();
-    await pc.setLocalDescription(a);
-    db.ref(`rooms/${myRoom}/call/answer`).set(a);
-    db.ref(`rooms/${myRoom}/call/candidates`).on('child_added', s => pc.addIceCandidate(new RTCIceCandidate(s.val())));
-}
-
-function endCall() {
-    db.ref(`rooms/${myRoom}/call`).remove();
-    if(pc) pc.close();
-    updateCallUI('idle');
-}
-
-function sendMsg() {
-    const inp = document.getElementById('msgInput');
-    if(!inp.value.trim()) return;
-    db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value});
-    inp.value = '';
-}
-
-function listenMsgs() {
-    db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
-        const d = snap.val();
-        const div = document.createElement('div');
-        div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-        div.innerHTML = `<b class="text-[9px] block opacity-50">${d.u}</b>${d.val}`;
-        document.getElementById('chatBox').appendChild(div);
-        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-    });
-}
-</script>
-</body>
-</html>
+        <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="sendPhoto(this)">
+        <button onclick="document.getElementById('photoInput').click()" class="text-gray-500 hover:text-[#075e54] transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828
