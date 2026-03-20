@@ -3,87 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Private Chat & Video Call</title>
+    <title>P2K Pro Video Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
         body { background-color: #0b141a; color: #e9edef; font-family: sans-serif; overflow: hidden; }
-        #chatBox { 
-            height: calc(100vh - 130px); 
-            overflow-y: auto; 
-            padding: 15px; 
-            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
-            background-color: #0b141a;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        #chatBox { height: calc(100vh - 130px); overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-color: #0b141a; display: flex; flex-direction: column; gap: 8px; }
         .msg { background: #202c33; padding: 8px 12px; border-radius: 8px; max-width: 85%; align-self: flex-start; }
         .my-msg { background: #005c4b; align-self: flex-end; }
         
-        /* Video Styling */
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #2a3942; }
-        #localVideo { 
-            position: absolute; top: 20px; right: 20px; 
-            width: 100px; height: 150px; 
-            object-fit: cover; border-radius: 10px; 
-            border: 2px solid #00a884; z-index: 10; 
-        }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
+        #localVideo { position: absolute; top: 20px; right: 20px; width: 110px; height: 160px; object-fit: cover; border-radius: 12px; border: 2px solid #00a884; z-index: 50; background: #2a3942; }
+        .control-btn { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px; rounded-full: 50%; transition: all 0.3s; }
+        .control-btn:active { transform: scale(0.9); }
+        .btn-active { background: #00a884 !important; color: #000 !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col">
 
-<div id="loginDiv" class="fixed inset-0 z-50 bg-[#111b21] flex items-center justify-center p-6">
-    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-2xl text-center border border-gray-700">
-        <h1 class="text-2xl font-bold mb-6">P2K Video Chat</h1>
-        <input id="user" type="text" placeholder="Name" class="w-full bg-[#2a3942] rounded-lg p-3 mb-4 outline-none text-white">
-        <input id="pass" type="password" placeholder="Room" class="w-full bg-[#2a3942] rounded-lg p-3 mb-6 outline-none text-white">
-        <button onclick="enter()" class="w-full bg-[#00a884] py-3 rounded-lg font-bold text-[#111b21]">Join Room</button>
+<div id="loginDiv" class="fixed inset-0 z-[1000] bg-[#111b21] flex items-center justify-center p-6">
+    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-2xl text-center border border-gray-700 shadow-2xl">
+        <h1 class="text-2xl font-bold mb-6 text-[#00a884]">P2K Pro Video</h1>
+        <input id="user" type="text" placeholder="Your Name" class="w-full bg-[#2a3942] rounded-lg p-3 mb-4 outline-none text-white border border-transparent focus:border-[#00a884]">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-lg p-3 mb-6 outline-none text-white border border-transparent focus:border-[#00a884]">
+        <button onclick="enter()" class="w-full bg-[#00a884] py-3 rounded-lg font-bold text-[#111b21] hover:bg-[#06cf9c]">Join Room</button>
     </div>
 </div>
 
 <div id="chatDiv" class="hidden flex flex-col h-full w-full">
     <header class="h-16 bg-[#202c33] flex items-center justify-between px-4 border-b border-gray-700">
-        <div class="flex items-center gap-3">
-            <b id="roomTitle">Room</b>
-        </div>
-        <button onclick="startCall()" class="bg-[#00a884] p-2.5 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#111b21]" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-            </svg>
-        </button>
+        <b id="roomTitle" class="text-[#00a884]">Room</b>
+        <button onclick="startCall()" class="bg-[#00a884] text-[#111b21] px-4 py-2 rounded-full font-bold text-sm shadow-lg">Video Call</button>
     </header>
 
     <div id="chatBox"></div>
 
     <footer class="p-3 bg-[#202c33] flex items-center gap-2">
-        <input id="msgInput" type="text" placeholder="Message" class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none">
+        <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none border-none">
         <button onclick="sendMsg()" class="bg-[#00a884] p-3 rounded-full text-[#111b21] font-bold">Send</button>
     </footer>
 </div>
 
-<div id="callUI" class="hidden fixed inset-0 z-[100] bg-black">
+<div id="callUI" class="hidden fixed inset-0 z-[500] bg-black">
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted></video>
     
-    <div id="incomingBox" class="hidden absolute inset-0 bg-black/80 flex flex-center flex-col justify-center items-center z-20">
-        <h2 id="callerName" class="text-xl mb-4 text-white">Incoming Video Call...</h2>
-        <div class="flex gap-4">
-            <button onclick="acceptCall()" class="bg-green-500 px-8 py-3 rounded-full font-bold">Accept</button>
-            <button onclick="rejectCall()" class="bg-red-500 px-8 py-3 rounded-full font-bold">Reject</button>
+    <div id="incomingBox" class="hidden absolute inset-0 bg-black/90 flex flex-col justify-center items-center z-[600] animate-pulse">
+        <div class="w-24 h-24 bg-[#00a884] rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_#00a884]">
+            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
+        </div>
+        <h2 id="callerName" class="text-2xl font-bold mb-8 text-white"></h2>
+        <div class="flex gap-6">
+            <button onclick="acceptCall()" class="bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-lg">Answer</button>
+            <button onclick="rejectCall()" class="bg-red-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-lg">Decline</button>
         </div>
     </div>
 
-    <div class="absolute bottom-10 left-0 right-0 flex justify-center gap-6">
-        <h2 id="callStatus" class="absolute -top-10 text-white font-bold w-full text-center"></h2>
-        <button onclick="endCall()" class="bg-red-600 p-5 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white rotate-[135deg]" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 005.456 5.456l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-            </svg>
+    <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-4 z-[700]">
+        <button id="muteBtn" onclick="toggleMute()" class="control-btn rounded-full bg-white/10 text-white">🎤</button>
+        <button onclick="endCall()" class="bg-red-600 p-5 rounded-full shadow-2xl transform hover:scale-110">
+            <svg class="w-8 h-8 text-white rotate-[135deg]" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 005.456 5.456l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
         </button>
+        <button id="screenBtn" onclick="toggleScreenShare()" class="control-btn rounded-full bg-white/10 text-white">🖥️</button>
     </div>
+    <div id="callStatus" class="absolute top-10 left-0 right-0 text-center text-white/50 text-sm italic">Connecting...</div>
 </div>
 
 <script>
@@ -97,24 +82,29 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let myName, myRoom, localStream, peerConnection, isCaller = false;
-const servers = { iceServers:[{urls:"stun:stun.l.google.com:19302"}] };
+let isMuted = false, isScreenSharing = false;
+
+const servers = { 
+    iceServers:[{urls:["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]}],
+    iceCandidatePoolSize: 10 
+};
 
 function enter(){
-  myName = document.getElementById('user').value;
-  myRoom = document.getElementById('pass').value;
-  if(!myName || !myRoom) return;
-  document.getElementById('loginDiv').style.display="none";
-  document.getElementById('chatDiv').classList.remove('hidden');
-  document.getElementById('roomTitle').innerText="Room: "+myRoom;
+  myName = user.value.trim();
+  myRoom = pass.value.trim();
+  if(!myName || !myRoom) return alert("Details required!");
+  loginDiv.style.display="none";
+  chatDiv.classList.remove('hidden');
+  roomTitle.innerText="Room: "+myRoom;
   listenMsgs();
   listenCall();
 }
 
+// CHAT LOGIC
 function sendMsg(){
-  const input = document.getElementById('msgInput');
-  if(!input.value) return;
-  db.ref("rooms/"+myRoom+"/msgs").push({ u: myName, val: input.value });
-  input.value="";
+  if(!msgInput.value.trim()) return;
+  db.ref("rooms/"+myRoom+"/msgs").push({ u: myName, val: msgInput.value });
+  msgInput.value="";
 }
 
 function listenMsgs(){
@@ -122,67 +112,78 @@ function listenMsgs(){
     let d = s.val();
     let div = document.createElement("div");
     div.className="msg"+(d.u==myName?" my-msg":"");
-    div.innerHTML=`<div class="text-[10px] opacity-60 font-bold uppercase">${d.u}</div>${d.val}`;
-    document.getElementById('chatBox').appendChild(div);
-    document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+    div.innerHTML=`<div class="text-[9px] opacity-50 uppercase font-bold">${d.u}</div>${d.val}`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
 
 // VIDEO CALL LOGIC
 async function getMedia(){
-  return await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+  return await navigator.mediaDevices.getUserMedia({ 
+    audio: true, 
+    video: { width: {ideal: 1280}, height: {ideal: 720}, frameRate: {max: 30} } 
+  });
 }
 
 async function startCall(){
   isCaller=true;
-  document.getElementById('callUI').classList.remove('hidden');
+  callUI.classList.remove('hidden');
   localStream = await getMedia();
-  document.getElementById('localVideo').srcObject = localStream;
+  localVideo.srcObject = localStream;
 
-  peerConnection = new RTCPeerConnection(servers);
-  localStream.getTracks().forEach(t=> peerConnection.addTrack(t,localStream));
-  peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
-  peerConnection.onicecandidate = e => {
-    if(e.candidate) db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
-  };
-
+  setupPeerConnection();
+  
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
   db.ref("calls/"+myRoom).set({ offer:offer, caller:myName });
 }
 
+function setupPeerConnection(){
+  peerConnection = new RTCPeerConnection(servers);
+  localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+  
+  peerConnection.ontrack = e => {
+    remoteVideo.srcObject = e.streams[0];
+    callStatus.innerText = "Live";
+  };
+  
+  peerConnection.onicecandidate = e => {
+    if(e.candidate) db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
+  };
+}
+
 function listenCall(){
   db.ref("calls/"+myRoom).on("value", async snap=>{
     let d = snap.val();
-    if(!d) return;
-    if(d.offer && !isCaller){
-      document.getElementById('callUI').classList.remove('hidden');
-      document.getElementById('incomingBox').classList.remove('hidden');
-      document.getElementById('callerName').innerText = d.caller + " video calling...";
+    if(!d) {
+        if(!isCaller && callUI.offsetParent !== null) endCall();
+        return;
+    }
+    if(d.offer && !isCaller && !peerConnection){
+      callUI.classList.remove('hidden');
+      incomingBox.classList.remove('hidden');
+      callerName.innerText = d.caller + " is Video Calling...";
     }
     if(d.answer && isCaller){
       await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
-      document.getElementById('callStatus').innerText="Connected";
     }
   });
+
   db.ref("calls/"+myRoom+"/candidates").on("child_added", snap=>{
-    let c = new RTCIceCandidate(snap.val());
-    peerConnection?.addIceCandidate(c);
+    if(peerConnection && peerConnection.remoteDescription) {
+        peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
+    }
   });
 }
 
 async function acceptCall(){
   isCaller=false;
-  document.getElementById('incomingBox').classList.add('hidden');
+  incomingBox.classList.add('hidden'); // Fix: Popup hide immediately
   localStream = await getMedia();
-  document.getElementById('localVideo').srcObject = localStream;
+  localVideo.srcObject = localStream;
 
-  peerConnection = new RTCPeerConnection(servers);
-  localStream.getTracks().forEach(t=> peerConnection.addTrack(t,localStream));
-  peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
-  peerConnection.onicecandidate = e => {
-    if(e.candidate) db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
-  };
+  setupPeerConnection();
 
   let data = (await db.ref("calls/"+myRoom).get()).val();
   await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
@@ -191,13 +192,42 @@ async function acceptCall(){
   db.ref("calls/"+myRoom).update({answer:answer});
 }
 
-function endCall(){
-  peerConnection?.getSenders().forEach(sender => sender.track.stop());
-  peerConnection?.close();
-  db.ref("calls/"+myRoom).remove();
-  document.getElementById('callUI').classList.add('hidden');
-  location.reload(); // Refresh to clear streams
+// Controls Logic
+function toggleMute() {
+    isMuted = !isMuted;
+    localStream.getAudioTracks()[0].enabled = !isMuted;
+    muteBtn.classList.toggle('btn-active', isMuted);
+    muteBtn.innerText = isMuted ? "🔇" : "🎤";
 }
+
+async function toggleScreenShare() {
+    if(!isScreenSharing) {
+        try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const videoTrack = screenStream.getVideoTracks()[0];
+            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+            sender.replaceTrack(videoTrack);
+            isScreenSharing = true;
+            screenBtn.classList.add('btn-active');
+            
+            videoTrack.onended = () => toggleScreenShare(); // Auto switch back
+        } catch(e) { console.error(e); }
+    } else {
+        const videoTrack = localStream.getVideoTracks()[0];
+        const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+        sender.replaceTrack(videoTrack);
+        isScreenSharing = false;
+        screenBtn.classList.remove('btn-active');
+    }
+}
+
+function endCall(){
+  if(localStream) localStream.getTracks().forEach(t => t.stop());
+  if(peerConnection) peerConnection.close();
+  db.ref("calls/"+myRoom).remove();
+  location.reload(); 
+}
+
 function rejectCall(){ endCall(); }
 </script>
 </body>
