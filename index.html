@@ -26,6 +26,7 @@ img.preview{max-width:100px;max-height:100px;border-radius:10px;margin-top:5px;}
 .admin-panel h2{margin:0 0 10px 0;text-align:center;}
 .user-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #ccc;}
 .user-item button{margin-left:5px;}
+video{width:150px;height:120px;border-radius:10px;background:black;}
 </style>
 </head>
 <body>
@@ -57,6 +58,7 @@ img.preview{max-width:100px;max-height:100px;border-radius:10px;margin-top:5px;}
     <button id="muteButton" class="call-controls" onclick="toggleMute()">🔇 Mute</button>
     <button onclick="exitRoom()">❌ Exit Room</button>
   </div>
+  <div id="callVideos" style="display:flex;gap:10px;margin:5px;"></div>
 </div>
 
 <!-- Admin Panel -->
@@ -88,8 +90,10 @@ const db = firebase.database();
 let roomName = "";
 let username = "";
 const muteButton = document.getElementById('muteButton');
-const ADMIN_PASSWORD = "1111"; // set admin password
+const ADMIN_PASSWORD = "14665866"; // Admin Password
 let isAdmin = false;
+let localStream, peerConnections = {};
+let callStartTime;
 
 // Login
 function login(){
@@ -115,6 +119,7 @@ function login(){
   joinRoom();
   listenMessages();
   updateActiveUsers();
+  listenCalls();
 }
 
 // Join Room
@@ -159,6 +164,7 @@ function exitRoom(){
     db.ref('rooms/'+roomName+'/users/'+username).remove();
     document.getElementById('chatDiv').style.display='none';
     document.getElementById('loginDiv').style.display='flex';
+    endCall();
   }
 }
 
@@ -199,10 +205,69 @@ function listenMessages(){
   });
 }
 
-// Call placeholders
-function startCall(){ muteButton.style.display='inline-block'; alert("Call started... (Placeholder)"); }
-function toggleMute(){ alert("Mute toggled"); }
+// -------- WebRTC Call --------
+async function startCall(){
+  muteButton.style.display='inline-block';
+  localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
+  const localVideo = document.createElement('video'); localVideo.srcObject = localStream; localVideo.autoplay = true; document.getElementById('callVideos').appendChild(localVideo);
+  callStartTime = Date.now();
+  
+  const usersSnap = await db.ref('rooms/'+roomName+'/users').once('value');
+  const users = usersSnap.val() || {};
+  for(const u in users){
+    if(u === username) continue;
+    createPeerConnection(u);
+  }
+}
 
+function createPeerConnection(peerUser){
+  const pc = new RTCPeerConnection();
+  peerConnections[peerUser] = pc;
+  localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
+  
+  pc.ontrack = function(event){
+    const remoteVideo = document.createElement('video');
+    remoteVideo.srcObject = event.streams[0]; remoteVideo.autoplay = true;
+    document.getElementById('callVideos').appendChild(remoteVideo);
+  }
+  
+  // Signaling via Firebase
+  const callRef = db.ref('rooms/'+roomName+'/calls/'+peerUser+'/'+username);
+  pc.onicecandidate = e=>{ if(e.candidate){ callRef.push({candidate:e.candidate.toJSON()}); } }
+  
+  callRef.on('child_added', async snap=>{
+    const data = snap.val();
+    if(data.sdp){ await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); if(pc.remoteDescription.type === 'offer'){ const ans = await pc.createAnswer(); await pc.setLocalDescription(ans); callRef.push({sdp: ans}); } }
+    if(data.candidate){ await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); }
+  });
+
+  // Offer
+  pc.createOffer().then(offer=>{
+    pc.setLocalDescription(offer);
+    callRef.push({sdp: offer});
+  });
+}
+
+function toggleMute(){
+  if(!localStream) return;
+  localStream.getAudioTracks().forEach(track=>track.enabled = !track.enabled);
+}
+
+function endCall(){
+  Object.values(peerConnections).forEach(pc=>pc.close());
+  peerConnections = {};
+  const callVideos = document.getElementById('callVideos');
+  while(callVideos.firstChild) callVideos.removeChild(callVideos.firstChild);
+  muteButton.style.display='none';
+}
+
+// Call Log
+function listenCalls(){
+  db.ref('rooms/'+roomName+'/calls').on('value', snap=>{
+    const calls = snap.val()||{};
+    console.log("Call log:", calls);
+  });
+}
 </script>
 </body>
 </html>
