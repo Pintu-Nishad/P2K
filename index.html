@@ -3,73 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Chat & Call</title>
+    <title>P2K Chat Fixed</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        /* Mobile Viewport Fix */
+        body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; display: flex; flex-direction: column; margin: 0; padding: 0; overflow: hidden; }
         
-        /* WhatsApp-like Wallpaper */
         #chatBox { 
             flex: 1; overflow-y: auto; padding: 15px; 
             background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            display: flex; flex-direction: column; gap: 8px; 
+            display: flex; flex-direction: column; gap: 8px;
+            padding-bottom: 80px; /* Space for input bar */
         }
 
-        /* Message Bubbles */
-        .msg { background: white; padding: 8px 12px; border-radius: 15px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
+        .msg { background: white; padding: 8px 12px; border-radius: 15px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; }
         .my-msg { background: #dcf8c6; align-self: flex-end; }
         
-        /* Header Call Active State */
-        .header-call-active { background: #128c7e !important; animation: pulse-bg 2s infinite; }
-        @keyframes pulse-bg { 0%, 100% { background: #128c7e; } 50% { background: #075e54; } }
+        /* Fixed Footer at Bottom */
+        .chat-footer {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #f0f0f0; padding: 10px; display: flex; 
+            align-items: center; gap: 8px; border-top: 1px solid #ccc;
+            z-index: 1000;
+        }
 
+        .header-call-active { background: #128c7e !important; transition: 0.3s; }
+        
         #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
     </style>
 </head>
 <body>
 
 <div id="loginDiv">
-  <div class="bg-white p-8 rounded-2xl w-[90%] max-w-sm text-center shadow-2xl">
-    <h2 class="text-2xl font-bold mb-4 text-[#075e54]">P2K Secure Login</h2>
-    <input type="text" id="user" placeholder="अपना नाम लिखें..." class="w-full p-3 mb-3 border rounded-lg outline-none focus:border-[#075e54]">
-    <input type="password" id="pass" placeholder="रूम पासवर्ड..." class="w-full p-3 mb-4 border rounded-lg outline-none focus:border-[#075e54]">
-    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold hover:bg-[#075e54] transition">Join Room</button>
+  <div class="bg-white p-6 rounded-2xl w-[85%] max-w-sm text-center shadow-2xl">
+    <h2 class="text-xl font-bold mb-4 text-[#075e54]">P2K Chat Login</h2>
+    <input type="text" id="user" placeholder="Name..." class="w-full p-3 mb-3 border rounded-lg outline-none">
+    <input type="password" id="pass" placeholder="Room Pass..." class="w-full p-3 mb-4 border rounded-lg outline-none">
+    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold">Join Now</button>
   </div>
 </div>
 
 <div id="chatDiv" class="hidden flex-col h-screen w-full">
-    <header id="mainHeader" class="h-[65px] bg-[#075e54] text-white flex justify-between items-center px-4 shrink-0 shadow-md">
+    <header id="mainHeader" class="h-[60px] bg-[#075e54] text-white flex justify-between items-center px-4 shrink-0 relative z-50">
         <div>
-            <b id="roomTitle" class="block text-sm opacity-80">Room</b>
-            <div id="callInfo" class="flex items-center gap-2">
-                <span id="callStatusText" class="text-xs font-bold text-green-400">Online</span>
-                <span id="callTimer" class="hidden font-mono text-xs bg-black/20 px-2 py-0.5 rounded">00:00</span>
+            <b id="roomTitle" class="text-sm">Room</b>
+            <div id="callInfo" class="text-[10px] flex items-center gap-1">
+                <span id="callStatusText">Online</span>
+                <span id="callTimer" class="hidden bg-black/30 px-1 rounded">00:00</span>
             </div>
         </div>
         
         <div class="flex items-center gap-2">
-            <button id="callBtn" onclick="startWebRTCCall()" class="bg-[#25d366] hover:bg-[#1ebd59] px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
-                📞 Call
-            </button>
-            <button id="joinBtn" onclick="answerCall()" class="hidden bg-blue-500 px-4 py-1.5 rounded-full text-xs font-bold animate-bounce">
-                Join Call
-            </button>
-            <button id="endBtn" onclick="endCall()" class="hidden bg-red-500 px-4 py-1.5 rounded-full text-xs font-bold">
-                End
-            </button>
-            <span id="userCount" class="text-[10px] ml-1 bg-white/10 px-2 py-1 rounded">0</span>
+            <button id="callBtn" onclick="startWebRTCCall()" class="bg-[#25d366] px-3 py-1 rounded-full text-xs font-bold">📞 Call</button>
+            <button id="joinBtn" onclick="answerCall()" class="hidden bg-blue-500 px-3 py-1 rounded-full text-xs font-bold">Join</button>
+            <button id="endBtn" onclick="endCall()" class="hidden bg-red-500 px-3 py-1 rounded-full text-xs font-bold">End</button>
+            <span id="userCount" class="text-[10px] bg-white/20 p-1 rounded">0</span>
         </div>
     </header>
 
     <div id="chatBox"></div>
 
-    <footer class="p-3 bg-[#f0f0f0] flex items-center gap-2 border-t shrink-0">
-        <button class="text-gray-500 text-2xl px-1">📎</button>
-        <input type="text" id="msgInput" placeholder="Type a message..." class="flex-1 p-2.5 rounded-full border border-gray-300 px-4 outline-none focus:border-[#075e54] text-sm">
-        <button onclick="sendMsg()" class="bg-[#075e54] text-white w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition">
+    <div class="chat-footer">
+        <input type="file" id="fileInput" class="hidden" onchange="handleFile(this)">
+        <button onclick="document.getElementById('fileInput').click()" class="text-gray-600 text-2xl px-2">📎</button>
+        
+        <input type="text" id="msgInput" placeholder="Type a message..." 
+               class="flex-1 p-2 rounded-full border border-gray-400 px-4 outline-none text-sm bg-white">
+        
+        <button onclick="sendMsg()" class="bg-[#075e54] text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
             ➤
         </button>
-    </footer>
+    </div>
 </div>
 
 <audio id="remoteAudio" autoplay></audio>
@@ -78,6 +82,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+// Firebase initialization (Same as before)
 const firebaseConfig = {
   apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
   authDomain: "p2kc-b0553.firebaseapp.com",
@@ -95,16 +100,15 @@ const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
 function enter() {
     myName = document.getElementById('user').value.trim();
     myRoom = document.getElementById('pass').value.trim();
-    if(!myName || !myRoom) return alert("नाम और पासवर्ड भरें!");
+    if(!myName || !myRoom) return alert("Details bhariye!");
 
     document.getElementById('loginDiv').style.display='none';
     document.getElementById('chatDiv').style.display='flex';
-    document.getElementById('roomTitle').innerText = "Room: " + myRoom;
+    document.getElementById('roomTitle').innerText = myRoom;
 
-    db.ref(`rooms/${myRoom}/users/${myName}`).set({ lastSeen: Date.now() }).then(() => {
-        db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
-    });
-
+    db.ref(`rooms/${myRoom}/users/${myName}`).set({ lastSeen: Date.now() });
+    db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
+    
     db.ref(`rooms/${myRoom}/users`).on('value', s => {
         document.getElementById('userCount').innerText = s.numChildren() || 0;
     });
@@ -113,71 +117,65 @@ function enter() {
     listenForCalls();
 }
 
-// --- CALL UI UPDATES ---
-function updateCallUI(status) {
-    const header = document.getElementById('mainHeader');
-    const callBtn = document.getElementById('callBtn');
-    const joinBtn = document.getElementById('joinBtn');
-    const endBtn = document.getElementById('endBtn');
-    const timerElem = document.getElementById('callTimer');
+function handleFile(input) {
+    if(input.files && input.files[0]) {
+        alert("File selected: " + input.files[0].name + "\n(Upload logic can be added here)");
+    }
+}
 
-    if (status === 'active') {
-        header.classList.add('header-call-active');
-        callBtn.classList.add('hidden');
-        joinBtn.classList.add('hidden');
-        endBtn.classList.remove('hidden');
-        timerElem.classList.remove('hidden');
+// UI & Timer Functions
+function updateCallUI(status) {
+    const h = document.getElementById('mainHeader');
+    const t = document.getElementById('callTimer');
+    if(status==='active') {
+        h.classList.add('header-call-active'); t.classList.remove('hidden');
+        document.getElementById('callBtn').classList.add('hidden');
+        document.getElementById('joinBtn').classList.add('hidden');
+        document.getElementById('endBtn').classList.remove('hidden');
         startTimer();
-    } else if (status === 'incoming') {
-        header.classList.add('header-call-active');
-        callBtn.classList.add('hidden');
-        joinBtn.classList.remove('hidden');
-        endBtn.classList.add('hidden');
+    } else if(status==='incoming') {
+        h.classList.add('header-call-active');
+        document.getElementById('callBtn').classList.add('hidden');
+        document.getElementById('joinBtn').classList.remove('hidden');
+        document.getElementById('endBtn').classList.add('hidden');
     } else {
-        header.classList.remove('header-call-active');
-        callBtn.classList.remove('hidden');
-        joinBtn.classList.add('hidden');
-        endBtn.classList.add('hidden');
-        timerElem.classList.add('hidden');
+        h.classList.remove('header-call-active'); t.classList.add('hidden');
+        document.getElementById('callBtn').classList.remove('hidden');
+        document.getElementById('joinBtn').classList.add('hidden');
+        document.getElementById('endBtn').classList.add('hidden');
         stopTimer();
     }
 }
 
 function startTimer() {
-    seconds = 0;
-    clearInterval(timerInterval);
+    seconds = 0; clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         seconds++;
-        let m = Math.floor(seconds / 60);
-        let s = seconds % 60;
-        document.getElementById('callTimer').innerText = (m<10?'0'+m:m) + ":" + (s<10?'0'+s:s);
+        let m = Math.floor(seconds/60), s = seconds%60;
+        document.getElementById('callTimer').innerText = (m<10?'0'+m:m)+":"+(s<10?'0'+s:s);
     }, 1000);
 }
-
 function stopTimer() { clearInterval(timerInterval); }
 
-// --- WebRTC Logic ---
+// WebRTC logic (Same as requested)
 async function startWebRTCCall() {
     updateCallUI('active');
     document.getElementById('callStatusText').innerText = "Calling...";
-    
     pc = new RTCPeerConnection(servers);
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => pc.addTrack(t, stream));
-
+    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t => pc.addTrack(t, s));
     pc.onicecandidate = e => e.candidate && db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    db.ref(`rooms/${myRoom}/call`).set({ offer, caller: myName, active: true });
+    const o = await pc.createOffer();
+    await pc.setLocalDescription(o);
+    db.ref(`rooms/${myRoom}/call`).set({ offer: o, caller: myName, active: true });
 }
 
 function listenForCalls() {
-    db.ref(`rooms/${myRoom}/call`).on('value', async snap => {
-        const data = snap.val();
-        if (data && data.active) {
-            if (data.caller !== myName) {
-                document.getElementById('callStatusText').innerText = data.caller + " is calling...";
+    db.ref(`rooms/${myRoom}/call`).on('value', snap => {
+        const d = snap.val();
+        if(d && d.active) {
+            if(d.caller !== myName) {
+                document.getElementById('callStatusText').innerText = d.caller + " is calling...";
                 updateCallUI('incoming');
             }
         } else {
@@ -191,18 +189,14 @@ async function answerCall() {
     updateCallUI('active');
     document.getElementById('callStatusText').innerText = "On Call";
     pc = new RTCPeerConnection(servers);
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => pc.addTrack(t, stream));
-
+    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t => pc.addTrack(t, s));
     pc.ontrack = e => document.getElementById('remoteAudio').srcObject = e.streams[0];
-    pc.onicecandidate = e => e.candidate && db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
-
     const call = (await db.ref(`rooms/${myRoom}/call`).once('value')).val();
     await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    db.ref(`rooms/${myRoom}/call/answer`).set(answer);
-
+    const a = await pc.createAnswer();
+    await pc.setLocalDescription(a);
+    db.ref(`rooms/${myRoom}/call/answer`).set(a);
     db.ref(`rooms/${myRoom}/call/candidates`).on('child_added', s => pc.addIceCandidate(new RTCIceCandidate(s.val())));
 }
 
@@ -212,7 +206,6 @@ function endCall() {
     updateCallUI('idle');
 }
 
-// --- Chat Logic ---
 function sendMsg() {
     const inp = document.getElementById('msgInput');
     if(!inp.value.trim()) return;
@@ -225,7 +218,7 @@ function listenMsgs() {
         const d = snap.val();
         const div = document.createElement('div');
         div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-        div.innerHTML = `<b class="text-[10px] block opacity-50">${d.u}</b>${d.val}`;
+        div.innerHTML = `<b class="text-[9px] block opacity-50">${d.u}</b>${d.val}`;
         document.getElementById('chatBox').appendChild(div);
         document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
     });
