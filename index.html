@@ -3,35 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secret Chat</title>
+<title>Secret Chat + Audio & Photo</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#e2e8f0;}
 h2{text-align:center;padding:10px;background:#111827;border-radius:6px;}
-input,button{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:none;font-size:16px;}
+input,button,select{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:none;font-size:16px;}
 button{background:#2563eb;color:white;font-weight:bold;cursor:pointer;}
-ul{list-style:none;padding:0;margin-top:10px;}
+ul{list-style:none;padding:0;margin-top:10px;max-height:300px;overflow:auto;}
 li{background:#111827;margin:6px 0;padding:8px;border-radius:6px;}
 .hidden{display:none;}
 #usersList{font-weight:bold;}
+#chatList img{max-width:150px;display:block;margin-top:5px;border-radius:6px;}
+#audioCallBox{border:1px solid #2563eb;padding:10px;border-radius:6px;margin-top:10px;}
 </style>
 </head>
 <body>
 
-<h2>🔐 Secret Chat</h2>
+<h2>🔐 Secret Chat + Audio & Photo</h2>
 
 <div id="loginBox">
     <input id="name" placeholder="Enter Name">
-    <input id="pass" placeholder="Enter Password (letters only)">
+    <input id="pass" placeholder="Enter Password (any characters)">
     <button id="enterBtn">Enter Room</button>
 </div>
 
 <div id="chatBox" class="hidden">
     <p>Room: <span id="roomDisplay"></span></p>
-    <p>Active Users: <span id="usersList"></span></p>
+    <p>Active Users (Session IDs): <span id="usersList"></span></p>
     <button id="exitBtn">Exit Room</button>
     <input id="msgInput" placeholder="Type message">
+    <input type="file" id="photoInput" accept="image/*">
     <button id="sendBtn">Send</button>
     <ul id="chatList"></ul>
+
+    <div id="audioCallBox">
+        <h3>Audio Call</h3>
+        <button id="callBtn">Call</button>
+        <button id="muteBtn">Mute</button>
+        <p id="callStatus">No active call</p>
+        <audio id="ringAudio" loop src="https://www.soundjay.com/phone/telephone-ring-01a.mp3"></audio>
+    </div>
+</div>
+
+<div id="adminBox" class="hidden">
+    <h3>Admin Panel</h3>
+    <input id="adminPass" placeholder="Enter Admin Password">
+    <button id="adminLoginBtn">Login</button>
+    <ul id="adminUsers"></ul>
+    <ul id="adminChat"></ul>
 </div>
 
 <script type="module">
@@ -61,55 +80,158 @@ const msgInput = document.getElementById("msgInput");
 const chatList = document.getElementById("chatList");
 const usersList = document.getElementById("usersList");
 const exitBtn = document.getElementById("exitBtn");
+const photoInput = document.getElementById("photoInput");
 
-let name, pass, sessionId;
-let roomRef, chatRef;
+const audioCallBox = document.getElementById("audioCallBox");
+const callBtn = document.getElementById("callBtn");
+const muteBtn = document.getElementById("muteBtn");
+const callStatus = document.getElementById("callStatus");
+const ringAudio = document.getElementById("ringAudio");
 
-// Enter room
+const adminBox = document.getElementById("adminBox");
+const adminPassInput = document.getElementById("adminPass");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminUsers = document.getElementById("adminUsers");
+const adminChat = document.getElementById("adminChat");
+
+let name, pass, sessionId, roomRef, chatRef, usersRef;
+let isMuted=false, callActive=false;
+
+const ADMIN_NAME = "master";
+const ADMIN_PASSWORD = "admin123";
+
+// Enter Room
 enterBtn.onclick = ()=>{
     name = document.getElementById("name").value.trim();
     pass = document.getElementById("pass").value.trim();
     if(!name){alert("Enter name"); return;}
-    if(!pass.match(/^[A-Za-z]+$/)){alert("Password letters only"); return;}
+    if(!pass){alert("Enter password"); return;}
 
     sessionId = Date.now().toString(36);
+    if(name===ADMIN_NAME && pass===ADMIN_PASSWORD){
+        loginBox.classList.add("hidden");
+        adminBox.classList.remove("hidden");
+        alert("Admin Access Granted");
+        return;
+    }
+
     roomRef = ref(db,"rooms/"+pass);
     chatRef = ref(db,"rooms/"+pass+"/chat");
+    usersRef = ref(db,"rooms/"+pass+"/users");
 
-    // Add user to DB
+    // Add user
     set(ref(db,"rooms/"+pass+"/users/"+sessionId),{name:name,time:Date.now()});
 
     loginBox.classList.add("hidden");
     chatBox.classList.remove("hidden");
     roomDisplay.innerText = pass;
 
-    // Active users
-    onValue(ref(db,"rooms/"+pass+"/users"), snap=>{
+    // Active users list
+    onValue(usersRef,snap=>{
         const users = snap.val();
-        usersList.innerText = users ? Object.values(users).map(u=>u.name).join(", ") : "";
+        usersList.innerText = users ? Object.entries(users).map(([k,u])=>u.name+" ["+k+"]").join(", ") : "";
     });
 
     // Display chat
-    onChildAdded(chatRef, d=>{
+    onChildAdded(chatRef,d=>{
         const li = document.createElement("li");
         li.innerText = d.val().user+": "+d.val().msg;
+        if(d.val().photo){
+            const img = document.createElement("img");
+            img.src = d.val().photo;
+            li.appendChild(img);
+        }
         chatList.insertBefore(li, chatList.firstChild);
     });
 };
 
-// Send message
+// Send message or photo
 sendBtn.onclick = ()=>{
     const msg = msgInput.value.trim();
-    if(!msg) return;
-    push(chatRef,{user:name,msg:msg,time:Date.now()});
+    if(!msg && !photoInput.files[0]) return;
+
+    if(photoInput.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){
+            push(chatRef,{user:name,msg:msg,photo:e.target.result,time:Date.now()});
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+    } else {
+        push(chatRef,{user:name,msg:msg,time:Date.now()});
+    }
     msgInput.value="";
+    photoInput.value="";
 };
 
-// Exit room
+// Exit Room
 exitBtn.onclick = ()=>{
     remove(ref(db,"rooms/"+pass+"/users/"+sessionId));
     setTimeout(()=>remove(ref(db,"rooms/"+pass+"/chat")),60000);
     location.reload();
+};
+
+// Audio Call
+callBtn.onclick = ()=>{
+    if(callActive){
+        callStatus.innerText="Call ended";
+        callActive=false;
+        ringAudio.pause();
+    } else {
+        callStatus.innerText="Calling...";
+        callActive=true;
+        ringAudio.play();
+        setTimeout(()=>{
+            if(callActive){
+                callStatus.innerText="No answer";
+                callActive=false;
+                ringAudio.pause();
+            }
+        },30000);
+    }
+};
+muteBtn.onclick = ()=>{
+    isMuted=!isMuted;
+    muteBtn.innerText=isMuted?"Unmute":"Mute";
+};
+
+// Admin Panel
+adminLoginBtn.onclick = ()=>{
+    if(adminPassInput.value===ADMIN_PASSWORD){
+        adminBox.classList.remove("hidden");
+        // Show all users + chats
+        const allRoomsRef = ref(db,"rooms");
+        onValue(allRoomsRef,snap=>{
+            adminUsers.innerHTML="";
+            adminChat.innerHTML="";
+            const rooms = snap.val();
+            if(!rooms) return;
+            for(const [rkey, room] of Object.entries(rooms)){
+                if(room.users){
+                    for(const [uid,u] of Object.entries(room.users)){
+                        const li = document.createElement("li");
+                        li.innerText = "Room: "+rkey+" | "+u.name+" ["+uid+"]";
+                        const blockBtn = document.createElement("button");
+                        blockBtn.innerText="Block";
+                        blockBtn.onclick=()=>remove(ref(db,"rooms/"+rkey+"/users/"+uid));
+                        li.appendChild(blockBtn);
+                        adminUsers.appendChild(li);
+                    }
+                }
+                if(room.chat){
+                    for(const [cid,c] of Object.entries(room.chat)){
+                        const li = document.createElement("li");
+                        li.innerText = c.user+": "+c.msg;
+                        if(c.photo){
+                            const img = document.createElement("img");
+                            img.src=c.photo;
+                            li.appendChild(img);
+                        }
+                        adminChat.appendChild(li);
+                    }
+                }
+            }
+        });
+    } else alert("Wrong password");
 };
 </script>
 
