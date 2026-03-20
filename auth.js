@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-// Firebase Config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
   authDomain: "p2kc-b0553.firebaseapp.com",
@@ -14,41 +13,30 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
 export const db = getDatabase(app);
 
-export let name, roomId, confirmationResult;
+let name, pass;
+let sessionId;
 
-const sendOtpBtn = document.getElementById("sendOtpBtn");
-const verifyBtn = document.getElementById("verifyBtn");
+const loginBox = document.getElementById("loginBox");
+const chatBox = document.getElementById("chatBox");
+const enterBtn = document.getElementById("enterBtn");
+const roomDisplay = document.getElementById("roomDisplay");
 
-window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {'size':'invisible'}, auth);
-
-sendOtpBtn.onclick = ()=>{
+enterBtn.onclick = ()=>{
     name = document.getElementById("name").value.trim();
-    roomId = document.getElementById("room").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    if(name.length<4){alert("Name min 4 letters"); return;}
-    if(!roomId){alert("Enter room"); return;}
-    if(!phone){alert("Enter phone"); return;}
-    
-    signInWithPhoneNumber(auth, phone, window.recaptchaVerifier)
-    .then(result=>{
-        confirmationResult = result;
-        alert("OTP sent ✓");
-        document.getElementById("otp").classList.remove("hidden");
-        verifyBtn.classList.remove("hidden");
-    }).catch(err=>{alert(err.message)});
-};
+    pass = document.getElementById("pass").value.trim();
 
-verifyBtn.onclick = ()=>{
-    const otp = document.getElementById("otp").value.trim();
-    confirmationResult.confirm(otp)
-    .then(resp=>{
-        alert("Phone verified ✓");
-        document.getElementById("menu").classList.add("hidden");
-        document.getElementById("chatBox").classList.remove("hidden");
-        set(ref(db,"users/"+roomId+"/"+name),true);
-        document.getElementById("roomDisplay").innerText = roomId;
-    }).catch(err=>alert("Wrong OTP"));
+    if(!name){alert("Enter name"); return;}
+    if(!pass.match(/^[A-Za-z]+$/)){alert("Password letters only"); return;}
+
+    sessionId = Date.now().toString(36); // unique session id
+
+    // Add user to DB
+    set(ref(db,"rooms/"+pass+"/users/"+sessionId),{name:name,time:Date.now()});
+
+    // Show chat
+    loginBox.classList.add("hidden");
+    chatBox.classList.remove("hidden");
+    roomDisplay.innerText = pass;
 };
