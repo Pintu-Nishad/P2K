@@ -88,7 +88,7 @@ const db = firebase.database();
 let roomName = "";
 let username = "";
 const muteButton = document.getElementById('muteButton');
-const ADMIN_PASSWORD = "adminroom123"; // set admin password
+const ADMIN_PASSWORD = "1111"; // set admin password
 let isAdmin = false;
 
 // Login
@@ -106,7 +106,7 @@ function login(){
     return;
   }
 
-  // Normal User login
+  // Normal User login: room key = password
   roomName = password;
   document.getElementById('loginDiv').style.display='none';
   document.getElementById('chatDiv').style.display='flex';
