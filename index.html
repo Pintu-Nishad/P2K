@@ -3,75 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Pro Video Chat</title>
+    <title>P2K Pro Video V4 - 4K Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <style>
-        body { background-color: #0b141a; color: #e9edef; font-family: sans-serif; overflow: hidden; }
-        #chatBox { height: calc(100vh - 130px); overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-color: #0b141a; display: flex; flex-direction: column; gap: 8px; }
-        .msg { background: #202c33; padding: 8px 12px; border-radius: 8px; max-width: 85%; align-self: flex-start; }
-        .my-msg { background: #005c4b; align-self: flex-end; }
+        body { background-color: #0b141a; color: #e9edef; font-family: sans-serif; overflow: hidden; height: 100vh; margin:0; }
         
+        /* Chat Layout */
+        #chatBox { height: calc(100vh - 130px); overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-color: #0b141a; transition: all 0.3s; }
+        .msg { background: #202c33; padding: 8px 12px; border-radius: 8px; max-width: 85%; align-self: flex-start; border: 1px solid rgba(255,255,255,0.05); font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .my-msg { background: #005c4b; align-self: flex-end; }
+
+        /* Video Call UI */
+        #callUI { position: fixed; inset: 0; z-index: 500; background: black; display: none; flex-direction: column; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #000; }
-        #localVideo { position: absolute; top: 20px; right: 20px; width: 110px; height: 160px; object-fit: cover; border-radius: 12px; border: 2px solid #00a884; z-index: 50; background: #2a3942; }
-        .control-btn { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 12px; rounded-full: 50%; transition: all 0.3s; }
-        .control-btn:active { transform: scale(0.9); }
-        .btn-active { background: #00a884 !important; color: #000 !important; }
+        #localVideo { position: absolute; top: 60px; right: 20px; width: 100px; height: 150px; object-fit: cover; border-radius: 12px; border: 2px solid #00a884; z-index: 550; background: #2a3942; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+
+        /* Controls Area */
+        .call-controls { position: absolute; bottom: 100px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 600; padding: 10px; }
+        .c-btn { background: rgba(32, 44, 51, 0.85); border: 1px solid rgba(255,255,255,0.1); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; backdrop-filter: blur(10px); transition: 0.2s; }
+        .c-btn:active { transform: scale(0.9); }
+        .end-btn { background: #ea0038 !important; box-shadow: 0 0 20px rgba(234,0,56,0.4); }
+
+        /* Quality Dropdown */
+        .quality-box { position: absolute; top: 20px; left: 20px; z-index: 700; }
+        #qualitySelect { background: rgba(0,0,0,0.6); color: white; border: 1px solid #00a884; border-radius: 6px; padding: 4px 8px; font-size: 12px; outline: none; backdrop-filter: blur(5px); }
+
+        /* Chat Input for Video UI */
+        .input-area { position: relative; z-index: 100; background: #202c33; padding: 12px; display: flex; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); }
+        .call-active-chat { position: absolute; bottom: 20px; left: 0; right: 0; z-index: 700; background: transparent !important; border:none !important; }
+        .call-active-chat input { background: rgba(32, 44, 51, 0.8) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2) !important; }
     </style>
 </head>
-<body class="h-screen flex flex-col">
+<body>
 
 <div id="loginDiv" class="fixed inset-0 z-[1000] bg-[#111b21] flex items-center justify-center p-6">
-    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-2xl text-center border border-gray-700 shadow-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-[#00a884]">P2K Pro Video</h1>
-        <input id="user" type="text" placeholder="Your Name" class="w-full bg-[#2a3942] rounded-lg p-3 mb-4 outline-none text-white border border-transparent focus:border-[#00a884]">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-lg p-3 mb-6 outline-none text-white border border-transparent focus:border-[#00a884]">
-        <button onclick="enter()" class="w-full bg-[#00a884] py-3 rounded-lg font-bold text-[#111b21] hover:bg-[#06cf9c]">Join Room</button>
+    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-3xl shadow-2xl border border-gray-700 text-center">
+        <h1 class="text-3xl font-bold mb-8 text-[#00a884]">P2K Secure</h1>
+        <input id="user" type="text" placeholder="Aapka Naam" class="w-full bg-[#2a3942] rounded-xl p-4 mb-4 outline-none text-white focus:ring-2 focus:ring-[#00a884] border-none">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-xl p-4 mb-8 outline-none text-white focus:ring-2 focus:ring-[#00a884] border-none">
+        <button onclick="enter()" class="w-full bg-[#00a884] py-4 rounded-xl font-bold text-[#111b21] hover:brightness-110 active:scale-95 transition">Join Room</button>
     </div>
 </div>
 
-<div id="chatDiv" class="hidden flex flex-col h-full w-full">
-    <header class="h-16 bg-[#202c33] flex items-center justify-between px-4 border-b border-gray-700">
-        <b id="roomTitle" class="text-[#00a884]">Room</b>
-        <button onclick="startCall()" class="bg-[#00a884] text-[#111b21] px-4 py-2 rounded-full font-bold text-sm shadow-lg">Video Call</button>
+<div id="chatDiv" class="hidden flex flex-col h-screen">
+    <header class="h-16 bg-[#202c33] flex items-center justify-between px-4 border-b border-gray-700 shrink-0">
+        <div>
+            <b id="roomTitle" class="text-sm block">Room</b>
+            <span id="userCounter" class="text-[10px] text-[#00a884] font-bold">Online: 0</span>
+        </div>
+        <button onclick="startCall()" class="bg-[#00a884] text-[#111b21] px-5 py-2 rounded-full font-bold text-xs uppercase tracking-tighter">Video Call</button>
     </header>
 
     <div id="chatBox"></div>
 
-    <footer class="p-3 bg-[#202c33] flex items-center gap-2">
-        <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-[#2a3942] rounded-full px-5 py-2.5 outline-none border-none">
-        <button onclick="sendMsg()" class="bg-[#00a884] p-3 rounded-full text-[#111b21] font-bold">Send</button>
+    <footer id="footerInput" class="input-area">
+        <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-[#2a3942] rounded-full px-5 py-3 text-sm outline-none text-white border-none">
+        <button onclick="sendMsg()" class="bg-[#00a884] p-3 rounded-full text-[#111b21]">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/></svg>
+        </button>
     </footer>
 </div>
 
-<div id="callUI" class="hidden fixed inset-0 z-[500] bg-black">
+<div id="callUI">
+    <div class="quality-box">
+        <select id="qualitySelect" onchange="changeResolution()">
+            <option value="720">Auto (720p)</option>
+            <option value="1080">Full HD (1080p)</option>
+            <option value="2160">Ultra HD (4K)</option>
+        </select>
+    </div>
+
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted></video>
     
-    <div id="incomingBox" class="hidden absolute inset-0 bg-black/90 flex flex-col justify-center items-center z-[600] animate-pulse">
-        <div class="w-24 h-24 bg-[#00a884] rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_#00a884]">
-            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
+    <div id="incomingBox" class="hidden absolute inset-0 bg-black/95 flex flex-col justify-center items-center z-[800]">
+        <div class="w-20 h-20 bg-[#00a884] rounded-full flex items-center justify-center mb-6 animate-pulse shadow-[0_0_30px_#00a884]">
+            <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"/></svg>
         </div>
-        <h2 id="callerName" class="text-2xl font-bold mb-8 text-white"></h2>
-        <div class="flex gap-6">
-            <button onclick="acceptCall()" class="bg-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-lg">Answer</button>
-            <button onclick="rejectCall()" class="bg-red-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-lg">Decline</button>
+        <h2 id="callerName" class="text-xl font-bold mb-10 text-white">Incoming Call</h2>
+        <div class="flex gap-8">
+            <button onclick="acceptCall()" class="bg-green-500 text-white px-10 py-4 rounded-full font-bold shadow-lg">Answer</button>
+            <button onclick="rejectCall()" class="bg-red-500 text-white px-10 py-4 rounded-full font-bold shadow-lg">Reject</button>
         </div>
     </div>
 
-    <div class="absolute bottom-10 left-0 right-0 flex justify-center items-center gap-4 z-[700]">
-        <button id="muteBtn" onclick="toggleMute()" class="control-btn rounded-full bg-white/10 text-white">🎤</button>
-        <button onclick="endCall()" class="bg-red-600 p-5 rounded-full shadow-2xl transform hover:scale-110">
+    <div class="call-controls">
+        <button id="muteBtn" onclick="toggleMute()" class="c-btn">🎤</button>
+        <button onclick="endCall()" class="c-btn end-btn">
             <svg class="w-8 h-8 text-white rotate-[135deg]" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 005.456 5.456l.773-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
         </button>
-        <button id="screenBtn" onclick="toggleScreenShare()" class="control-btn rounded-full bg-white/10 text-white">🖥️</button>
+        <button id="screenBtn" onclick="toggleScreenShare()" class="c-btn">🖥️</button>
     </div>
-    <div id="callStatus" class="absolute top-10 left-0 right-0 text-center text-white/50 text-sm italic">Connecting...</div>
 </div>
 
 <script>
+// --- CONFIG & DB ---
 const firebaseConfig = {
   apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
   authDomain: "p2kc-b0553.firebaseapp.com",
@@ -82,150 +110,161 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let myName, myRoom, localStream, peerConnection, isCaller = false;
-let isMuted = false, isScreenSharing = false;
-
+let onlineUsers = 0;
 const servers = { 
     iceServers:[{urls:["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]}],
     iceCandidatePoolSize: 10 
 };
 
+// --- CORE FUNCTIONS ---
 function enter(){
-  myName = user.value.trim();
-  myRoom = pass.value.trim();
-  if(!myName || !myRoom) return alert("Details required!");
-  loginDiv.style.display="none";
-  chatDiv.classList.remove('hidden');
-  roomTitle.innerText="Room: "+myRoom;
-  listenMsgs();
-  listenCall();
+    myName = user.value.trim(); myRoom = pass.value.trim();
+    if(!myName || !myRoom) return;
+    loginDiv.style.display="none"; chatDiv.classList.remove('hidden');
+    roomTitle.innerText="Room: "+myRoom;
+    
+    db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
+    db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
+    db.ref(`rooms/${myRoom}/users`).on('value', s => {
+        onlineUsers = s.numChildren();
+        userCounter.innerText = "Online: " + onlineUsers;
+    });
+
+    listenMsgs(); listenCall();
 }
 
-// CHAT LOGIC
 function sendMsg(){
-  if(!msgInput.value.trim()) return;
-  db.ref("rooms/"+myRoom+"/msgs").push({ u: myName, val: msgInput.value });
-  msgInput.value="";
+    if(!msgInput.value.trim()) return;
+    db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: msgInput.value });
+    msgInput.value="";
 }
 
 function listenMsgs(){
-  db.ref("rooms/"+myRoom+"/msgs").on("child_added", s=>{
-    let d = s.val();
-    let div = document.createElement("div");
-    div.className="msg"+(d.u==myName?" my-msg":"");
-    div.innerHTML=`<div class="text-[9px] opacity-50 uppercase font-bold">${d.u}</div>${d.val}`;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
+    db.ref(`rooms/${myRoom}/msgs`).on("child_added", s=>{
+        let d = s.val();
+        let div = document.createElement("div");
+        div.className="msg"+(d.u==myName?" my-msg":"");
+        div.innerHTML=`<div class="text-[9px] opacity-40 font-bold uppercase mb-1">${d.u}</div>${d.val}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
 }
 
-// VIDEO CALL LOGIC
-async function getMedia(){
-  return await navigator.mediaDevices.getUserMedia({ 
-    audio: true, 
-    video: { width: {ideal: 1280}, height: {ideal: 720}, frameRate: {max: 30} } 
-  });
-}
-
+// --- VIDEO CALL ENGINE ---
 async function startCall(){
-  isCaller=true;
-  callUI.classList.remove('hidden');
-  localStream = await getMedia();
-  localVideo.srcObject = localStream;
-
-  setupPeerConnection();
-  
-  let offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-  db.ref("calls/"+myRoom).set({ offer:offer, caller:myName });
-}
-
-function setupPeerConnection(){
-  peerConnection = new RTCPeerConnection(servers);
-  localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
-  
-  peerConnection.ontrack = e => {
-    remoteVideo.srcObject = e.streams[0];
-    callStatus.innerText = "Live";
-  };
-  
-  peerConnection.onicecandidate = e => {
-    if(e.candidate) db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
-  };
-}
-
-function listenCall(){
-  db.ref("calls/"+myRoom).on("value", async snap=>{
-    let d = snap.val();
-    if(!d) {
-        if(!isCaller && callUI.offsetParent !== null) endCall();
-        return;
-    }
-    if(d.offer && !isCaller && !peerConnection){
-      callUI.classList.remove('hidden');
-      incomingBox.classList.remove('hidden');
-      callerName.innerText = d.caller + " is Video Calling...";
-    }
-    if(d.answer && isCaller){
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
-    }
-  });
-
-  db.ref("calls/"+myRoom+"/candidates").on("child_added", snap=>{
-    if(peerConnection && peerConnection.remoteDescription) {
-        peerConnection.addIceCandidate(new RTCIceCandidate(snap.val()));
-    }
-  });
+    isCaller=true;
+    toggleUI(true);
+    localStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true, video: { width: 1280, height: 720, frameRate: 30 } 
+    });
+    localVideo.srcObject = localStream;
+    setupPeer();
+    let offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    db.ref(`calls/${myRoom}`).set({ offer:offer, caller:myName });
 }
 
 async function acceptCall(){
-  isCaller=false;
-  incomingBox.classList.add('hidden'); // Fix: Popup hide immediately
-  localStream = await getMedia();
-  localVideo.srcObject = localStream;
-
-  setupPeerConnection();
-
-  let data = (await db.ref("calls/"+myRoom).get()).val();
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-  let answer = await peerConnection.createAnswer();
-  await peerConnection.setLocalDescription(answer);
-  db.ref("calls/"+myRoom).update({answer:answer});
+    isCaller=false; incomingBox.classList.add('hidden');
+    toggleUI(true);
+    localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
+    localVideo.srcObject = localStream;
+    setupPeer();
+    let d = (await db.ref(`calls/${myRoom}`).get()).val();
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(d.offer));
+    let answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    db.ref(`calls/${myRoom}`).update({answer:answer});
 }
 
-// Controls Logic
-function toggleMute() {
-    isMuted = !isMuted;
-    localStream.getAudioTracks()[0].enabled = !isMuted;
-    muteBtn.classList.toggle('btn-active', isMuted);
-    muteBtn.innerText = isMuted ? "🔇" : "🎤";
+function setupPeer(){
+    peerConnection = new RTCPeerConnection(servers);
+    localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+    peerConnection.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
+    peerConnection.onicecandidate = e => {
+        if(e.candidate) db.ref(`calls/${myRoom}/candidates`).push(e.candidate.toJSON());
+    };
 }
 
-async function toggleScreenShare() {
-    if(!isScreenSharing) {
-        try {
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-            const videoTrack = screenStream.getVideoTracks()[0];
-            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
-            sender.replaceTrack(videoTrack);
-            isScreenSharing = true;
-            screenBtn.classList.add('btn-active');
-            
-            videoTrack.onended = () => toggleScreenShare(); // Auto switch back
-        } catch(e) { console.error(e); }
-    } else {
-        const videoTrack = localStream.getVideoTracks()[0];
+function listenCall(){
+    db.ref(`calls/${myRoom}`).on("value", async snap=>{
+        let d = snap.val();
+        if(!d) {
+            if(onlineUsers <= 2 && callUI.style.display === "flex") {
+                closeConnection();
+                toggleUI(false);
+            }
+            return;
+        }
+        if(d.offer && !isCaller && !peerConnection){
+            toggleUI(true); incomingBox.classList.remove('hidden');
+            callerName.innerText = d.caller + " calling...";
+        }
+        if(d.answer && isCaller) await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
+    });
+
+    db.ref(`calls/${myRoom}/candidates`).on("child_added", snap=>{
+        if(peerConnection && peerConnection.remoteDescription) {
+            peerConnection.addIceCandidate(new RTCIceCandidate(snap.val())).catch(e=>{});
+        }
+    });
+}
+
+// --- CALL CONTROLS ---
+async function changeResolution() {
+    if (!localStream) return;
+    const res = qualitySelect.value;
+    let constraints = { audio: true, video: { width: 1280, height: 720 } }; // default
+
+    if (res === "2160") constraints.video = { width: 3840, height: 2160 };
+    else if (res === "1080") constraints.video = { width: 1920, height: 1080 };
+
+    try {
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const newTrack = newStream.getVideoTracks()[0];
         const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+        if (sender) sender.replaceTrack(newTrack);
+        
+        localStream.getVideoTracks()[0].stop();
+        localStream.removeTrack(localStream.getVideoTracks()[0]);
+        localStream.addTrack(newTrack);
+        localVideo.srcObject = localStream;
+    } catch (e) { alert("Resolution not supported by camera."); qualitySelect.value="720"; }
+}
+
+function toggleMute(){
+    let audio = localStream.getAudioTracks()[0];
+    audio.enabled = !audio.enabled;
+    muteBtn.innerText = audio.enabled ? "🎤" : "🔇";
+    muteBtn.classList.toggle('bg-red-500', !audio.enabled);
+}
+
+async function toggleScreenShare(){
+    try {
+        let screen = await navigator.mediaDevices.getDisplayMedia({video:true});
+        let videoTrack = screen.getVideoTracks()[0];
+        let sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
         sender.replaceTrack(videoTrack);
-        isScreenSharing = false;
-        screenBtn.classList.remove('btn-active');
-    }
+        videoTrack.onended = () => sender.replaceTrack(localStream.getVideoTracks()[0]);
+    } catch(e){}
 }
 
 function endCall(){
-  if(localStream) localStream.getTracks().forEach(t => t.stop());
-  if(peerConnection) peerConnection.close();
-  db.ref("calls/"+myRoom).remove();
-  location.reload(); 
+    if(onlineUsers <= 2) db.ref(`calls/${myRoom}`).remove();
+    else closeConnection();
+    toggleUI(false);
+}
+
+function closeConnection(){
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
+    if(peerConnection) { peerConnection.close(); peerConnection = null; }
+    remoteVideo.srcObject = null;
+}
+
+function toggleUI(onCall){
+    callUI.style.display = onCall ? "flex" : "none";
+    if(onCall) footerInput.classList.add('call-active-chat');
+    else footerInput.classList.remove('call-active-chat');
 }
 
 function rejectCall(){ endCall(); }
