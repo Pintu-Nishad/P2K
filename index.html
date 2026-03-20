@@ -35,7 +35,7 @@ video{width:48%;border-radius:10px;background:black;}
 
 <button onclick="exitRoom()">🚪 Exit Room</button>
 
-<input id="msg"><button onclick="sendMsg()">Send</button>
+<input id="msg" placeholder="Type message"><button onclick="sendMsg()">Send</button>
 <ul id="chat"></ul>
 
 <select id="quality">
@@ -81,14 +81,15 @@ const db=getDatabase(app);
 
 let name,roomId,pc,localStream,currentFacing='user',flashOn=false;
 let ringtone=document.getElementById("ringtone");
+let lastMsg=""; // prevent duplicate spam
 
-function validName(n){return /^[A-Za-z]{4,}$/.test(n);} // min 4 letters, max unlimited
+function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
 function toggleRoomPass(){
   let span=document.getElementById("maskedRoom");
   span.innerText = (span.innerText==="****")?roomId:"****";
 }
 
-// JOIN
+// JOIN ROOM
 window.joinRoom=async()=>{
 name=document.getElementById("name").value.trim();
 roomId=document.getElementById("room").value.trim();
@@ -122,7 +123,10 @@ onChildAdded(ref(db,"chat/"+roomId),(d)=>{
 let li=document.createElement("li");
 li.innerText=d.val().user+": "+d.val().msg;
 document.getElementById("chat").appendChild(li);
-setTimeout(()=>li.remove(),60000);
+setTimeout(()=>{
+li.remove();
+remove(ref(db,"chat/"+roomId+"/"+d.key)).catch(()=>{});
+},60000);
 });
 
 // call listener
@@ -150,7 +154,16 @@ document.location.reload();
 }
 
 // SEND MSG
-window.sendMsg=()=>{push(ref(db,"chat/"+roomId),{user:name,msg:msg.value});}
+window.sendMsg = () => {
+    let inputBox = document.getElementById("msg");
+    let text = inputBox.value.trim();
+    if(!text) return; // ignore empty
+    if(text === lastMsg) return; // ignore duplicate
+    lastMsg = text;
+
+    push(ref(db,"chat/"+roomId), {user:name, msg:text});
+    inputBox.value = ""; // clear input
+}
 
 // MEDIA
 async function getStream(){
@@ -185,7 +198,6 @@ createPeer(); localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
 let offer=await pc.createOffer(); await pc.setLocalDescription(offer);
 set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
 
-// ICE
 onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{if(pc){try{await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));}catch(e){}}});
 }
 
