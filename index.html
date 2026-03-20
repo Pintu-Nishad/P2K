@@ -5,127 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>101%Secure Chat Room</title>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-  .login, .chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-  .login-box {
-    background: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 90%;
-    max-width: 350px;
-  }
-  .login-box input {
-    padding: 10px 15px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    outline: none;
-  }
-  .login-box button {
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    background: #4a90e2;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .header {
-    background: #4a90e2;
-    color: white;
-    padding: 15px;
-    font-size: 18px;
-    text-align: center;
-    font-weight: bold;
-  }
-  .chat-box {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    background: #eef3f8;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    width: 100%;
-  }
-  .message {
-    max-width: 70%;
-    padding: 8px 12px;
-    border-radius: 15px;
-    background: #ffffff;
-    align-self: flex-start;
-    word-wrap: break-word;
-  }
-  .input-area {
-    display: flex;
-    gap: 5px;
-    padding: 10px;
-    background: #fff;
-  }
-  .input-area input[type="text"] {
-    flex: 1;
-    padding: 10px;
-    border-radius: 25px;
-    border: 1px solid #ccc;
-    outline: none;
-  }
-  .input-area button {
-    padding: 10px 15px;
-    border-radius: 25px;
-    border: none;
-    background: #4a90e2;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .bottom-buttons {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background: #fff;
-  }
-  .bottom-buttons button {
-    flex: 1;
-    margin: 0 5px;
-    padding: 10px;
-    border-radius: 25px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .call-controls {
-    display: none;
-    gap: 10px;
-    margin-top: 5px;
-  }
-  .call-controls button {
-    background: orange;
-    color: white;
-  }
+  body { margin:0; font-family: Arial,sans-serif; background: #eef3f8; display:flex; flex-direction:column; height:100vh; }
+  .login, .chat-container { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+  .login-box { background:#fff; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:15px; width:90%; max-width:350px; }
+  .login-box input { padding:10px 15px; border-radius:10px; border:1px solid #ccc; outline:none; }
+  .login-box button { padding:10px; border-radius:10px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
+  .header { background:#4a90e2; color:white; padding:15px; font-size:18px; text-align:center; font-weight:bold; width:100%; }
+  .chat-box { flex:1; padding:10px; overflow-y:auto; background:#eef3f8; display:flex; flex-direction:column; gap:5px; width:100%; }
+  .message { max-width:70%; padding:8px 12px; border-radius:15px; background:#ffffff; align-self:flex-start; word-wrap:break-word; }
+  .input-area { display:flex; gap:5px; padding:10px; background:#fff; }
+  .input-area input[type="text"] { flex:1; padding:10px; border-radius:25px; border:1px solid #ccc; outline:none; }
+  .input-area button { padding:10px 15px; border-radius:25px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
+  .bottom-buttons { display:flex; justify-content:space-between; padding:10px; background:#fff; width:100%; }
+  .bottom-buttons button { flex:1; margin:0 5px; padding:10px; border-radius:25px; border:none; cursor:pointer; font-weight:bold; }
+  .call-controls { display:none; gap:10px; margin-top:5px; }
+  .call-controls button { background:orange; color:white; }
 </style>
 </head>
 <body>
 
+<!-- Login -->
 <div class="login" id="loginDiv">
   <div class="login-box">
     <input type="text" id="username" placeholder="Username 👤">
-    <div style="position: relative;">
+    <div style="position:relative;">
       <input type="password" id="password" placeholder="Password 🔒">
       <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;" onclick="togglePassword()">👁️</span>
     </div>
@@ -133,16 +36,14 @@
   </div>
 </div>
 
+<!-- Chat -->
 <div class="chat-container" id="chatDiv" style="display:none;">
   <div class="header" id="roomName">101%Secure</div>
-
   <div class="chat-box" id="chatBox"></div>
-
   <div class="input-area">
     <input type="text" id="messageInput" placeholder="Message... 😊">
     <button onclick="sendMessage()">Send</button>
   </div>
-
   <div class="bottom-buttons">
     <button onclick="selectPhoto()">📷 Photo</button>
     <button id="callButton" onclick="startCall()">📞 Call</button>
@@ -151,62 +52,97 @@
   </div>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-  function togglePassword() {
+  // Firebase config 🔑 — aapko Firebase project banana hoga
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const roomName = "101%Secure";
+
+  // Login
+  function togglePassword(){
     const pw = document.getElementById('password');
-    if(pw.type === "password") pw.type = "text";
-    else pw.type = "password";
+    pw.type = pw.type==="password"?"text":"password";
   }
 
-  function login() {
+  function login(){
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
-    if(username === '' || password === '') {
-      alert("Username aur Password daalo! ⚠️");
-      return;
-    }
-    document.getElementById('loginDiv').style.display = 'none';
-    document.getElementById('chatDiv').style.display = 'flex';
+    if(!username || !password){ alert("Username aur Password daalo! ⚠️"); return; }
+    document.getElementById('loginDiv').style.display='none';
+    document.getElementById('chatDiv').style.display='flex';
     document.getElementById('roomName').textContent = username + " - 101%Secure";
+    listenMessages();
+    listenCall();
   }
 
-  const chatBox = document.getElementById('chatBox');
+  // Send message
+  function sendMessage(){
+    const msg = document.getElementById('messageInput').value.trim();
+    if(!msg) return;
+    db.ref('rooms/'+roomName+'/messages').push({ user: document.getElementById('username').value, text: msg, time: Date.now() });
+    document.getElementById('messageInput').value='';
+  }
+
+  // Listen messages
+  function listenMessages(){
+    const chatBox = document.getElementById('chatBox');
+    db.ref('rooms/'+roomName+'/messages').on('child_added', snapshot=>{
+      const msgData = snapshot.val();
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message');
+      msgDiv.textContent = msgData.user + ": " + msgData.text;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  }
+
+  // Photo (dummy)
+  function selectPhoto(){ alert("Photo select ka option clicked! 📸"); }
+
+  // Call logic
   const muteButton = document.getElementById('muteButton');
   const callButton = document.getElementById('callButton');
+  let audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg'); // sample ringtone
 
-  function sendMessage() {
-    const input = document.getElementById('messageInput');
-    if(input.value.trim() === '') return;
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('message');
-    msgDiv.textContent = input.value;
-    chatBox.appendChild(msgDiv);
-    input.value = '';
-    chatBox.scrollTop = chatBox.scrollHeight;
+  function startCall(){
+    db.ref('rooms/'+roomName+'/call').set({ caller: document.getElementById('username').value, time: Date.now() });
   }
 
-  function selectPhoto() {
-    alert("Photo select ka option clicked! 📸");
+  function listenCall(){
+    db.ref('rooms/'+roomName+'/call').on('value', snapshot=>{
+      const data = snapshot.val();
+      if(data && data.caller !== document.getElementById('username').value){
+        audio.loop = true;
+        audio.play();
+        alert("Incoming Call from "+data.caller+" 📞");
+        muteButton.style.display='inline-block';
+        callButton.disabled=true;
+      }
+    });
   }
 
-  function startCall() {
-    alert("Call started... ☎️");
-    muteButton.style.display = 'inline-block';
-    callButton.disabled = true;
-  }
+  function toggleMute(){ audio.paused ? audio.play() : audio.pause(); }
 
-  function toggleMute() {
-    alert("Call muted/unmuted 🔇");
-  }
-
-  function exitRoom() {
-    const confirmExit = confirm("Pakka Nikalna Chahte Ho? 🤔");
-    if(confirmExit) {
-      alert("Room se nikal gaye! 👋");
+  function exitRoom(){
+    if(confirm("Pakka Nikalna Chahte Ho? 🤔")){
       location.reload();
     }
   }
 </script>
 
 </body>
-</html>
+  </html>
