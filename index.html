@@ -3,76 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Secure Chat & Group Call</title>
+<title>P2K Real-Time WebRTC Call</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  :root { --app-height: 100%; }
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; }
-  body { font-family: -apple-system, sans-serif; background:#efe7dd; display: flex; flex-direction: column; }
-  #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-  .login-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; }
-  .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-  .login-box button { width: 100%; padding: 12px; background: #128c7e; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
-  #chatDiv { display: none; flex-direction: column; height: 100vh; width: 100%; }
-  .header { height: 60px; background: #075e54; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 1000; }
-  
-  /* Call Notification Bar */
-  #callBar { display: none; background: #25d366; color: white; padding: 10px 15px; font-size: 14px; font-weight: bold; justify-content: space-between; align-items: center; animation: blink 1s infinite; border-bottom: 2px solid #128c7e; }
-  @keyframes blink { 0% { background: #25d366; } 50% { background: #128c7e; } 100% { background: #25d366; } }
-  #callBar button { background: white; color: #075e54; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  
-  .header-tools { display: flex; align-items: center; gap: 12px; }
-  #callBtn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
-  #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-  .msg { background: white; padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-  .my-msg { background: #dcf8c6; align-self: flex-end; border-top-left-radius: 12px; border-top-right-radius: 0; }
-  .footer { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
-  .input-row { display: flex; gap: 8px; height: 45px; }
-  .input-row input { flex: 1; padding: 0 15px; border-radius: 22px; border: 1px solid #ccc; font-size: 16px; outline: none; }
-  .input-row button { width: 45px; height: 45px; border-radius: 50%; background: #075e54; color: white; border: none; font-size: 20px; flex-shrink: 0; }
+  body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  #chatBox { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 8px; }
+  .msg { background: white; padding: 8px 12px; border-radius: 15px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .my-msg { background: #dcf8c6; align-self: flex-end; }
+  #callOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; color: white; }
+  .pulse { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
 
-<div id="loginDiv">
-  <div class="login-box">
-    <h2>Secure Chat</h2>
-    <input type="text" id="user" placeholder="Naam...">
-    <input type="password" id="pass" placeholder="Room Password...">
-    <button onclick="enter()">Join Karo</button>
+<div id="loginDiv" class="fixed inset-0 bg-[#075e54] flex items-center justify-center z-[9999]">
+  <div class="bg-white p-8 rounded-2xl w-80 text-center shadow-2xl">
+    <h2 class="text-2xl font-bold mb-4 text-[#075e54]">P2K Secure</h2>
+    <input type="text" id="user" placeholder="अपना नाम..." class="w-full p-3 mb-3 border rounded-lg outline-none">
+    <input type="password" id="pass" placeholder="रूम कोड..." class="w-full p-3 mb-4 border rounded-lg outline-none">
+    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold">Join Room</button>
   </div>
 </div>
 
-<div id="chatDiv">
-  <div class="header">
+<div id="chatDiv" class="hidden flex-col h-screen">
+  <div class="h-[60px] bg-[#075e54] text-white flex justify-between items-center px-4">
     <b id="roomTitle">Room</b>
-    <div class="header-tools">
-      <button id="callBtn" onclick="startCall()">📞 Call</button>
-      <span id="userCount">Online: 0</span>
-    </div>
-  </div>
-
-  <div id="callBar">
-    <span id="callStatusText">Incoming Call...</span>
-    <div>
-      <button onclick="joinCall()">JOIN</button>
-      <button style="background:#ff4b2b; color:white; margin-left:5px;" onclick="document.getElementById('callBar').style.display='none'">❌</button>
+    <div class="flex items-center gap-3">
+        <button onclick="startWebRTCCall()" class="bg-[#25d366] px-4 py-1 rounded-full text-sm font-bold">📞 Call</button>
+        <span id="userCount" class="text-xs">Online: 0</span>
     </div>
   </div>
 
   <div id="chatBox"></div>
 
-  <div class="footer">
-    <div class="input-row">
-      <input type="text" id="msgInput" placeholder="Type a message...">
-      <button onclick="sendMsg()">➤</button>
-    </div>
+  <div class="p-3 bg-[#f0f0f0] flex gap-2">
+    <input type="text" id="msgInput" placeholder="Type..." class="flex-1 p-2 rounded-full border px-4 outline-none">
+    <button onclick="sendMsg()" class="bg-[#075e54] text-white w-10 h-10 rounded-full">➤</button>
   </div>
+</div>
+
+<div id="callOverlay">
+    <div class="text-2xl mb-4 pulse" id="callStatus">Calling...</div>
+    <div class="flex gap-10">
+        <button id="answerBtn" onclick="answerCall()" class="bg-green-500 p-5 rounded-full hidden">📞 Accept</button>
+        <button onclick="endCall()" class="bg-red-500 p-5 rounded-full">❌ End</button>
+    </div>
+    <audio id="remoteAudio" autoplay></audio>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
   authDomain: "p2kc-b0553.firebaseapp.com",
@@ -83,60 +67,110 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let myName, myRoom;
+
+let myName, myRoom, pc;
+const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
 function enter() {
   myName = document.getElementById('user').value.trim();
   myRoom = document.getElementById('pass').value.trim();
-  if(!myName || !myRoom) return alert("Fill details!");
+  if(!myName || !myRoom) return alert("Details fill karein!");
 
   document.getElementById('loginDiv').style.display='none';
   document.getElementById('chatDiv').style.display='flex';
-  document.getElementById('roomTitle').innerText = "Room: " + myRoom;
+  document.getElementById('roomTitle').innerText = myRoom;
 
+  // Online Presence
   const userRef = db.ref(`rooms/${myRoom}/users/${myName}`);
   userRef.set({ lastSeen: Date.now() });
   userRef.onDisconnect().remove();
 
-  db.ref(`rooms/${myRoom}/users`).on('value', s => {
-    document.getElementById('userCount').innerText = "Online: " + (s.numChildren() || 0);
-  });
-
-  listenCalls();
   listenMsgs();
+  listenForInboundCalls();
 }
 
-// 1. Call शुरू करने का Logic
-function startCall() {
-  db.ref(`rooms/${myRoom}/call`).set({
-    caller: myName,
-    active: true,
-    time: Date.now()
-  });
-  // Caller खुद भी तुरंत Join कर सकता है
-  joinCall();
+// --- WebRTC Logic ---
+
+async function startWebRTCCall() {
+    showOverlay("Calling Everyone...");
+    pc = new RTCPeerConnection(servers);
+    
+    // Get Audio
+    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    // Handle candidates
+    pc.onicecandidate = e => {
+        if (e.candidate) db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
+    };
+
+    // Create Offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    db.ref(`rooms/${myRoom}/call`).set({
+        offer: { type: offer.type, sdp: offer.sdp },
+        caller: myName,
+        active: true
+    });
 }
 
-// 2. बाकी सबको Call का Notification दिखाने का Logic
-function listenCalls() {
-  db.ref(`rooms/${myRoom}/call`).on('value', snap => {
-    const call = snap.val();
-    const bar = document.getElementById('callBar');
-    if(call && call.active && call.caller !== myName) {
-      document.getElementById('callStatusText').innerText = call.caller + " is calling...";
-      bar.style.display = 'flex';
-    } else {
-      bar.style.display = 'none';
-    }
-  });
+function listenForInboundCalls() {
+    db.ref(`rooms/${myRoom}/call`).on('value', async snap => {
+        const data = snap.val();
+        if (data && data.active && data.caller !== myName) {
+            showOverlay(data.caller + " is calling...");
+            document.getElementById('answerBtn').classList.remove('hidden');
+        } else if (!data || !data.active) {
+            hideOverlay();
+        }
+    });
 }
 
-// 3. असली बातचीत (Voice/Video) का Logic [Jitsi Meet]
-function joinCall() {
-  // यह आपको एक Private Voice Room में ले जाएगा
-  const callUrl = "https://meet.jit.si/" + myRoom + "_private_room_" + myRoom;
-  window.open(callUrl, '_blank');
-  document.getElementById('callBar').style.display = 'none';
+async function answerCall() {
+    document.getElementById('answerBtn').classList.add('hidden');
+    pc = new RTCPeerConnection(servers);
+
+    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    pc.onicecandidate = e => {
+        if (e.candidate) db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
+    };
+
+    pc.ontrack = e => {
+        document.getElementById('remoteAudio').srcObject = e.streams[0];
+    };
+
+    const callData = (await db.ref(`rooms/${myRoom}/call`).once('value')).val();
+    await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+    
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    db.ref(`rooms/${myRoom}/call/answer`).set({ type: answer.type, sdp: answer.sdp });
+
+    // Listen for ICE candidates
+    db.ref(`rooms/${myRoom}/call/candidates`).on('child_added', snap => {
+        pc.addIceCandidate(new RTCIceCandidate(snap.val()));
+    });
+}
+
+// --- Chat & UI Helpers ---
+
+function showOverlay(txt) {
+    document.getElementById('callOverlay').style.display = 'flex';
+    document.getElementById('callStatus').innerText = txt;
+}
+
+function hideOverlay() {
+    document.getElementById('callOverlay').style.display = 'none';
+    if(pc) { pc.close(); pc = null; }
+}
+
+function endCall() {
+    db.ref(`rooms/${myRoom}/call`).remove();
+    hideOverlay();
 }
 
 function sendMsg() {
@@ -151,7 +185,7 @@ function listenMsgs() {
     const d = snap.val();
     const div = document.createElement('div');
     div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-    div.innerHTML = `<b style="font-size:10px; display:block;">${d.u}</b>` + d.val;
+    div.innerHTML = `<b class="text-[10px] block opacity-50">${d.u}</b>${d.val}`;
     document.getElementById('chatBox').appendChild(div);
     document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
   });
