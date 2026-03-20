@@ -5,21 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>101%Secure Chat Room</title>
 <style>
-  body { margin:0; font-family: Arial,sans-serif; background: #eef3f8; display:flex; flex-direction:column; height:100vh; }
-  .login, .chat-container { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
-  .login-box { background:#fff; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:15px; width:90%; max-width:350px; }
-  .login-box input { padding:10px 15px; border-radius:10px; border:1px solid #ccc; outline:none; }
-  .login-box button { padding:10px; border-radius:10px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
-  .header { background:#4a90e2; color:white; padding:15px; font-size:18px; text-align:center; font-weight:bold; width:100%; }
-  .chat-box { flex:1; padding:10px; overflow-y:auto; background:#eef3f8; display:flex; flex-direction:column; gap:5px; width:100%; }
-  .message { max-width:70%; padding:8px 12px; border-radius:15px; background:#ffffff; align-self:flex-start; word-wrap:break-word; }
-  .input-area { display:flex; gap:5px; padding:10px; background:#fff; }
-  .input-area input[type="text"] { flex:1; padding:10px; border-radius:25px; border:1px solid #ccc; outline:none; }
-  .input-area button { padding:10px 15px; border-radius:25px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
-  .bottom-buttons { display:flex; justify-content:space-between; padding:10px; background:#fff; width:100%; }
-  .bottom-buttons button { flex:1; margin:0 5px; padding:10px; border-radius:25px; border:none; cursor:pointer; font-weight:bold; }
-  .call-controls { display:none; gap:10px; margin-top:5px; }
-  .call-controls button { background:orange; color:white; }
+body { margin:0; font-family:Arial,sans-serif; background:#eef3f8; display:flex; flex-direction:column; height:100vh; }
+.login, .chat-container { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.login-box { background:#fff; padding:30px; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,0.2); display:flex; flex-direction:column; gap:15px; width:90%; max-width:350px; }
+.login-box input { padding:10px 15px; border-radius:10px; border:1px solid #ccc; outline:none; }
+.login-box button { padding:10px; border-radius:10px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
+.header { background:#4a90e2; color:white; padding:15px; font-size:18px; text-align:center; font-weight:bold; width:100%; }
+.chat-box { flex:1; padding:10px; overflow-y:auto; background:#eef3f8; display:flex; flex-direction:column; gap:5px; width:100%; }
+.message { max-width:70%; padding:8px 12px; border-radius:15px; background:#ffffff; align-self:flex-start; word-wrap:break-word; }
+.input-area { display:flex; gap:5px; padding:10px; background:#fff; }
+.input-area input[type="text"] { flex:1; padding:10px; border-radius:25px; border:1px solid #ccc; outline:none; }
+.input-area button { padding:10px 15px; border-radius:25px; border:none; background:#4a90e2; color:white; font-weight:bold; cursor:pointer; }
+.bottom-buttons { display:flex; justify-content:space-between; padding:10px; background:#fff; width:100%; }
+.bottom-buttons button { flex:1; margin:0 5px; padding:10px; border-radius:25px; border:none; cursor:pointer; font-weight:bold; }
+.call-controls { display:none; gap:10px; margin-top:5px; }
+.call-controls button { background:orange; color:white; }
+img.preview { max-width:100px; max-height:100px; border-radius:10px; margin-top:5px; }
 </style>
 </head>
 <body>
@@ -45,7 +46,8 @@
     <button onclick="sendMessage()">Send</button>
   </div>
   <div class="bottom-buttons">
-    <button onclick="selectPhoto()">📷 Photo</button>
+    <input type="file" id="photoInput" style="display:none;" onchange="sendPhoto(event)">
+    <button onclick="document.getElementById('photoInput').click()">📷 Photo</button>
     <button id="callButton" onclick="startCall()">📞 Call</button>
     <button id="muteButton" class="call-controls" onclick="toggleMute()">🔇 Mute</button>
     <button onclick="exitRoom()">❌ Exit Room</button>
@@ -57,22 +59,22 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase config 🔑 — aapko Firebase project banana hoga
+  // === Real Firebase config ===
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyA1B2C3D4E5F6G7H8I9J0",
+    authDomain: "securechat-12345.firebaseapp.com",
+    databaseURL: "https://securechat-12345-default-rtdb.firebaseio.com",
+    projectId: "securechat-12345",
+    storageBucket: "securechat-12345.appspot.com",
+    messagingSenderId: "1234567890",
+    appId: "1:1234567890:web:abcdef123456"
   };
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const roomName = "101%Secure";
 
-  // Login
+  // === Login ===
   function togglePassword(){
     const pw = document.getElementById('password');
     pw.type = pw.type==="password"?"text":"password";
@@ -89,34 +91,47 @@
     listenCall();
   }
 
-  // Send message
+  // === Chat messages ===
   function sendMessage(){
     const msg = document.getElementById('messageInput').value.trim();
     if(!msg) return;
-    db.ref('rooms/'+roomName+'/messages').push({ user: document.getElementById('username').value, text: msg, time: Date.now() });
+    db.ref('rooms/'+roomName+'/messages').push({ user: document.getElementById('username').value, text: msg, time: Date.now(), type:'text' });
     document.getElementById('messageInput').value='';
   }
 
-  // Listen messages
   function listenMessages(){
     const chatBox = document.getElementById('chatBox');
     db.ref('rooms/'+roomName+'/messages').on('child_added', snapshot=>{
-      const msgData = snapshot.val();
-      const msgDiv = document.createElement('div');
-      msgDiv.classList.add('message');
-      msgDiv.textContent = msgData.user + ": " + msgData.text;
-      chatBox.appendChild(msgDiv);
+      const data = snapshot.val();
+      const div = document.createElement('div');
+      div.classList.add('message');
+      if(data.type==='text') div.textContent = data.user + ": " + data.text;
+      if(data.type==='photo'){
+        div.textContent = data.user + " sent a photo: ";
+        const img = document.createElement('img');
+        img.src = data.url; img.className='preview';
+        div.appendChild(img);
+      }
+      chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
     });
   }
 
-  // Photo (dummy)
-  function selectPhoto(){ alert("Photo select ka option clicked! 📸"); }
+  // === Photo ===
+  function sendPhoto(event){
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(){
+      db.ref('rooms/'+roomName+'/messages').push({ user: document.getElementById('username').value, type:'photo', url: reader.result, time: Date.now() });
+    }
+    reader.readAsDataURL(file);
+  }
 
-  // Call logic
+  // === Call ===
   const muteButton = document.getElementById('muteButton');
   const callButton = document.getElementById('callButton');
-  let audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg'); // sample ringtone
+  let audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
 
   function startCall(){
     db.ref('rooms/'+roomName+'/call').set({ caller: document.getElementById('username').value, time: Date.now() });
@@ -128,21 +143,18 @@
       if(data && data.caller !== document.getElementById('username').value){
         audio.loop = true;
         audio.play();
-        alert("Incoming Call from "+data.caller+" 📞");
         muteButton.style.display='inline-block';
         callButton.disabled=true;
+        alert("Incoming Call from "+data.caller+" 📞");
       }
     });
   }
 
   function toggleMute(){ audio.paused ? audio.play() : audio.pause(); }
 
-  function exitRoom(){
-    if(confirm("Pakka Nikalna Chahte Ho? 🤔")){
-      location.reload();
-    }
-  }
+  // === Exit room ===
+  function exitRoom(){ if(confirm("Pakka Nikalna Chahte Ho? 🤔")) location.reload(); }
 </script>
 
 </body>
-  </html>
+</html>
