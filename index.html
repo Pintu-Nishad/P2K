@@ -29,7 +29,6 @@ video{width:48%;border-radius:10px;background:black;}
 <h3 id="status"></h3>
 <div id="users"></div>
 
-<!-- Masked password inside chatBox -->
 <p>Room: <span id="maskedRoom">****</span>
 <span class="eye" onclick="toggleRoomPass()">👁️</span></p>
 
@@ -81,7 +80,7 @@ const db=getDatabase(app);
 
 let name,roomId,pc,localStream,currentFacing='user',flashOn=false;
 let ringtone=document.getElementById("ringtone");
-let lastMsg=""; // prevent duplicate spam
+let lastMsg=""; 
 
 function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
 function toggleRoomPass(){
@@ -108,14 +107,12 @@ document.getElementById("chatBox").style.display="block";
 document.getElementById("maskedRoom").innerText="****";
 document.getElementById("title").innerText="🔐 Secret Chat - "+name;
 
-// users list
 onValue(ref(db,"users/"+roomId),(s)=>{
 let data=s.val(); let html="<b>Online:</b><br>";
 for(let u in data){html+="🟢 "+u+"<br>";}
 document.getElementById("users").innerHTML=html;
 });
 
-// leave
 window.addEventListener("beforeunload",()=>{exitRoom();});
 
 // chat listener
@@ -157,12 +154,12 @@ document.location.reload();
 window.sendMsg = () => {
     let inputBox = document.getElementById("msg");
     let text = inputBox.value.trim();
-    if(!text) return; // ignore empty
-    if(text === lastMsg) return; // ignore duplicate
+    if(!text) return; 
+    if(text === lastMsg) return;
     lastMsg = text;
 
     push(ref(db,"chat/"+roomId), {user:name, msg:text});
-    inputBox.value = ""; // clear input
+    inputBox.value = ""; 
 }
 
 // MEDIA
@@ -202,23 +199,33 @@ onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{if(pc){try{await p
 }
 
 // ACCEPT
-window.acceptCall=async()=>{
-ringtone.pause(); document.getElementById("incoming").style.display="none"; document.getElementById("status").innerText="✅ Connected";
+window.acceptCall = async () => {
+ringtone.pause();
+document.getElementById("incoming").style.display="none";
+document.getElementById("status").innerText="✅ Connected";
 
-localStream=await getStream(); document.getElementById("local").srcObject=localStream;
+localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing }, audio: true });
+document.getElementById("local").srcObject = localStream;
 
-createPeer(); localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+createPeer();
+localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-onValue(ref(db,"webrtc/"+roomId+"/offer"),async s=>{
-if(s.exists()){
-let offer=new RTCSessionDescription(JSON.parse(s.val()));
+const offerSnap = await get(ref(db, "webrtc/"+roomId+"/offer"));
+if(!offerSnap.exists()) return;
+
+let offer = new RTCSessionDescription(JSON.parse(offerSnap.val()));
 await pc.setRemoteDescription(offer);
 
-let ans=await pc.createAnswer();
-await pc.setLocalDescription(ans);
-set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(ans));
+let answer = await pc.createAnswer();
+await pc.setLocalDescription(answer);
+set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(answer));
+
 document.getElementById("callWindow").style.display="block";
-}
+
+onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"), async (snap) => {
+    if (pc) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(snap.val()))); } catch(e){}
+    }
 });
 }
 
@@ -236,7 +243,7 @@ window.switchCamera=async()=>{currentFacing=currentFacing==='user'?'environment'
 
 // FLASH
 window.toggleFlash=()=>{if(!('ImageCapture' in window)) return alert("Flash not supported"); let track=localStream.getVideoTracks()[0]; let imageCapture=new ImageCapture(track); flashOn=!flashOn; track.applyConstraints({advanced:[{torch:flashOn}]});}
-</script>
 
+</script>
 </body>
 </html>
