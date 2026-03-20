@@ -1,45 +1,33 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Pro Secure Chat</title>
-
+<title>Secure Chat & Group Call</title>
 <style>
   :root { --app-height: 100%; }
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; }
   body { font-family: -apple-system, sans-serif; background:#efe7dd; display: flex; flex-direction: column; }
-
-  /* Login */
   #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
   .login-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; }
   .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
   .login-box button { width: 100%; padding: 12px; background: #128c7e; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
-
-  /* Chat Layout */
-  #chatDiv { display: none; flex-direction: column; height: 100vh; height: -webkit-fill-available; width: 100%; }
-  .header { height: 60px; background: #075e54; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 100; }
+  #chatDiv { display: none; flex-direction: column; height: 100vh; width: 100%; }
+  .header { height: 60px; background: #075e54; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 1000; }
   
-  .header-tools { display: flex; align-items: center; gap: 15px; }
-  #notifBtn { font-size: 20px; cursor: pointer; filter: grayscale(1); }
-  #notifBtn.active { filter: grayscale(0); }
-
+  /* Call Notification Bar */
+  #callBar { display: none; background: #25d366; color: white; padding: 10px 15px; font-size: 14px; font-weight: bold; justify-content: space-between; align-items: center; animation: blink 1s infinite; border-bottom: 2px solid #128c7e; }
+  @keyframes blink { 0% { background: #25d366; } 50% { background: #128c7e; } 100% { background: #25d366; } }
+  #callBar button { background: white; color: #075e54; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  
+  .header-tools { display: flex; align-items: center; gap: 12px; }
+  #callBtn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
   #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-  .msg { background: white; padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; }
-  .msg-u { font-size: 11px; font-weight: bold; color: #075e54; display: block; }
+  .msg { background: white; padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
   .my-msg { background: #dcf8c6; align-self: flex-end; border-top-left-radius: 12px; border-top-right-radius: 0; }
-  .system-msg { align-self: center; background: rgba(0,0,0,0.3); color: white; font-size: 11px; padding: 4px 12px; border-radius: 10px; margin: 5px 0; }
-
-  .footer { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
-  .btn-row { display: flex; gap: 5px; margin-bottom: 8px; }
-  .btn-row button { flex: 1; height: 38px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
-  
-  .btn-photo { background: #5c6bc0; }
-  #callBtn { background: #25d366; }
-  .btn-exit { background: #777; flex: 0.4 !important; }
-
+  .footer { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
   .input-row { display: flex; gap: 8px; height: 45px; }
-  .input-row input { flex: 1; padding: 0 15px; border-radius: 22px; border: 1px solid #ccc; font-size: 16px; outline: none; background: white; }
+  .input-row input { flex: 1; padding: 0 15px; border-radius: 22px; border: 1px solid #ccc; font-size: 16px; outline: none; }
   .input-row button { width: 45px; height: 45px; border-radius: 50%; background: #075e54; color: white; border: none; font-size: 20px; flex-shrink: 0; }
 </style>
 </head>
@@ -49,7 +37,7 @@
   <div class="login-box">
     <h2>Secure Chat</h2>
     <input type="text" id="user" placeholder="Naam...">
-    <input type="password" id="pass" placeholder="Password...">
+    <input type="password" id="pass" placeholder="Room Password...">
     <button onclick="enter()">Join Karo</button>
   </div>
 </div>
@@ -58,20 +46,24 @@
   <div class="header">
     <b id="roomTitle">Room</b>
     <div class="header-tools">
-      <span id="notifBtn" onclick="toggleNotif()">🔔</span>
+      <button id="callBtn" onclick="startCall()">📞 Call</button>
       <span id="userCount">Online: 0</span>
     </div>
   </div>
-  <div id="chatBox"></div>
-  <div class="footer">
-    <div class="btn-row">
-      <input type="file" id="fileInp" style="display:none;" accept="image/*" onchange="upPhoto(event)">
-      <button class="btn-photo" onclick="document.getElementById('fileInp').click()">📷 Photo</button>
-      <button id="callBtn" onclick="alert('Call feature active')">📞 Call</button>
-      <button class="btn-exit" onclick="exitChat()">Bahar</button>
+
+  <div id="callBar">
+    <span id="callStatusText">Incoming Call...</span>
+    <div>
+      <button onclick="joinCall()">JOIN</button>
+      <button style="background:#ff4b2b; color:white; margin-left:5px;" onclick="document.getElementById('callBar').style.display='none'">❌</button>
     </div>
+  </div>
+
+  <div id="chatBox"></div>
+
+  <div class="footer">
     <div class="input-row">
-      <input type="text" id="msgInput" placeholder="Message...">
+      <input type="text" id="msgInput" placeholder="Type a message...">
       <button onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -91,98 +83,78 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let myName, myRoom, notifEnabled = false;
+let myName, myRoom;
 
 function enter() {
   myName = document.getElementById('user').value.trim();
   myRoom = document.getElementById('pass').value.trim();
-  if(!myName || !myRoom) return alert("Fill Details!");
+  if(!myName || !myRoom) return alert("Fill details!");
 
   document.getElementById('loginDiv').style.display='none';
   document.getElementById('chatDiv').style.display='flex';
   document.getElementById('roomTitle').innerText = "Room: " + myRoom;
 
-  // 1. Heartbeat System: User ko active mark karein
   const userRef = db.ref(`rooms/${myRoom}/users/${myName}`);
-  const updateHeartbeat = () => userRef.set({ lastSeen: Date.now() });
-  updateHeartbeat();
-  setInterval(updateHeartbeat, 30000); // Har 30 sec mein update
-
+  userRef.set({ lastSeen: Date.now() });
   userRef.onDisconnect().remove();
 
-  // 2. Dead User Cleanup (Automatic 2 Minute baad)
-  if(myName === "Admin") { // Sirf ek user cleanup chalaye toh behtar hai
-    setInterval(() => {
-      db.ref(`rooms/${myRoom}/users`).once('value', s => {
-        const now = Date.now();
-        s.forEach(child => {
-          if(now - child.val().lastSeen > 120000) { // 2 Min check
-            child.ref.remove();
-            db.ref(`rooms/${myRoom}/msgs`).push({u:'System', val:`${child.key} timed out.`, t:'sys'});
-            clearUserMsgs(myRoom, child.key);
-          }
-        });
-      });
-    }, 60000);
-  }
-
-  listenMsgs();
   db.ref(`rooms/${myRoom}/users`).on('value', s => {
     document.getElementById('userCount').innerText = "Online: " + (s.numChildren() || 0);
   });
+
+  listenCalls();
+  listenMsgs();
 }
 
-// Notification Logic
-function toggleNotif() {
-  if (!("Notification" in window)) return alert("Browser notif support nahi karta");
-  Notification.requestPermission().then(perm => {
-    if(perm === "granted") {
-      notifEnabled = !notifEnabled;
-      document.getElementById('notifBtn').classList.toggle('active', notifEnabled);
+// 1. Call शुरू करने का Logic
+function startCall() {
+  db.ref(`rooms/${myRoom}/call`).set({
+    caller: myName,
+    active: true,
+    time: Date.now()
+  });
+  // Caller खुद भी तुरंत Join कर सकता है
+  joinCall();
+}
+
+// 2. बाकी सबको Call का Notification दिखाने का Logic
+function listenCalls() {
+  db.ref(`rooms/${myRoom}/call`).on('value', snap => {
+    const call = snap.val();
+    const bar = document.getElementById('callBar');
+    if(call && call.active && call.caller !== myName) {
+      document.getElementById('callStatusText').innerText = call.caller + " is calling...";
+      bar.style.display = 'flex';
+    } else {
+      bar.style.display = 'none';
     }
   });
+}
+
+// 3. असली बातचीत (Voice/Video) का Logic [Jitsi Meet]
+function joinCall() {
+  // यह आपको एक Private Voice Room में ले जाएगा
+  const callUrl = "https://meet.jit.si/" + myRoom + "_private_room_" + myRoom;
+  window.open(callUrl, '_blank');
+  document.getElementById('callBar').style.display = 'none';
 }
 
 function sendMsg() {
   const inp = document.getElementById('msgInput');
   if(!inp.value.trim()) return;
-  db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value, t:'text', ts: Date.now()});
+  db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value});
   inp.value = '';
 }
 
 function listenMsgs() {
-  const box = document.getElementById('chatBox');
   db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
     const d = snap.val();
-    
-    // Background Notif Logic
-    if(notifEnabled && document.hidden && d.u !== myName && d.t !== 'sys') {
-      new Notification(`New msg from ${d.u}`, { body: d.val });
-    }
-
     const div = document.createElement('div');
-    if(d.t === 'sys') {
-      div.className = 'system-msg';
-      div.innerText = d.val;
-    } else {
-      div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-      div.innerHTML = `<span class="msg-u">${d.u}</span>` + d.val;
-    }
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
+    div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
+    div.innerHTML = `<b style="font-size:10px; display:block;">${d.u}</b>` + d.val;
+    document.getElementById('chatBox').appendChild(div);
+    document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
   });
-}
-
-function clearUserMsgs(room, user) {
-  db.ref(`rooms/${room}/msgs`).once('value', s => {
-    s.forEach(child => { if(child.val().u === user) child.ref.remove(); });
-  });
-}
-
-function exitChat() {
-  db.ref(`rooms/${myRoom}/users/${myName}`).remove();
-  clearUserMsgs(myRoom, myName);
-  location.reload();
 }
 </script>
 </body>
