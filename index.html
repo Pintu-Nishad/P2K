@@ -1,198 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Master Chat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: -apple-system, sans-serif; background:#efe7dd; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
-        #chatBox { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
-        .msg { background: white; padding: 8px 12px; border-radius: 15px; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; word-wrap: break-word; }
-        .my-msg { background: #dcf8c6; align-self: flex-end; }
-        .chat-footer { background: #f0f0f0; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; z-index: 100; }
-        #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .header-call-active { background: #128c7e !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
-        .sent-img { max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: zoom-in; border: 1px solid #ddd; }
-    </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2K Chat + Call</title>
 
-<div id="loginDiv">
-  <div class="bg-white p-8 rounded-2xl w-[90%] max-w-sm text-center shadow-2xl">
-    <h2 class="text-2xl font-bold mb-4 text-[#075e54]">P2K Secure</h2>
-    <input type="text" id="user" placeholder="अपना नाम..." class="w-full p-3 mb-3 border rounded-lg outline-none">
-    <input type="password" id="pass" placeholder="रूम पासवर्ड..." class="w-full p-3 mb-4 border rounded-lg outline-none">
-    <button onclick="enter()" class="w-full bg-[#128c7e] text-white py-3 rounded-lg font-bold">Join Room</button>
-  </div>
-</div>
-
-<div id="chatDiv" class="hidden flex-col h-screen w-full">
-    <header id="mainHeader" class="h-[65px] bg-[#075e54] text-white flex justify-between items-center px-4 shrink-0 shadow-md transition-all">
-        <div>
-            <b id="roomTitle" class="block text-sm">Room</b>
-            <div class="flex items-center gap-2">
-                <span id="callStatusText" class="text-[10px] text-green-300">Online</span>
-                <span id="callTimer" class="hidden font-mono text-xs bg-black/20 px-2 py-0.5 rounded">00:00</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <button id="callBtn" onclick="startWebRTCCall()" class="bg-[#25d366] px-4 py-1.5 rounded-full text-xs font-bold">📞 Call</button>
-            <button id="joinBtn" onclick="answerCall()" class="hidden bg-blue-500 px-4 py-1.5 rounded-full text-xs font-bold animate-bounce">Join</button>
-            <button id="endBtn" onclick="endCall()" class="hidden bg-red-500 px-4 py-1.5 rounded-full text-xs font-bold">End</button>
-            <span id="userCount" class="text-[10px] bg-white/10 px-2 py-1 rounded">0</span>
-        </div>
-    </header>
-
-    <div id="chatBox"></div>
-
-    <div class="chat-footer">
-        <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="sendPhoto(this)">
-        <button onclick="document.getElementById('photoInput').click()" class="text-gray-500 hover:text-[#075e54] transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-        </button>
-        <input type="text" id="msgInput" placeholder="Type a message..." class="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-[#075e54]">
-        <button onclick="sendMsg()" class="bg-[#075e54] text-white p-2.5 rounded-full shadow-md active:scale-90 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-        </button>
-    </div>
-</div>
-
-<audio id="remoteAudio" autoplay></audio>
-
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
+<style>
+body { margin:0; font-family:sans-serif; }
+#chatBox { height:70vh; overflow:auto; padding:10px; }
+.msg { background:#eee; padding:6px 10px; margin:5px; border-radius:10px; }
+.my-msg { background:#dcf8c6; text-align:right; }
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginDiv" style="padding:20px;">
+<input id="user" placeholder="Name"><br><br>
+<input id="pass" placeholder="Room"><br><br>
+<button onclick="enter()">Join</button>
+</div>
+
+<!-- CHAT -->
+<div id="chatDiv" style="display:none;">
+<h3 id="roomTitle"></h3>
+
+<div id="chatBox"></div>
+
+<input id="msgInput" placeholder="message">
+<button onclick="sendMsg()">Send</button>
+
+<br><br>
+<button onclick="startCall()">📞 Call</button>
+</div>
+
+<!-- CALL UI -->
+<div id="callUI" style="display:none; position:fixed; inset:0; background:black; color:white; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+<h2 id="callStatus">Calling...</h2>
+
+<div id="incomingBox" style="display:none;">
+<p id="callerName"></p>
+<button onclick="acceptCall()">Accept</button>
+<button onclick="rejectCall()">Reject</button>
+</div>
+
+<button onclick="endCall()">End Call</button>
+</div>
+
 <script>
-// --- CONFIG (Replace with your own) ---
+
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
   authDomain: "p2kc-b0553.firebaseapp.com",
   databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
-  projectId: "p2kc-b0553",
-  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
+  projectId: "p2kc-b0553"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let myName, myRoom, pc, timerInterval, seconds = 0;
-const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
+let myName, myRoom;
+let localStream, peerConnection;
+let isCaller = false;
 
-function enter() {
-    myName = document.getElementById('user').value.trim();
-    myRoom = document.getElementById('pass').value.trim();
-    if(!myName || !myRoom) return alert("Fill details!");
-    document.getElementById('loginDiv').style.display='none';
-    document.getElementById('chatDiv').style.display='flex';
-    document.getElementById('roomTitle').innerText = "Room: " + myRoom;
-    db.ref(`rooms/${myRoom}/users/${myName}`).set({ lastSeen: Date.now() });
-    db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
-    db.ref(`rooms/${myRoom}/users`).on('value', s => { document.getElementById('userCount').innerText = s.numChildren() || 0; });
-    listenMsgs(); listenForCalls();
+// 🔑 ENTER
+function enter(){
+  myName = user.value;
+  myRoom = pass.value;
+
+  loginDiv.style.display="none";
+  chatDiv.style.display="block";
+  roomTitle.innerText="Room: "+myRoom;
+
+  listenMsgs();
+  listenCall();
 }
 
-// --- PHOTO LOGIC (HQ Base64) ---
-function sendPhoto(input) {
-    if (!input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            const highQualData = canvas.toDataURL('image/jpeg', 0.9); // 90% Quality to save DB space
-            db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, type: "img", data: highQualData });
-        };
-    };
-    reader.readAsDataURL(input.files[0]);
+// 💬 CHAT
+function sendMsg(){
+  db.ref("rooms/"+myRoom+"/msgs").push({
+    u: myName,
+    val: msgInput.value
+  });
+  msgInput.value="";
 }
 
-// --- CALL UI & LOGIC ---
-function updateCallUI(status) {
-    const h = document.getElementById('mainHeader'), t = document.getElementById('callTimer');
-    const cb = document.getElementById('callBtn'), jb = document.getElementById('joinBtn'), eb = document.getElementById('endBtn');
-    if(status==='active') {
-        h.classList.add('header-call-active'); t.classList.remove('hidden');
-        cb.classList.add('hidden'); jb.classList.add('hidden'); eb.classList.remove('hidden');
-        startTimer();
-    } else if(status==='incoming') {
-        h.classList.add('header-call-active'); cb.classList.add('hidden'); jb.classList.remove('hidden');
-    } else {
-        h.classList.remove('header-call-active'); t.classList.add('hidden');
-        cb.classList.remove('hidden'); jb.classList.add('hidden'); eb.classList.add('hidden');
-        stopTimer();
+function listenMsgs(){
+  db.ref("rooms/"+myRoom+"/msgs").on("child_added", s=>{
+    let d = s.val();
+    let div = document.createElement("div");
+    div.className="msg"+(d.u==myName?" my-msg":"");
+    div.innerText=d.u+": "+d.val;
+    chatBox.appendChild(div);
+  });
+}
+
+// 🎤 MEDIA
+async function getMedia(){
+  return await navigator.mediaDevices.getUserMedia({
+    audio:{
+      echoCancellation:true,
+      noiseSuppression:true,
+      autoGainControl:true
+    },
+    video:false
+  });
+}
+
+const servers = { iceServers:[{urls:"stun:stun.l.google.com:19302"}] };
+
+// 📞 CALL START
+async function startCall(){
+  isCaller=true;
+  callUI.style.display="flex";
+
+  localStream = await getMedia();
+  peerConnection = new RTCPeerConnection(servers);
+
+  localStream.getTracks().forEach(t=>{
+    peerConnection.addTrack(t,localStream);
+  });
+
+  peerConnection.ontrack = e=>{
+    let audio = new Audio();
+    audio.srcObject = e.streams[0];
+    audio.play();
+  };
+
+  peerConnection.onicecandidate = e=>{
+    if(e.candidate){
+      db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
     }
+  };
+
+  let offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+
+  db.ref("calls/"+myRoom).set({
+    offer:offer,
+    caller:myName
+  });
 }
 
-function startTimer() {
-    seconds = 0; clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        seconds++; let m = Math.floor(seconds/60), s = seconds%60;
-        document.getElementById('callTimer').innerText = (m<10?'0'+m:m)+":"+(s<10?'0'+s:s);
-    }, 1000);
-}
-function stopTimer() { clearInterval(timerInterval); }
+// 📲 LISTEN CALL
+function listenCall(){
+  db.ref("calls/"+myRoom).on("value", async snap=>{
+    let d = snap.val();
+    if(!d) return;
 
-async function startWebRTCCall() {
-    updateCallUI('active'); document.getElementById('callStatusText').innerText = "Calling...";
-    pc = new RTCPeerConnection(servers);
-    const s = await navigator.mediaDevices.getUserMedia({audio:true});
-    s.getTracks().forEach(t => pc.addTrack(t, s));
-    pc.onicecandidate = e => e.candidate && db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
-    const o = await pc.createOffer(); await pc.setLocalDescription(o);
-    db.ref(`rooms/${myRoom}/call`).set({ offer: o, caller: myName, active: true });
-}
+    if(d.offer && !isCaller){
+      callUI.style.display="flex";
+      incomingBox.style.display="block";
+      callerName.innerText=d.caller+" calling...";
+    }
 
-function listenForCalls() {
-    db.ref(`rooms/${myRoom}/call`).on('value', snap => {
-        const d = snap.val();
-        if(d && d.active) {
-            if(d.caller !== myName) {
-                document.getElementById('callStatusText').innerText = d.caller + " is calling...";
-                updateCallUI('incoming');
-            }
-        } else { updateCallUI('idle'); document.getElementById('callStatusText').innerText = "Online"; }
-    });
+    if(d.answer && isCaller){
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
+      callStatus.innerText="Connected";
+    }
+  });
+
+  db.ref("calls/"+myRoom+"/candidates").on("child_added", snap=>{
+    let c = new RTCIceCandidate(snap.val());
+    peerConnection?.addIceCandidate(c);
+  });
 }
 
-async function answerCall() {
-    updateCallUI('active'); document.getElementById('callStatusText').innerText = "Connected";
-    pc = new RTCPeerConnection(servers);
-    const s = await navigator.mediaDevices.getUserMedia({audio:true});
-    s.getTracks().forEach(t => pc.addTrack(t, s));
-    pc.ontrack = e => document.getElementById('remoteAudio').srcObject = e.streams[0];
-    const call = (await db.ref(`rooms/${myRoom}/call`).once('value')).val();
-    await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
-    const a = await pc.createAnswer(); await pc.setLocalDescription(a);
-    db.ref(`rooms/${myRoom}/call/answer`).set(a);
-    db.ref(`rooms/${myRoom}/call/candidates`).on('child_added', s => pc.addIceCandidate(new RTCIceCandidate(s.val())));
+// ✅ ACCEPT
+async function acceptCall(){
+  isCaller=false;
+  incomingBox.style.display="none";
+
+  localStream = await getMedia();
+  peerConnection = new RTCPeerConnection(servers);
+
+  localStream.getTracks().forEach(t=>{
+    peerConnection.addTrack(t,localStream);
+  });
+
+  peerConnection.ontrack = e=>{
+    let audio = new Audio();
+    audio.srcObject = e.streams[0];
+    audio.play();
+  };
+
+  peerConnection.onicecandidate = e=>{
+    if(e.candidate){
+      db.ref("calls/"+myRoom+"/candidates").push(e.candidate.toJSON());
+    }
+  };
+
+  let data = (await db.ref("calls/"+myRoom).get()).val();
+
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+  let answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  db.ref("calls/"+myRoom).update({answer:answer});
+
+  callStatus.innerText="Connected";
 }
 
-function endCall() { db.ref(`rooms/${myRoom}/call`).remove(); if(pc) pc.close(); updateCallUI('idle'); }
-
-// --- CHAT LOGIC ---
-function sendMsg() {
-    const inp = document.getElementById('msgInput'); if(!inp.value.trim()) return;
-    db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value, type:"txt"});
-    inp.value = '';
+// ❌ REJECT
+function rejectCall(){
+  db.ref("calls/"+myRoom).remove();
+  callUI.style.display="none";
 }
 
-function listenMsgs() {
-    db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
-        const d = snap.val(); const div = document.createElement('div');
-        div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-        let html = `<b class="text-[9px] block opacity-40 uppercase">${d.u}</b>`;
-        if(d.type === "img") { html += `<img src="${d.data}" class="sent-img" onclick="window.open('${d.data}')">`; }
-        else { html += `<span>${d.val}</span>`; }
-        div.innerHTML = html;
-        document.getElementById('chatBox').appendChild(div);
-        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-    });
+// 🔴 END
+function endCall(){
+  peerConnection?.close();
+  db.ref("calls/"+myRoom).remove();
+  callUI.style.display="none";
 }
+
 </script>
+
 </body>
 </html>
