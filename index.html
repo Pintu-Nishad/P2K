@@ -4,14 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secret Chat</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#e2e8f0;}
+h2{text-align:center;padding:10px;background:#111827;border-radius:6px;}
+input,button{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:none;font-size:16px;}
+button{background:#2563eb;color:white;font-weight:bold;cursor:pointer;}
+ul{list-style:none;padding:0;margin-top:10px;}
+li{background:#111827;margin:6px 0;padding:8px;border-radius:6px;}
+.hidden{display:none;}
+#usersList{font-weight:bold;}
+</style>
 </head>
 <body>
 
 <h2>🔐 Secret Chat</h2>
 
 <div id="loginBox">
-    <input id="name" placeholder="Enter Name (any)">
+    <input id="name" placeholder="Enter Name">
     <input id="pass" placeholder="Enter Password (letters only)">
     <button id="enterBtn">Enter Room</button>
 </div>
@@ -20,14 +29,89 @@
     <p>Room: <span id="roomDisplay"></span></p>
     <p>Active Users: <span id="usersList"></span></p>
     <button id="exitBtn">Exit Room</button>
-
     <input id="msgInput" placeholder="Type message">
     <button id="sendBtn">Send</button>
     <ul id="chatList"></ul>
 </div>
 
-<script type="module" src="auth.js"></script>
-<script type="module" src="chat.js"></script>
+<script type="module">
+// Firebase setup
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, set, push, onChildAdded, onChildRemoved, onValue, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
+  authDomain: "p2kc-b0553.firebaseapp.com",
+  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
+  projectId: "p2kc-b0553",
+  storageBucket: "p2kc-b0553.appspot.com",
+  messagingSenderId: "939347031406",
+  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Elements
+const loginBox = document.getElementById("loginBox");
+const chatBox = document.getElementById("chatBox");
+const enterBtn = document.getElementById("enterBtn");
+const roomDisplay = document.getElementById("roomDisplay");
+const sendBtn = document.getElementById("sendBtn");
+const msgInput = document.getElementById("msgInput");
+const chatList = document.getElementById("chatList");
+const usersList = document.getElementById("usersList");
+const exitBtn = document.getElementById("exitBtn");
+
+let name, pass, sessionId;
+let roomRef, chatRef;
+
+// Enter room
+enterBtn.onclick = ()=>{
+    name = document.getElementById("name").value.trim();
+    pass = document.getElementById("pass").value.trim();
+    if(!name){alert("Enter name"); return;}
+    if(!pass.match(/^[A-Za-z]+$/)){alert("Password letters only"); return;}
+
+    sessionId = Date.now().toString(36);
+    roomRef = ref(db,"rooms/"+pass);
+    chatRef = ref(db,"rooms/"+pass+"/chat");
+
+    // Add user to DB
+    set(ref(db,"rooms/"+pass+"/users/"+sessionId),{name:name,time:Date.now()});
+
+    loginBox.classList.add("hidden");
+    chatBox.classList.remove("hidden");
+    roomDisplay.innerText = pass;
+
+    // Active users
+    onValue(ref(db,"rooms/"+pass+"/users"), snap=>{
+        const users = snap.val();
+        usersList.innerText = users ? Object.values(users).map(u=>u.name).join(", ") : "";
+    });
+
+    // Display chat
+    onChildAdded(chatRef, d=>{
+        const li = document.createElement("li");
+        li.innerText = d.val().user+": "+d.val().msg;
+        chatList.insertBefore(li, chatList.firstChild);
+    });
+};
+
+// Send message
+sendBtn.onclick = ()=>{
+    const msg = msgInput.value.trim();
+    if(!msg) return;
+    push(chatRef,{user:name,msg:msg,time:Date.now()});
+    msgInput.value="";
+};
+
+// Exit room
+exitBtn.onclick = ()=>{
+    remove(ref(db,"rooms/"+pass+"/users/"+sessionId));
+    setTimeout(()=>remove(ref(db,"rooms/"+pass+"/chat")),60000);
+    location.reload();
+};
+</script>
 
 </body>
 </html>
