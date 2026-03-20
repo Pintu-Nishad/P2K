@@ -1,17 +1,11 @@
-import { db } from './auth.js';
-import { ref, push, onChildAdded, onChildRemoved, remove, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+const roomPass = window.roomPass;
+const sessionId = window.sessionId;
+const name = window.userName;
 
-const sendBtn = document.getElementById("sendBtn");
-const msgInput = document.getElementById("msgInput");
-const chatList = document.getElementById("chatList");
-const usersList = document.getElementById("usersList");
-const exitBtn = document.getElementById("exitBtn");
+const roomRef = ref(db,"rooms/"+roomPass);
+const chatRef = ref(db,"rooms/"+roomPass+"/chat");
 
-// Get room and sessionId from auth.js
-import { name, pass, sessionId } from './auth.js';
-const roomRef = ref(db,"rooms/"+pass);
-const chatRef = ref(db,"rooms/"+pass+"/chat");
-
+// Send message
 sendBtn.onclick = ()=>{
     const msg = msgInput.value.trim();
     if(!msg) return;
@@ -20,24 +14,23 @@ sendBtn.onclick = ()=>{
 };
 
 // Display chat
-onChildAdded(chatRef, (d)=>{
+onChildAdded(chatRef,(d)=>{
     const li = document.createElement("li");
     li.innerText = d.val().user+": "+d.val().msg;
     chatList.insertBefore(li, chatList.firstChild);
 });
 
-// Active users list
-onValue(ref(db,"rooms/"+pass+"/users"), snap=>{
+// Active users
+onValue(ref(db,"rooms/"+roomPass+"/users"), snap=>{
     const users = snap.val();
     if(users){
         usersList.innerText = Object.values(users).map(u=>u.name).join(", ");
     } else usersList.innerText="";
 });
 
-// Exit button
+// Exit
 exitBtn.onclick = ()=>{
-    remove(ref(db,"rooms/"+pass+"/users/"+sessionId));
-    // Delete chat after 1 min
-    setTimeout(()=>remove(ref(db,"rooms/"+pass+"/chat")),60000);
+    remove(ref(db,"rooms/"+roomPass+"/users/"+sessionId));
+    setTimeout(()=>remove(ref(db,"rooms/"+roomPass+"/chat")),60000);
     location.reload();
 };
