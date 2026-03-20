@@ -4,16 +4,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secret Chat Audio</title>
 <style>
-body{margin:0; font-family:system-ui; background:#0a0f1b; color:#f1f5f9;}
-h2{background:#111827; padding:15px; margin:0; text-align:center;}
-#menu, #chatBox, #incoming, #callWindow{
+body{margin:0;font-family:system-ui;background:#0a0f1b;color:#f1f5f9;}
+h2{background:#111827;padding:15px;margin:0;text-align:center;}
+#menu,#chatBox,#incoming,#callWindow{
     padding:15px; max-width:500px; margin:20px auto; border-radius:12px;
     background:rgba(17,24,39,0.95); box-shadow:0 4px 15px rgba(0,0,0,0.5);
 }
-input,button,select{width:100%; padding:12px; margin:6px 0; border-radius:10px; border:none; background:#1f2937; color:white;}
+input,button{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none;background:#1f2937;color:white;}
 button{background:#2563eb; cursor:pointer;}
-ul{list-style:none; padding:0; max-height:200px; overflow-y:auto;}
-li{background:#111827; padding:10px; border-radius:10px; margin:6px 0;}
+ul{list-style:none;padding:0; max-height:200px; overflow-y:auto;}
+li{background:#111827;padding:10px;border-radius:10px;margin:6px 0;}
 .eye{cursor:pointer;margin-left:5px;}
 #users{margin-bottom:10px;}
 audio{width:100%; border-radius:10px; background:black; margin:2px 0;}
@@ -24,7 +24,7 @@ audio{width:100%; border-radius:10px; background:black; margin:2px 0;}
 <h2 id="title">🔐 Secret Chat Audio</h2>
 
 <div id="menu">
-<input id="name" placeholder="Name (min 4 letters)">
+<input id="name" placeholder="Name (4-10 letters)" maxlength="10">
 <input id="room" type="password" placeholder="Room">
 <button onclick="joinRoom()">Enter</button>
 </div>
@@ -34,7 +34,7 @@ audio{width:100%; border-radius:10px; background:black; margin:2px 0;}
 <div id="users"></div>
 
 <p>Room: 
-<input id="roomDisplay" type="password" value="" readonly style="background:#111827; color:white; border:none; width:80%; border-radius:8px; padding:8px;">
+<input id="roomDisplay" type="password" value="" readonly style="background:#111827;color:white;border:none;width:80%;border-radius:8px;padding:8px;">
 <span class="eye" onclick="toggleRoomPass()">👁️</span>
 </p>
 
@@ -77,62 +77,67 @@ let ringtone=document.getElementById("ringtone");
 let lastMsg="";
 let roomVisible=false;
 
-function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
+// NAME VALIDATION 4-10 letters, spaces allowed
+function validName(n){
+    let letters = n.replace(/\s/g,'');
+    return letters.length>=4 && letters.length<=10;
+}
+
+// TOGGLE ROOM PASSWORD EYE
 function toggleRoomPass(){
-  let input=document.getElementById("roomDisplay");
-  roomVisible=!roomVisible;
-  input.type=roomVisible?"text":"password";
-  input.value=roomId;
+    let input=document.getElementById("roomDisplay");
+    roomVisible=!roomVisible;
+    input.type=roomVisible?"text":"password";
+    input.value=roomId;
 }
 
 // JOIN ROOM
 window.joinRoom=async()=>{
-name=document.getElementById("name").value.trim();
-roomId=document.getElementById("room").value.trim();
-if(!validName(name)) return alert("Name must be at least 4 letters");
-if(!roomId) return alert("Enter room");
+    name=document.getElementById("name").value.trim();
+    roomId=document.getElementById("room").value.trim();
+    if(!validName(name)) return alert("Name must be 4-10 letters (spaces allowed)");
+    if(!roomId) return alert("Enter room");
 
-set(ref(db,"users/"+roomId+"/"+name),true);
-document.getElementById("roomDisplay").value=roomId;
-document.getElementById("roomDisplay").type="password";
+    set(ref(db,"users/"+roomId+"/"+name),true);
+    document.getElementById("roomDisplay").value=roomId;
+    document.getElementById("roomDisplay").type="password";
 
-document.getElementById("menu").style.display="none";
-document.getElementById("chatBox").style.display="block";
-document.getElementById("title").innerText="🔐 Secret Chat - "+name;
+    document.getElementById("menu").style.display="none";
+    document.getElementById("chatBox").style.display="block";
+    document.getElementById("title").innerText="🔐 Secret Chat - "+name;
 
-// users list
-onValue(ref(db,"users/"+roomId),(s)=>{
-let data=s.val()||{}; let html="<b>Online:</b><br>";
-for(let u in data){html+="🟢 "+u+"<br>";}
-document.getElementById("users").innerHTML=html;
-});
+    // USERS LIST
+    onValue(ref(db,"users/"+roomId),(s)=>{
+        let data=s.val()||{}; let html="<b>Online:</b><br>";
+        for(let u in data){html+="🟢 "+u+"<br>";}
+        document.getElementById("users").innerHTML=html;
+    });
 
-// leave
-window.addEventListener("beforeunload",()=>{exitRoom();});
+    window.addEventListener("beforeunload",()=>{exitRoom();});
 
-// chat listener new top
-onChildAdded(ref(db,"chat/"+roomId),(d)=>{
-let li=document.createElement("li");
-li.innerText=d.val().user+": "+d.val().msg;
-document.getElementById("chat").insertBefore(li, document.getElementById("chat").firstChild);
-setTimeout(()=>{li.remove(); remove(ref(db,"chat/"+roomId+"/"+d.key)).catch(()=>{});},60000);
-});
+    // CHAT LISTENER (new on top)
+    onChildAdded(ref(db,"chat/"+roomId),(d)=>{
+        let li=document.createElement("li");
+        li.innerText=d.val().user+": "+d.val().msg;
+        document.getElementById("chat").insertBefore(li, document.getElementById("chat").firstChild);
+        setTimeout(()=>{ li.remove(); remove(ref(db,"chat/"+roomId+"/"+d.key)).catch(()=>{}); },60000);
+    });
 
-// call listener
-onValue(ref(db,"call/"+roomId),(snap)=>{
-if(snap.exists()){
-let data=snap.val();
-if(data.caller===name) return;
-document.getElementById("incoming").style.display="block";
-document.getElementById("callerName").innerText=data.caller+" calling...";
-ringtone.currentTime=0; ringtone.play().catch(()=>{});
-}else{ringtone.pause();ringtone.currentTime=0;}
-});
+    // CALL LISTENER
+    onValue(ref(db,"call/"+roomId),(snap)=>{
+        if(snap.exists()){
+            let data=snap.val();
+            if(data.caller===name) return;
+            document.getElementById("incoming").style.display="block";
+            document.getElementById("callerName").innerText=data.caller+" calling...";
+            ringtone.currentTime=0; ringtone.play().catch(()=>{});
+        }else{ringtone.pause(); ringtone.currentTime=0;}
+    });
 
-// ICE listener
-onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"), async snap=>{
-if(pc){try{await pc.addIceCandidate(JSON.parse(snap.val()));}catch(e){}}
-});
+    // ICE listener
+    onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"), async snap=>{
+        if(pc){try{await pc.addIceCandidate(JSON.parse(snap.val()));}catch(e){}}
+    });
 }
 
 // EXIT ROOM
@@ -140,11 +145,11 @@ function exitRoom(){ remove(ref(db,"users/"+roomId+"/"+name)); remove(ref(db,"ca
 
 // SEND MSG
 window.sendMsg=()=>{ 
-let input=document.getElementById("msg");
-let text=input.value.trim();
-if(!text) return; if(text===lastMsg) return; lastMsg=text;
-push(ref(db,"chat/"+roomId),{user:name,msg:text});
-input.value="";
+    let input=document.getElementById("msg");
+    let text=input.value.trim();
+    if(!text) return; if(text===lastMsg) return; lastMsg=text;
+    push(ref(db,"chat/"+roomId),{user:name,msg:text});
+    input.value="";
 }
 
 // GET AUDIO STREAM
@@ -152,62 +157,62 @@ async function getStream(){ return await navigator.mediaDevices.getUserMedia({au
 
 // PEER
 function createPeer(){
-pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
-pc.ontrack=e=>{document.getElementById("remoteAudio").srcObject=e.streams[0];};
-pc.onicecandidate=e=>{if(e.candidate) push(ref(db,"webrtc/"+roomId+"/candidates"),JSON.stringify(e.candidate));};
+    pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+    pc.ontrack=e=>{document.getElementById("remoteAudio").srcObject=e.streams[0];};
+    pc.onicecandidate=e=>{if(e.candidate) push(ref(db,"webrtc/"+roomId+"/candidates"),JSON.stringify(e.candidate));};
 }
 
 // CALL
 window.callUser=async()=>{
-let snap=await get(ref(db,"call/"+roomId));
-if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
+    let snap=await get(ref(db,"call/"+roomId));
+    if(snap.exists()) return alert("Bhosdi Ke Pagal Hai Kya 😅");
 
-set(ref(db,"call/"+roomId),{caller:name});
-document.getElementById("status").innerText="📡 Ringing...";
-let time=30;
-let timer=setInterval(()=>{
-time--; document.getElementById("status").innerText="📡 Ringing... ("+time+"s)";
-if(time<=0){clearInterval(timer);set(ref(db,"call/"+roomId),null);document.getElementById("status").innerText="❌ No Answer";}
-},1000);
+    set(ref(db,"call/"+roomId),{caller:name});
+    document.getElementById("status").innerText="📡 Ringing...";
+    let time=30;
+    let timer=setInterval(()=>{
+        time--; document.getElementById("status").innerText="📡 Ringing... ("+time+"s)";
+        if(time<=0){clearInterval(timer);set(ref(db,"call/"+roomId),null);document.getElementById("status").innerText="❌ No Answer";}
+    },1000);
 
-onValue(ref(db,"webrtc/"+roomId+"/answer"),()=>{clearInterval(timer);document.getElementById("status").innerText="✅ Connected";});
+    onValue(ref(db,"webrtc/"+roomId+"/answer"),()=>{clearInterval(timer);document.getElementById("status").innerText="✅ Connected";});
 
-localStream=await getStream();
-document.getElementById("localAudio").srcObject=localStream;
+    localStream=await getStream();
+    document.getElementById("localAudio").srcObject=localStream;
 
-createPeer();
-localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-let offer=await pc.createOffer(); await pc.setLocalDescription(offer);
-set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
+    createPeer();
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    let offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+    set(ref(db,"webrtc/"+roomId+"/offer"),JSON.stringify(offer));
 
-onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{if(pc){try{await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));}catch(e){}}});
+    onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{if(pc){try{await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val())));}catch(e){} }});
 }
 
 // ACCEPT
 window.acceptCall=async()=>{
-ringtone.pause();
-document.getElementById("incoming").style.display="none";
-document.getElementById("status").innerText="✅ Connected";
+    ringtone.pause();
+    document.getElementById("incoming").style.display="none";
+    document.getElementById("status").innerText="✅ Connected";
 
-localStream=await getStream(); document.getElementById("localAudio").srcObject=localStream;
+    localStream=await getStream(); document.getElementById("localAudio").srcObject=localStream;
 
-createPeer();
-localStream.getTracks().forEach(track=>pc.addTrack(track,localStream));
+    createPeer();
+    localStream.getTracks().forEach(track=>pc.addTrack(track,localStream));
 
-const offerSnap=await get(ref(db,"webrtc/"+roomId+"/offer"));
-if(!offerSnap.exists()) return;
-let offer=new RTCSessionDescription(JSON.parse(offerSnap.val()));
-await pc.setRemoteDescription(offer);
+    const offerSnap=await get(ref(db,"webrtc/"+roomId+"/offer"));
+    if(!offerSnap.exists()) return;
+    let offer=new RTCSessionDescription(JSON.parse(offerSnap.val()));
+    await pc.setRemoteDescription(offer);
 
-let answer=await pc.createAnswer();
-await pc.setLocalDescription(answer);
-set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(answer));
+    let answer=await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    set(ref(db,"webrtc/"+roomId+"/answer"),JSON.stringify(answer));
 
-document.getElementById("callWindow").style.display="block";
+    document.getElementById("callWindow").style.display="block";
 
-onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
-if(pc){try{await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val()))}catch(e){}}
-});
+    onChildAdded(ref(db,"webrtc/"+roomId+"/candidates"),async s=>{
+        if(pc){try{await pc.addIceCandidate(new RTCIceCandidate(JSON.parse(s.val()))}catch(e){}}
+    });
 }
 
 // REJECT
