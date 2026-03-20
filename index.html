@@ -82,7 +82,7 @@ const db=getDatabase(app);
 let name,roomId,pc,localStream,currentFacing='user',flashOn=false;
 let ringtone=document.getElementById("ringtone");
 
-function validName(n){return /^[A-Za-z]{4,}$/.test(n);}
+function validName(n){return /^[A-Za-z]{4,}$/.test(n);} // min 4 letters, max unlimited
 function toggleRoomPass(){
   let span=document.getElementById("maskedRoom");
   span.innerText = (span.innerText==="****")?roomId:"****";
@@ -90,10 +90,10 @@ function toggleRoomPass(){
 
 // JOIN
 window.joinRoom=async()=>{
-name=document.getElementById("name").value;
-roomId=document.getElementById("room").value;
+name=document.getElementById("name").value.trim();
+roomId=document.getElementById("room").value.trim();
 
-if(!validName(name)) return alert("4 letters name min");
+if(!validName(name)) return alert("Name must be at least 4 letters");
 if(!roomId) return alert("Enter room");
 
 let userRef=ref(db,"users/"+roomId+"/"+name);
