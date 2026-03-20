@@ -50,4 +50,149 @@
     <div class="chat-footer">
         <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="sendPhoto(this)">
         <button onclick="document.getElementById('photoInput').click()" class="text-gray-500 hover:text-[#075e54] transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        </button>
+        <input type="text" id="msgInput" placeholder="Type a message..." class="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-[#075e54]">
+        <button onclick="sendMsg()" class="bg-[#075e54] text-white p-2.5 rounded-full shadow-md active:scale-90 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+        </button>
+    </div>
+</div>
+
+<audio id="remoteAudio" autoplay></audio>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// --- CONFIG (Replace with your own) ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
+  authDomain: "p2kc-b0553.firebaseapp.com",
+  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
+  projectId: "p2kc-b0553",
+  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let myName, myRoom, pc, timerInterval, seconds = 0;
+const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }] };
+
+function enter() {
+    myName = document.getElementById('user').value.trim();
+    myRoom = document.getElementById('pass').value.trim();
+    if(!myName || !myRoom) return alert("Fill details!");
+    document.getElementById('loginDiv').style.display='none';
+    document.getElementById('chatDiv').style.display='flex';
+    document.getElementById('roomTitle').innerText = "Room: " + myRoom;
+    db.ref(`rooms/${myRoom}/users/${myName}`).set({ lastSeen: Date.now() });
+    db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
+    db.ref(`rooms/${myRoom}/users`).on('value', s => { document.getElementById('userCount').innerText = s.numChildren() || 0; });
+    listenMsgs(); listenForCalls();
+}
+
+// --- PHOTO LOGIC (HQ Base64) ---
+function sendPhoto(input) {
+    if (!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const highQualData = canvas.toDataURL('image/jpeg', 0.9); // 90% Quality to save DB space
+            db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, type: "img", data: highQualData });
+        };
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+// --- CALL UI & LOGIC ---
+function updateCallUI(status) {
+    const h = document.getElementById('mainHeader'), t = document.getElementById('callTimer');
+    const cb = document.getElementById('callBtn'), jb = document.getElementById('joinBtn'), eb = document.getElementById('endBtn');
+    if(status==='active') {
+        h.classList.add('header-call-active'); t.classList.remove('hidden');
+        cb.classList.add('hidden'); jb.classList.add('hidden'); eb.classList.remove('hidden');
+        startTimer();
+    } else if(status==='incoming') {
+        h.classList.add('header-call-active'); cb.classList.add('hidden'); jb.classList.remove('hidden');
+    } else {
+        h.classList.remove('header-call-active'); t.classList.add('hidden');
+        cb.classList.remove('hidden'); jb.classList.add('hidden'); eb.classList.add('hidden');
+        stopTimer();
+    }
+}
+
+function startTimer() {
+    seconds = 0; clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        seconds++; let m = Math.floor(seconds/60), s = seconds%60;
+        document.getElementById('callTimer').innerText = (m<10?'0'+m:m)+":"+(s<10?'0'+s:s);
+    }, 1000);
+}
+function stopTimer() { clearInterval(timerInterval); }
+
+async function startWebRTCCall() {
+    updateCallUI('active'); document.getElementById('callStatusText').innerText = "Calling...";
+    pc = new RTCPeerConnection(servers);
+    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t => pc.addTrack(t, s));
+    pc.onicecandidate = e => e.candidate && db.ref(`rooms/${myRoom}/call/candidates`).push(e.candidate.toJSON());
+    const o = await pc.createOffer(); await pc.setLocalDescription(o);
+    db.ref(`rooms/${myRoom}/call`).set({ offer: o, caller: myName, active: true });
+}
+
+function listenForCalls() {
+    db.ref(`rooms/${myRoom}/call`).on('value', snap => {
+        const d = snap.val();
+        if(d && d.active) {
+            if(d.caller !== myName) {
+                document.getElementById('callStatusText').innerText = d.caller + " is calling...";
+                updateCallUI('incoming');
+            }
+        } else { updateCallUI('idle'); document.getElementById('callStatusText').innerText = "Online"; }
+    });
+}
+
+async function answerCall() {
+    updateCallUI('active'); document.getElementById('callStatusText').innerText = "Connected";
+    pc = new RTCPeerConnection(servers);
+    const s = await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t => pc.addTrack(t, s));
+    pc.ontrack = e => document.getElementById('remoteAudio').srcObject = e.streams[0];
+    const call = (await db.ref(`rooms/${myRoom}/call`).once('value')).val();
+    await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
+    const a = await pc.createAnswer(); await pc.setLocalDescription(a);
+    db.ref(`rooms/${myRoom}/call/answer`).set(a);
+    db.ref(`rooms/${myRoom}/call/candidates`).on('child_added', s => pc.addIceCandidate(new RTCIceCandidate(s.val())));
+}
+
+function endCall() { db.ref(`rooms/${myRoom}/call`).remove(); if(pc) pc.close(); updateCallUI('idle'); }
+
+// --- CHAT LOGIC ---
+function sendMsg() {
+    const inp = document.getElementById('msgInput'); if(!inp.value.trim()) return;
+    db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value, type:"txt"});
+    inp.value = '';
+}
+
+function listenMsgs() {
+    db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
+        const d = snap.val(); const div = document.createElement('div');
+        div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
+        let html = `<b class="text-[9px] block opacity-40 uppercase">${d.u}</b>`;
+        if(d.type === "img") { html += `<img src="${d.data}" class="sent-img" onclick="window.open('${d.data}')">`; }
+        else { html += `<span>${d.val}</span>`; }
+        div.innerHTML = html;
+        document.getElementById('chatBox').appendChild(div);
+        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+    });
+}
+</script>
+</body>
+</html>
