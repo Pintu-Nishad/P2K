@@ -1,161 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Secure Chat & Group Call</title>
-<style>
-  :root { --app-height: 100%; }
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; }
-  body { font-family: -apple-system, sans-serif; background:#efe7dd; display: flex; flex-direction: column; }
-  #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-  .login-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; }
-  .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-  .login-box button { width: 100%; padding: 12px; background: #128c7e; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
-  #chatDiv { display: none; flex-direction: column; height: 100vh; width: 100%; }
-  .header { height: 60px; background: #075e54; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 1000; }
-  
-  /* Call Notification Bar */
-  #callBar { display: none; background: #25d366; color: white; padding: 10px 15px; font-size: 14px; font-weight: bold; justify-content: space-between; align-items: center; animation: blink 1s infinite; border-bottom: 2px solid #128c7e; }
-  @keyframes blink { 0% { background: #25d366; } 50% { background: #128c7e; } 100% { background: #25d366; } }
-  #callBar button { background: white; color: #075e54; border: none; padding: 6px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  
-  .header-tools { display: flex; align-items: center; gap: 12px; }
-  #callBtn { background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
-  #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-  .msg { background: white; padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-  .my-msg { background: #dcf8c6; align-self: flex-end; border-top-left-radius: 12px; border-top-right-radius: 0; }
-  .footer { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; }
-  .input-row { display: flex; gap: 8px; height: 45px; }
-  .input-row input { flex: 1; padding: 0 15px; border-radius: 22px; border: 1px solid #ccc; font-size: 16px; outline: none; }
-  .input-row button { width: 45px; height: 45px; border-radius: 50%; background: #075e54; color: white; border: none; font-size: 20px; flex-shrink: 0; }
-</style>
-</head>
-<body>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-<div id="loginDiv">
-  <div class="login-box">
-    <h2>Secure Chat</h2>
-    <input type="text" id="user" placeholder="Naam...">
-    <input type="password" id="pass" placeholder="Room Password...">
-    <button onclick="enter()">Join Karo</button>
-  </div>
-</div>
+<body class="bg-gray-50 text-gray-900">
 
-<div id="chatDiv">
-  <div class="header">
-    <b id="roomTitle">Room</b>
-    <div class="header-tools">
-      <button id="callBtn" onclick="startCall()">📞 Call</button>
-      <span id="userCount">Online: 0</span>
+    <div id="incomingCallBox" class="hidden bg-indigo-600 text-white p-4 flex justify-between items-center sticky top-0 z-[100]">
+        <p id="callMsg">Inbound Call...</p>
+        <div class="flex gap-2">
+            <button onclick="acceptCall()" class="bg-green-500 px-4 py-1 rounded shadow-md">Accept</button>
+            <button onclick="rejectCall()" class="bg-red-500 px-4 py-1 rounded shadow-md">Reject</button>
+        </div>
     </div>
-  </div>
 
-  <div id="callBar">
-    <span id="callStatusText">Incoming Call...</span>
-    <div>
-      <button onclick="joinCall()">JOIN</button>
-      <button style="background:#ff4b2b; color:white; margin-left:5px;" onclick="document.getElementById('callBar').style.display='none'">❌</button>
-    </div>
-  </div>
+    <nav class="p-6 bg-white shadow-sm flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-600">MyDevCall</h1>
+        <div id="myIdDisplay" class="text-xs bg-gray-100 p-2 rounded text-gray-500">Connecting...</div>
+    </nav>
 
-  <div id="chatBox"></div>
+    <header class="max-w-6xl mx-auto px-6 py-20 text-center">
+        <h2 class="text-5xl font-extrabold mb-4">Live Audio Calling</h2>
+        <input type="text" id="remotePeerId" placeholder="User ki ID daalein" class="border p-3 rounded-lg w-64 mb-4 shadow-sm">
+        <br>
+        <button onclick="startCall()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center mx-auto">
+            <span class="mr-2">📞</span> Call Now
+        </button>
+        <audio id="remoteAudio" autoplay></audio>
+    </header>
 
-  <div class="footer">
-    <div class="input-row">
-      <input type="text" id="msgInput" placeholder="Type a message...">
-      <button onclick="sendMsg()">➤</button>
-    </div>
-  </div>
-</div>
+    <script>
+        // 1. Peer connection setup
+        const peer = new Peer(); 
+        let currentCall;
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+        // Apni ID show karna
+        peer.on('open', (id) => {
+            document.getElementById('myIdDisplay').innerText = "Aapki ID: " + id;
+            console.log('My peer ID is: ' + id);
+        });
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
-  authDomain: "p2kc-b0553.firebaseapp.com",
-  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
-  projectId: "p2kc-b0553",
-  storageBucket: "p2kc-b0553.firebasestorage.app",
-  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-let myName, myRoom;
+        // 2. CALL RECEIVE KARNA (Call Accept Logic)
+        peer.on('call', (call) => {
+            document.getElementById('incomingCallBox').classList.remove('hidden');
+            document.getElementById('callMsg').innerText = "Incoming Call from: " + call.peer;
+            
+            // Accept Button par click hone ka wait
+            window.acceptCall = () => {
+                navigator.mediaDevices.getUserMedia({audio: true}).then((stream) => {
+                    call.answer(stream); // Call utha li
+                    call.on('stream', (remoteStream) => {
+                        document.getElementById('remoteAudio').srcObject = remoteStream;
+                    });
+                    document.getElementById('incomingCallBox').classList.add('hidden');
+                });
+            };
+        });
 
-function enter() {
-  myName = document.getElementById('user').value.trim();
-  myRoom = document.getElementById('pass').value.trim();
-  if(!myName || !myRoom) return alert("Fill details!");
+        // 3. CALL DIAL KARNA (Start Call Logic)
+        function startCall() {
+            const destId = document.getElementById('remotePeerId').value;
+            if(!destId) return alert("Kripya User ID daalein!");
 
-  document.getElementById('loginDiv').style.display='none';
-  document.getElementById('chatDiv').style.display='flex';
-  document.getElementById('roomTitle').innerText = "Room: " + myRoom;
+            navigator.mediaDevices.getUserMedia({audio: true}).then((stream) => {
+                const call = peer.call(destId, stream);
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remoteAudio').srcObject = remoteStream;
+                    alert("Calling Connected!");
+                });
+            }).catch(err => {
+                console.error("Mic access denied", err);
+                alert("Mic access chahiye call ke liye!");
+            });
+        }
 
-  const userRef = db.ref(`rooms/${myRoom}/users/${myName}`);
-  userRef.set({ lastSeen: Date.now() });
-  userRef.onDisconnect().remove();
-
-  db.ref(`rooms/${myRoom}/users`).on('value', s => {
-    document.getElementById('userCount').innerText = "Online: " + (s.numChildren() || 0);
-  });
-
-  listenCalls();
-  listenMsgs();
-}
-
-// 1. Call शुरू करने का Logic
-function startCall() {
-  db.ref(`rooms/${myRoom}/call`).set({
-    caller: myName,
-    active: true,
-    time: Date.now()
-  });
-  // Caller खुद भी तुरंत Join कर सकता है
-  joinCall();
-}
-
-// 2. बाकी सबको Call का Notification दिखाने का Logic
-function listenCalls() {
-  db.ref(`rooms/${myRoom}/call`).on('value', snap => {
-    const call = snap.val();
-    const bar = document.getElementById('callBar');
-    if(call && call.active && call.caller !== myName) {
-      document.getElementById('callStatusText').innerText = call.caller + " is calling...";
-      bar.style.display = 'flex';
-    } else {
-      bar.style.display = 'none';
-    }
-  });
-}
-
-// 3. असली बातचीत (Voice/Video) का Logic [Jitsi Meet]
-function joinCall() {
-  // यह आपको एक Private Voice Room में ले जाएगा
-  const callUrl = "https://meet.jit.si/" + myRoom + "_private_room_" + myRoom;
-  window.open(callUrl, '_blank');
-  document.getElementById('callBar').style.display = 'none';
-}
-
-function sendMsg() {
-  const inp = document.getElementById('msgInput');
-  if(!inp.value.trim()) return;
-  db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value});
-  inp.value = '';
-}
-
-function listenMsgs() {
-  db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
-    const d = snap.val();
-    const div = document.createElement('div');
-    div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-    div.innerHTML = `<b style="font-size:10px; display:block;">${d.u}</b>` + d.val;
-    document.getElementById('chatBox').appendChild(div);
-    document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-  });
-}
-</script>
+        function rejectCall() {
+            document.getElementById('incomingCallBox').classList.add('hidden');
+        }
+    </script>
 </body>
-</html>
