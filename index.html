@@ -3,41 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Secure Hinglish Chat</title>
+<title>Pro Secure Chat</title>
 
 <style>
   :root { --app-height: 100%; }
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:#efe7dd; display: flex; flex-direction: column; }
+  body { font-family: -apple-system, sans-serif; background:#efe7dd; display: flex; flex-direction: column; }
 
-  /* Login Style */
+  /* Login */
   #loginDiv { position: fixed; inset: 0; background: #075e54; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-  .login-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-  .login-box h2 { color: #075e54; margin-top: 0; }
+  .login-box { background: white; padding: 25px; border-radius: 15px; width: 85%; max-width: 320px; text-align: center; }
   .login-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-  .login-box button { width: 100%; padding: 12px; background: #128c7e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+  .login-box button { width: 100%; padding: 12px; background: #128c7e; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
 
-  /* Main Chat Layout */
+  /* Chat Layout */
   #chatDiv { display: none; flex-direction: column; height: 100vh; height: -webkit-fill-available; width: 100%; }
   .header { height: 60px; background: #075e54; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 100; }
-  #userCount { font-size: 13px; opacity: 0.9; }
+  
+  .header-tools { display: flex; align-items: center; gap: 15px; }
+  #notifBtn { font-size: 20px; cursor: pointer; filter: grayscale(1); }
+  #notifBtn.active { filter: grayscale(0); }
 
-  /* Chat Box */
-  #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-attachment: fixed; }
+  #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
   .msg { background: white; padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; max-width: 80%; align-self: flex-start; box-shadow: 0 1px 1px rgba(0,0,0,0.1); word-wrap: break-word; }
-  .msg-u { font-size: 11px; font-weight: bold; color: #075e54; display: block; margin-bottom: 2px; }
+  .msg-u { font-size: 11px; font-weight: bold; color: #075e54; display: block; }
   .my-msg { background: #dcf8c6; align-self: flex-end; border-top-left-radius: 12px; border-top-right-radius: 0; }
-  .system-msg { align-self: center; background: rgba(0,0,0,0.3); color: white; font-size: 11px; padding: 4px 12px; border-radius: 10px; margin: 5px 0; text-align: center; }
-  .msg-img { max-width: 100%; border-radius: 8px; display: block; margin-top: 5px; }
+  .system-msg { align-self: center; background: rgba(0,0,0,0.3); color: white; font-size: 11px; padding: 4px 12px; border-radius: 10px; margin: 5px 0; }
 
-  /* Footer & Buttons */
   .footer { background: #f0f0f0; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
   .btn-row { display: flex; gap: 5px; margin-bottom: 8px; }
-  .btn-row button { flex: 1; height: 40px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 13px; cursor: pointer; }
+  .btn-row button { flex: 1; height: 38px; border-radius: 8px; border: none; color: white; font-weight: bold; font-size: 12px; cursor: pointer; }
   
   .btn-photo { background: #5c6bc0; }
   #callBtn { background: #25d366; }
-  #callBtn.active { background: #e53935; }
   .btn-exit { background: #777; flex: 0.4 !important; }
 
   .input-row { display: flex; gap: 8px; height: 45px; }
@@ -50,7 +48,7 @@
 <div id="loginDiv">
   <div class="login-box">
     <h2>Secure Chat</h2>
-    <input type="text" id="user" placeholder="Apna Naam...">
+    <input type="text" id="user" placeholder="Naam...">
     <input type="password" id="pass" placeholder="Password...">
     <button onclick="enter()">Join Karo</button>
   </div>
@@ -59,18 +57,21 @@
 <div id="chatDiv">
   <div class="header">
     <b id="roomTitle">Room</b>
-    <span id="userCount">Online: 0</span>
+    <div class="header-tools">
+      <span id="notifBtn" onclick="toggleNotif()">🔔</span>
+      <span id="userCount">Online: 0</span>
+    </div>
   </div>
   <div id="chatBox"></div>
   <div class="footer">
     <div class="btn-row">
       <input type="file" id="fileInp" style="display:none;" accept="image/*" onchange="upPhoto(event)">
       <button class="btn-photo" onclick="document.getElementById('fileInp').click()">📷 Photo</button>
-      <button id="callBtn" onclick="handleCallToggle()">📞 Call</button>
+      <button id="callBtn" onclick="alert('Call feature active')">📞 Call</button>
       <button class="btn-exit" onclick="exitChat()">Bahar</button>
     </div>
     <div class="input-row">
-      <input type="text" id="msgInput" placeholder="Kuch likho...">
+      <input type="text" id="msgInput" placeholder="Message...">
       <button onclick="sendMsg()">➤</button>
     </div>
   </div>
@@ -90,26 +91,40 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let myName, myRoom;
+let myName, myRoom, notifEnabled = false;
 
 function enter() {
   myName = document.getElementById('user').value.trim();
   myRoom = document.getElementById('pass').value.trim();
-  if(!myName || !myRoom) return alert("Fill details!");
+  if(!myName || !myRoom) return alert("Fill Details!");
 
   document.getElementById('loginDiv').style.display='none';
   document.getElementById('chatDiv').style.display='flex';
   document.getElementById('roomTitle').innerText = "Room: " + myRoom;
 
+  // 1. Heartbeat System: User ko active mark karein
   const userRef = db.ref(`rooms/${myRoom}/users/${myName}`);
-  userRef.set(true);
+  const updateHeartbeat = () => userRef.set({ lastSeen: Date.now() });
+  updateHeartbeat();
+  setInterval(updateHeartbeat, 30000); // Har 30 sec mein update
 
-  // Jab user disconnect ho (Browser/Tab close kare)
-  userRef.onDisconnect().remove().then(() => {
-    db.ref(`rooms/${myRoom}/msgs`).push({u:'System', val:`${myName} left. Messages will delete in 1m.`, t:'sys'});
-    // 1 Minute baad uske messages saaf karo
-    setTimeout(() => { clearUserMsgs(myRoom, myName); }, 60000);
-  });
+  userRef.onDisconnect().remove();
+
+  // 2. Dead User Cleanup (Automatic 2 Minute baad)
+  if(myName === "Admin") { // Sirf ek user cleanup chalaye toh behtar hai
+    setInterval(() => {
+      db.ref(`rooms/${myRoom}/users`).once('value', s => {
+        const now = Date.now();
+        s.forEach(child => {
+          if(now - child.val().lastSeen > 120000) { // 2 Min check
+            child.ref.remove();
+            db.ref(`rooms/${myRoom}/msgs`).push({u:'System', val:`${child.key} timed out.`, t:'sys'});
+            clearUserMsgs(myRoom, child.key);
+          }
+        });
+      });
+    }, 60000);
+  }
 
   listenMsgs();
   db.ref(`rooms/${myRoom}/users`).on('value', s => {
@@ -117,59 +132,58 @@ function enter() {
   });
 }
 
+// Notification Logic
+function toggleNotif() {
+  if (!("Notification" in window)) return alert("Browser notif support nahi karta");
+  Notification.requestPermission().then(perm => {
+    if(perm === "granted") {
+      notifEnabled = !notifEnabled;
+      document.getElementById('notifBtn').classList.toggle('active', notifEnabled);
+    }
+  });
+}
+
 function sendMsg() {
   const inp = document.getElementById('msgInput');
   if(!inp.value.trim()) return;
-  db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value, t:'text'});
+  db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:inp.value, t:'text', ts: Date.now()});
   inp.value = '';
-}
-
-function upPhoto(e) {
-  const r = new FileReader();
-  r.onload = () => db.ref(`rooms/${myRoom}/msgs`).push({u:myName, val:r.result, t:'img'});
-  r.readAsDataURL(e.target.files[0]);
 }
 
 function listenMsgs() {
   const box = document.getElementById('chatBox');
   db.ref(`rooms/${myRoom}/msgs`).on('child_added', snap => {
     const d = snap.val();
+    
+    // Background Notif Logic
+    if(notifEnabled && document.hidden && d.u !== myName && d.t !== 'sys') {
+      new Notification(`New msg from ${d.u}`, { body: d.val });
+    }
+
     const div = document.createElement('div');
     if(d.t === 'sys') {
       div.className = 'system-msg';
       div.innerText = d.val;
     } else {
       div.className = 'msg' + (d.u === myName ? ' my-msg' : '');
-      div.innerHTML = `<span class="msg-u">${d.u}</span>` + (d.t === 'img' ? `<img src="${d.val}" class="msg-img">` : d.val);
+      div.innerHTML = `<span class="msg-u">${d.u}</span>` + d.val;
     }
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
   });
-  // Real-time UI refresh jab messages delete hon
-  db.ref(`rooms/${myRoom}/msgs`).on('child_removed', () => {
-    // UI ko clean rakhne ke liye messages refresh ho jayenge
-    box.lastElementChild?.remove(); 
-  });
 }
 
 function clearUserMsgs(room, user) {
-  const ref = db.ref(`rooms/${room}/msgs`);
-  ref.once('value', s => {
-    s.forEach(child => {
-      if(child.val().u === user) child.ref.remove();
-    });
+  db.ref(`rooms/${room}/msgs`).once('value', s => {
+    s.forEach(child => { if(child.val().u === user) child.ref.remove(); });
   });
 }
 
 function exitChat() {
-  db.ref(`rooms/${myRoom}/msgs`).push({u:'System', val:`${myName} left. Deleting msgs...`, t:'sys'});
   db.ref(`rooms/${myRoom}/users/${myName}`).remove();
-  // Exit par turant delete function trigger karein (1 min wait nahi)
   clearUserMsgs(myRoom, myName);
-  setTimeout(() => { location.reload(); }, 1000);
+  location.reload();
 }
-
-function handleCallToggle() { alert("Mic logic added, use your existing WebRTC code here."); }
 </script>
 </body>
 </html>
