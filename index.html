@@ -1,55 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secret Chat Audio</title>
+<title>Secret Chat</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>🔐 Secret Chat Audio</h2>
+<h2>🔐 Secret Chat</h2>
 
-<div id="menu">
-  <input id="name" placeholder="Name (4-15 letters)">
-  <input id="room" type="password" placeholder="Room">
-  <input id="phone" placeholder="+91 9876543210">
-  <div id="recaptcha-container"></div>
-  <button id="sendOtpBtn">Send OTP</button>
-  <input id="otp" placeholder="Enter OTP" class="hidden">
-  <button id="verifyBtn" class="hidden">Verify OTP</button>
+<div id="loginBox">
+    <input id="name" placeholder="Enter Name (any)">
+    <input id="pass" placeholder="Enter Password (letters only)">
+    <button id="enterBtn">Enter Room</button>
 </div>
 
 <div id="chatBox" class="hidden">
-  <p>Room: <span id="roomDisplay"></span></p>
-  <button id="exitBtn">Exit Room</button>
+    <p>Room: <span id="roomDisplay"></span></p>
+    <p>Active Users: <span id="usersList"></span></p>
+    <button id="exitBtn">Exit Room</button>
 
-  <input id="msg" placeholder="Type message">
-  <button id="sendMsgBtn">Send</button>
-  <ul id="chat"></ul>
-
-  <button id="callBtn">📞 Audio Call</button>
+    <input id="msgInput" placeholder="Type message">
+    <button id="sendBtn">Send</button>
+    <ul id="chatList"></ul>
 </div>
-
-<div id="incoming" class="hidden">
-  <p id="callerName"></p>
-  <button id="acceptBtn">Accept</button>
-  <button id="rejectBtn">Reject</button>
-</div>
-
-<div id="callWindow" class="hidden">
-  <h3>📞 Audio Call</h3>
-  <audio id="localAudio" autoplay muted></audio>
-  <audio id="remoteAudio" autoplay></audio>
-  <button id="muteBtn">🔇 Mute</button>
-  <button id="endBtn">❌ End</button>
-</div>
-
-<audio id="ringtone" src="ring.mp3" loop></audio>
 
 <script type="module" src="auth.js"></script>
 <script type="module" src="chat.js"></script>
-<script type="module" src="call.js"></script>
 
 </body>
 </html>
