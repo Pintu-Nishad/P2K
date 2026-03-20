@@ -3,236 +3,209 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secret Chat + Audio & Photo</title>
+<title>101%Secure Chat Room</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0f172a;color:#e2e8f0;}
-h2{text-align:center;padding:10px;background:#111827;border-radius:6px;}
-input,button,select{width:100%;padding:10px;margin-top:8px;border-radius:6px;border:none;font-size:16px;}
-button{background:#2563eb;color:white;font-weight:bold;cursor:pointer;}
-ul{list-style:none;padding:0;margin-top:10px;max-height:300px;overflow:auto;}
-li{background:#111827;margin:6px 0;padding:8px;border-radius:6px;}
-.hidden{display:none;}
-#usersList{font-weight:bold;}
-#chatList img{max-width:150px;display:block;margin-top:5px;border-radius:6px;}
-#audioCallBox{border:1px solid #2563eb;padding:10px;border-radius:6px;margin-top:10px;}
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .login, .chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .login-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 90%;
+    max-width: 350px;
+  }
+  .login-box input {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    outline: none;
+  }
+  .login-box button {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #4a90e2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .header {
+    background: #4a90e2;
+    color: white;
+    padding: 15px;
+    font-size: 18px;
+    text-align: center;
+    font-weight: bold;
+  }
+  .chat-box {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #eef3f8;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+  }
+  .message {
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 15px;
+    background: #ffffff;
+    align-self: flex-start;
+    word-wrap: break-word;
+  }
+  .input-area {
+    display: flex;
+    gap: 5px;
+    padding: 10px;
+    background: #fff;
+  }
+  .input-area input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    outline: none;
+  }
+  .input-area button {
+    padding: 10px 15px;
+    border-radius: 25px;
+    border: none;
+    background: #4a90e2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .bottom-buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: #fff;
+  }
+  .bottom-buttons button {
+    flex: 1;
+    margin: 0 5px;
+    padding: 10px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .call-controls {
+    display: none;
+    gap: 10px;
+    margin-top: 5px;
+  }
+  .call-controls button {
+    background: orange;
+    color: white;
+  }
 </style>
 </head>
 <body>
 
-<h2>🔐 Secret Chat + Audio & Photo</h2>
-
-<div id="loginBox">
-    <input id="name" placeholder="Enter Name">
-    <input id="pass" placeholder="Enter Password (any characters)">
-    <button id="enterBtn">Enter Room</button>
-</div>
-
-<div id="chatBox" class="hidden">
-    <p>Room: <span id="roomDisplay"></span></p>
-    <p>Active Users (Session IDs): <span id="usersList"></span></p>
-    <button id="exitBtn">Exit Room</button>
-    <input id="msgInput" placeholder="Type message">
-    <input type="file" id="photoInput" accept="image/*">
-    <button id="sendBtn">Send</button>
-    <ul id="chatList"></ul>
-
-    <div id="audioCallBox">
-        <h3>Audio Call</h3>
-        <button id="callBtn">Call</button>
-        <button id="muteBtn">Mute</button>
-        <p id="callStatus">No active call</p>
-        <audio id="ringAudio" loop src="https://www.soundjay.com/phone/telephone-ring-01a.mp3"></audio>
+<div class="login" id="loginDiv">
+  <div class="login-box">
+    <input type="text" id="username" placeholder="Username 👤">
+    <div style="position: relative;">
+      <input type="password" id="password" placeholder="Password 🔒">
+      <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;" onclick="togglePassword()">👁️</span>
     </div>
+    <button onclick="login()">Login</button>
+  </div>
 </div>
 
-<div id="adminBox" class="hidden">
-    <h3>Admin Panel</h3>
-    <input id="adminPass" placeholder="Enter Admin Password">
-    <button id="adminLoginBtn">Login</button>
-    <ul id="adminUsers"></ul>
-    <ul id="adminChat"></ul>
+<div class="chat-container" id="chatDiv" style="display:none;">
+  <div class="header" id="roomName">101%Secure</div>
+
+  <div class="chat-box" id="chatBox"></div>
+
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Message... 😊">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <div class="bottom-buttons">
+    <button onclick="selectPhoto()">📷 Photo</button>
+    <button id="callButton" onclick="startCall()">📞 Call</button>
+    <button id="muteButton" class="call-controls" onclick="toggleMute()">🔇 Mute</button>
+    <button onclick="exitRoom()">❌ Exit Room</button>
+  </div>
 </div>
 
-<script type="module">
-// Firebase setup
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, set, push, onChildAdded, onChildRemoved, onValue, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+<script>
+  function togglePassword() {
+    const pw = document.getElementById('password');
+    if(pw.type === "password") pw.type = "text";
+    else pw.type = "password";
+  }
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM",
-  authDomain: "p2kc-b0553.firebaseapp.com",
-  databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com",
-  projectId: "p2kc-b0553",
-  storageBucket: "p2kc-b0553.appspot.com",
-  messagingSenderId: "939347031406",
-  appId: "1:939347031406:web:998f52b262a0cecf11bd7f"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-// Elements
-const loginBox = document.getElementById("loginBox");
-const chatBox = document.getElementById("chatBox");
-const enterBtn = document.getElementById("enterBtn");
-const roomDisplay = document.getElementById("roomDisplay");
-const sendBtn = document.getElementById("sendBtn");
-const msgInput = document.getElementById("msgInput");
-const chatList = document.getElementById("chatList");
-const usersList = document.getElementById("usersList");
-const exitBtn = document.getElementById("exitBtn");
-const photoInput = document.getElementById("photoInput");
-
-const audioCallBox = document.getElementById("audioCallBox");
-const callBtn = document.getElementById("callBtn");
-const muteBtn = document.getElementById("muteBtn");
-const callStatus = document.getElementById("callStatus");
-const ringAudio = document.getElementById("ringAudio");
-
-const adminBox = document.getElementById("adminBox");
-const adminPassInput = document.getElementById("adminPass");
-const adminLoginBtn = document.getElementById("adminLoginBtn");
-const adminUsers = document.getElementById("adminUsers");
-const adminChat = document.getElementById("adminChat");
-
-let name, pass, sessionId, roomRef, chatRef, usersRef;
-let isMuted=false, callActive=false;
-
-const ADMIN_NAME = "master";
-const ADMIN_PASSWORD = "admin123";
-
-// Enter Room
-enterBtn.onclick = ()=>{
-    name = document.getElementById("name").value.trim();
-    pass = document.getElementById("pass").value.trim();
-    if(!name){alert("Enter name"); return;}
-    if(!pass){alert("Enter password"); return;}
-
-    sessionId = Date.now().toString(36);
-    if(name===ADMIN_NAME && pass===ADMIN_PASSWORD){
-        loginBox.classList.add("hidden");
-        adminBox.classList.remove("hidden");
-        alert("Admin Access Granted");
-        return;
+  function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    if(username === '' || password === '') {
+      alert("Username aur Password daalo! ⚠️");
+      return;
     }
+    document.getElementById('loginDiv').style.display = 'none';
+    document.getElementById('chatDiv').style.display = 'flex';
+    document.getElementById('roomName').textContent = username + " - 101%Secure";
+  }
 
-    roomRef = ref(db,"rooms/"+pass);
-    chatRef = ref(db,"rooms/"+pass+"/chat");
-    usersRef = ref(db,"rooms/"+pass+"/users");
+  const chatBox = document.getElementById('chatBox');
+  const muteButton = document.getElementById('muteButton');
+  const callButton = document.getElementById('callButton');
 
-    // Add user
-    set(ref(db,"rooms/"+pass+"/users/"+sessionId),{name:name,time:Date.now()});
+  function sendMessage() {
+    const input = document.getElementById('messageInput');
+    if(input.value.trim() === '') return;
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message');
+    msgDiv.textContent = input.value;
+    chatBox.appendChild(msgDiv);
+    input.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-    loginBox.classList.add("hidden");
-    chatBox.classList.remove("hidden");
-    roomDisplay.innerText = pass;
+  function selectPhoto() {
+    alert("Photo select ka option clicked! 📸");
+  }
 
-    // Active users list
-    onValue(usersRef,snap=>{
-        const users = snap.val();
-        usersList.innerText = users ? Object.entries(users).map(([k,u])=>u.name+" ["+k+"]").join(", ") : "";
-    });
+  function startCall() {
+    alert("Call started... ☎️");
+    muteButton.style.display = 'inline-block';
+    callButton.disabled = true;
+  }
 
-    // Display chat
-    onChildAdded(chatRef,d=>{
-        const li = document.createElement("li");
-        li.innerText = d.val().user+": "+d.val().msg;
-        if(d.val().photo){
-            const img = document.createElement("img");
-            img.src = d.val().photo;
-            li.appendChild(img);
-        }
-        chatList.insertBefore(li, chatList.firstChild);
-    });
-};
+  function toggleMute() {
+    alert("Call muted/unmuted 🔇");
+  }
 
-// Send message or photo
-sendBtn.onclick = ()=>{
-    const msg = msgInput.value.trim();
-    if(!msg && !photoInput.files[0]) return;
-
-    if(photoInput.files[0]){
-        const reader = new FileReader();
-        reader.onload = function(e){
-            push(chatRef,{user:name,msg:msg,photo:e.target.result,time:Date.now()});
-        };
-        reader.readAsDataURL(photoInput.files[0]);
-    } else {
-        push(chatRef,{user:name,msg:msg,time:Date.now()});
+  function exitRoom() {
+    const confirmExit = confirm("Pakka Nikalna Chahte Ho? 🤔");
+    if(confirmExit) {
+      alert("Room se nikal gaye! 👋");
+      location.reload();
     }
-    msgInput.value="";
-    photoInput.value="";
-};
-
-// Exit Room
-exitBtn.onclick = ()=>{
-    remove(ref(db,"rooms/"+pass+"/users/"+sessionId));
-    setTimeout(()=>remove(ref(db,"rooms/"+pass+"/chat")),60000);
-    location.reload();
-};
-
-// Audio Call
-callBtn.onclick = ()=>{
-    if(callActive){
-        callStatus.innerText="Call ended";
-        callActive=false;
-        ringAudio.pause();
-    } else {
-        callStatus.innerText="Calling...";
-        callActive=true;
-        ringAudio.play();
-        setTimeout(()=>{
-            if(callActive){
-                callStatus.innerText="No answer";
-                callActive=false;
-                ringAudio.pause();
-            }
-        },30000);
-    }
-};
-muteBtn.onclick = ()=>{
-    isMuted=!isMuted;
-    muteBtn.innerText=isMuted?"Unmute":"Mute";
-};
-
-// Admin Panel
-adminLoginBtn.onclick = ()=>{
-    if(adminPassInput.value===ADMIN_PASSWORD){
-        adminBox.classList.remove("hidden");
-        // Show all users + chats
-        const allRoomsRef = ref(db,"rooms");
-        onValue(allRoomsRef,snap=>{
-            adminUsers.innerHTML="";
-            adminChat.innerHTML="";
-            const rooms = snap.val();
-            if(!rooms) return;
-            for(const [rkey, room] of Object.entries(rooms)){
-                if(room.users){
-                    for(const [uid,u] of Object.entries(room.users)){
-                        const li = document.createElement("li");
-                        li.innerText = "Room: "+rkey+" | "+u.name+" ["+uid+"]";
-                        const blockBtn = document.createElement("button");
-                        blockBtn.innerText="Block";
-                        blockBtn.onclick=()=>remove(ref(db,"rooms/"+rkey+"/users/"+uid));
-                        li.appendChild(blockBtn);
-                        adminUsers.appendChild(li);
-                    }
-                }
-                if(room.chat){
-                    for(const [cid,c] of Object.entries(room.chat)){
-                        const li = document.createElement("li");
-                        li.innerText = c.user+": "+c.msg;
-                        if(c.photo){
-                            const img = document.createElement("img");
-                            img.src=c.photo;
-                            li.appendChild(img);
-                        }
-                        adminChat.appendChild(li);
-                    }
-                }
-            }
-        });
-    } else alert("Wrong password");
-};
+  }
 </script>
 
 </body>
