@@ -3,15 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mosquito Killer - Nishad Crafts</title>
+    <title>Mosquito Killer Pro - Nishad Crafts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
         body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #020617; color: white; }
         .game-font { font-family: 'Bungee', cursive; }
-        .room-bg { background-size: cover; background-position: center; height: 100vh; width: 100vw; position: relative; transition: 1s; }
-        .mosquito { position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer; user-select: none; }
+        
+        .room-bg { 
+            background-size: cover; 
+            background-position: center; 
+            height: 100vh; width: 100vw; 
+            position: relative; 
+            transition: background-image 0.8s ease-in-out;
+        }
+
+        .mosquito { position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer; user-select: none; transition: transform 0.1s; }
+        
+        /* Mic Button Animation */
+        .mic-active { box-shadow: 0 0 15px #22c55e; border-color: #22c55e; }
+        .mic-muted { box-shadow: 0 0 15px #ef4444; border-color: #ef4444; }
     </style>
 </head>
 <body>
@@ -19,10 +31,10 @@
     <audio id="slap-sound" src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3"></audio>
 
     <div id="home-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950">
-        <h1 class="text-6xl text-red-600 game-font mb-12 text-center">MOSQUITO<br><span class="text-white text-4xl">KILLER</span></h1>
+        <h1 class="text-6xl text-red-600 game-font mb-12 text-center drop-shadow-2xl">MOSQUITO<br><span class="text-white text-4xl">KILLER</span></h1>
         <div class="flex flex-col gap-6 w-80">
             <button onclick="window.startMode('ai')" class="bg-blue-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1d4ed8] active:translate-y-1">🤖 कंप्यूटर</button>
-            <button id="match-btn" onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ऑनलाइन (Auto-Match)</button>
+            <button onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ऑनलाइन खेलें</button>
         </div>
         <p class="mt-8 text-slate-500 text-[10px] tracking-widest uppercase">Nishad Crafts Edition</p>
     </div>
@@ -34,17 +46,25 @@
     </div>
 
     <div id="game-room" class="hidden room-bg flex flex-col">
-        <div class="w-full p-4 flex justify-between items-center bg-black/80 border-b border-white/10">
-            <div class="text-center"><p class="text-[10px] text-blue-400 font-bold">YOU</p><div id="score1" class="text-4xl font-black">0</div></div>
+        <div class="w-full p-4 flex justify-between items-center bg-black/80 border-b border-white/10 backdrop-blur-md">
+            <div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase">You</p><div id="score1" class="text-4xl font-black">0</div></div>
             <div class="text-center"><div id="timer" class="text-5xl font-black text-yellow-500 game-font">00</div></div>
-            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold">OPPONENT</p><div id="score2" class="text-4xl font-black">0</div></div>
+            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold uppercase">Opponent</p><div id="score2" class="text-4xl font-black">0</div></div>
         </div>
+
         <div id="room-area" class="relative flex-grow overflow-hidden"></div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-2">
+            <button id="mic-btn" onclick="window.toggleMic()" class="mic-active bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all active:scale-90">
+                <span id="mic-icon" class="text-3xl">🎙️</span>
+            </button>
+            <span id="mic-text" class="text-[10px] font-bold uppercase tracking-widest text-green-500">Mic On</span>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, get, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAzvw8YGIdYQ3YxB9NCMqjXL-yIWfuQPxs",
@@ -53,114 +73,120 @@
             storageBucket: "ml-killer.firebasestorage.app",
             messagingSenderId: "481192438237",
             appId: "1:481192438237:web:20cd6e7022738bf3d62e34",
-            databaseURL: "https://ml-killer-default-rtdb.firebaseio.com" // ध्यान दें: यहाँ आपकी अपनी DB URL होनी चाहिए
+            databaseURL: "https://ml-killer-default-rtdb.firebaseio.com"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let peer, conn, myScore = 0, oppScore = 0, timeLeft = 0, gameActive = false, mode = '';
+        let peer, conn, localStream, myScore = 0, oppScore = 0, timeLeft = 0, gameActive = false, isMuted = false;
         const slap = document.getElementById('slap-sound');
 
-        // फंक्शन को ग्लोबल बनाना ताकि बटन से कॉल हो सके
-        window.startMode = function(m) {
-            mode = m;
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('status-screen').classList.remove('hidden');
+        // --- बैकग्राउंड चेंज लॉजिक (100+ Rooms) ---
+        function changeRoomBackground() {
+            const randomSeed = Math.floor(Math.random() * 500); // 500 अलग विकल्प
+            // Interior, Room, Luxury House की रैंडम इमेज
+            const url = `https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${randomSeed}&auto=format&fit=crop&w=1200&q=80`;
+            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('${url}')`;
+        }
 
-            if(mode === 'ai') {
-                runCountdown(30);
+        // --- माइक कंट्रोल लॉजिक ---
+        window.toggleMic = function() {
+            if (!localStream) return;
+            isMuted = !isMuted;
+            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+            
+            const btn = document.getElementById('mic-btn');
+            const icon = document.getElementById('mic-icon');
+            const txt = document.getElementById('mic-text');
+
+            if (isMuted) {
+                btn.className = "mic-muted bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all";
+                icon.innerText = "🔇";
+                txt.innerText = "Muted";
+                txt.className = "text-[10px] font-bold uppercase tracking-widest text-red-500";
             } else {
-                initMultiplayer();
+                btn.className = "mic-active bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all";
+                icon.innerText = "🎙️";
+                txt.innerText = "Mic On";
+                txt.className = "text-[10px] font-bold uppercase tracking-widest text-green-500";
             }
         };
 
-        function initMultiplayer() {
-            peer = new Peer();
-            peer.on('open', (myId) => {
-                const lobbyRef = ref(db, 'lobby');
-                
-                get(lobbyRef).then((snapshot) => {
-                    let found = false;
-                    if (snapshot.exists()) {
-                        snapshot.forEach((childSnap) => {
-                            if (childSnap.val().status === 'waiting' && childSnap.key !== myId) {
-                                found = true;
-                                connectToPlayer(childSnap.key);
-                                remove(ref(db, 'lobby/' + childSnap.key));
-                                return true;
-                            }
-                        });
-                    }
-
-                    if (!found) {
-                        set(ref(db, 'lobby/' + myId), { status: 'waiting' });
-                        peer.on('connection', (c) => {
-                            conn = c;
-                            setupData();
-                            runCountdown(90);
-                        });
-                    }
-                });
-            });
-
-            peer.on('call', call => {
-                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                    call.answer(stream);
-                    call.on('stream', remStream => { 
-                        const audio = new Audio(); audio.srcObject = remStream; audio.play();
-                    });
-                });
-            });
+        async function getStream() {
+            if (localStream) return localStream;
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                return localStream;
+            } catch (e) { alert("Mic permission required for voice chat!"); }
         }
 
-        function connectToPlayer(tid) {
-            conn = peer.connect(tid);
-            setupData();
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                peer.call(tid, stream);
+        window.startMode = function(m) {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('status-screen').classList.remove('hidden');
+            changeRoomBackground(); // गेम शुरू होते ही बैकग्राउंड बदलें
+
+            if(m === 'ai') { runCountdown(30); return; }
+
+            peer = new Peer();
+            peer.on('open', (id) => {
+                const lobbyRef = ref(db, 'lobby');
+                onDisconnect(ref(db, 'lobby/' + id)).remove();
+
+                get(lobbyRef).then((snap) => {
+                    let found = false;
+                    if (snap.exists()) {
+                        for (let tid in snap.val()) {
+                            if (tid !== id) {
+                                found = true;
+                                connectTo(tid);
+                                remove(ref(db, 'lobby/' + tid));
+                                break;
+                            }
+                        }
+                    }
+                    if (!found) set(ref(db, 'lobby/' + id), { status: 'waiting' });
+                });
             });
+
+            peer.on('connection', (c) => { conn = c; setupConn(); runCountdown(90); });
+            peer.on('call', async (call) => {
+                const s = await getStream();
+                call.answer(s);
+                call.on('stream', rs => { const a = new Audio(); a.srcObject = rs; a.play(); });
+            });
+        };
+
+        async function connectTo(tid) {
+            conn = peer.connect(tid);
+            setupConn();
+            const s = await getStream();
+            peer.call(tid, s);
             runCountdown(90);
         }
 
-        function setupData() {
+        function setupConn() {
             conn.on('data', d => { if(d.type === 'kill') { oppScore = d.score; document.getElementById('score2').innerText = oppScore; } });
         }
 
-        function runCountdown(time) {
-            timeLeft = time;
-            // रैंडम बैकग्राउंड (50+ options from Unsplash)
-            const randomID = Math.floor(Math.random() * 500);
-            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${randomID}&w=1000')`;
-            
+        function runCountdown(t) {
+            timeLeft = t;
             document.getElementById('status-msg').classList.add('hidden');
             const cd = document.getElementById('countdown-text');
             cd.classList.remove('hidden');
-
             let c = 3;
-            const int = setInterval(() => {
+            const i = setInterval(() => {
                 c--;
                 if(c > 0) cd.innerText = c;
                 else if(c === 0) cd.innerText = "GO!";
-                else { 
-                    clearInterval(int); 
-                    document.getElementById('status-screen').classList.add('hidden'); 
-                    document.getElementById('game-room').classList.remove('hidden'); 
-                    startGame(); 
-                }
+                else { clearInterval(i); document.getElementById('status-screen').classList.add('hidden'); document.getElementById('game-room').classList.remove('hidden'); startGame(); }
             }, 1000);
         }
 
         function startGame() {
             gameActive = true;
-            document.getElementById('p2-label').innerText = (mode === 'ai') ? "COMPUTER" : "PLAYER 2";
             setInterval(() => { if(gameActive) spawn(); }, 700);
-            if(mode === 'ai') setInterval(() => { if(gameActive) aiAction(); }, 1100);
-            const clock = setInterval(() => { 
-                timeLeft--; 
-                document.getElementById('timer').innerText = timeLeft; 
-                if(timeLeft <= 0) { clearInterval(clock); endGame(); } 
-            }, 1000);
+            const clock = setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft; if(timeLeft<=0){clearInterval(clock); endGame();} }, 1000);
         }
 
         function spawn() {
@@ -168,28 +194,18 @@
             const m = document.createElement('div');
             m.className = 'mosquito'; m.innerHTML = '🦟';
             m.style.left = Math.random() * (window.innerWidth - 80) + 'px';
-            m.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+            m.style.top = Math.random() * (window.innerHeight - 300) + 'px';
             m.onclick = () => { 
-                myScore += 10; 
-                document.getElementById('score1').innerText = myScore; 
-                slap.currentTime = 0; slap.play(); 
-                if(conn) conn.send({type:'kill', score:myScore}); 
-                m.remove(); 
+                myScore += 10; document.getElementById('score1').innerText = myScore;
+                slap.currentTime = 0; slap.play();
+                if(conn) conn.send({type:'kill', score:myScore});
+                m.remove();
             };
             area.appendChild(m);
-            setTimeout(() => { if(m.parentNode) m.remove(); }, 2500);
+            setTimeout(() => m.remove(), 2500);
         }
 
-        function aiAction() {
-            const targets = Array.from(document.querySelectorAll('.mosquito'));
-            if(targets.length > 0) { oppScore += 10; document.getElementById('score2').innerText = oppScore; targets[0].remove(); }
-        }
-
-        function endGame() { 
-            gameActive = false; 
-            alert(`खेल समाप्त!\nआपका स्कोर: ${myScore}\nविपक्षी: ${oppScore}`); 
-            location.reload(); 
-        }
+        function endGame() { gameActive = false; alert("गेम समाप्त!"); location.reload(); }
     </script>
 </body>
 </html>
