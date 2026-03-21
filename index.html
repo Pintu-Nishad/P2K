@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V38 - TIMER</title>
+    <title>P2K SECURE V39 - FIX</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -12,17 +12,21 @@
     <style>
         :root { --accent: #10b981; --bg: #020617; }
         body { background: var(--bg); color: white; font-family: 'Manrope', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+        
         .header { height: 75px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; position: relative; }
-        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #020617; padding-bottom: 140px; }
+        
+        /* Fixed Scroll Area */
+        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #020617; padding-bottom: 160px; scroll-behavior: smooth; }
+        
         .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
         
-        /* Call Bar with Timer */
         #callBar { position: absolute; top: 75px; left: 0; width: 100%; height: 60px; background: #065f46; display: none; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 90; border-bottom: 2px solid #10b981; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 
         .msg-wrap { display: flex; flex-direction: column; position: relative; max-width: 85%; }
         .out-wrap { align-self: flex-end; }
         .in-wrap { align-self: flex-start; }
+        
         .msg { padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .out { background: #059669; border-bottom-right-radius: 2px; }
         .in { background: #1e293b; border-bottom-left-radius: 2px; }
@@ -39,10 +43,10 @@
 
 <div id="loginDiv">
     <div class="w-full max-w-sm bg-slate-900/50 p-10 rounded-[40px] border border-white/10 text-center">
-        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 uppercase tracking-widest">P2K SECURE</h1>
+        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 uppercase tracking-widest text-shadow-lg">P2K SECURE</h1>
         <input id="user" type="text" placeholder="Username" class="w-full bg-slate-800 rounded-2xl p-5 mb-4 outline-none border border-transparent focus:border-emerald-500">
         <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
-        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl">START ENCRYPTED CHAT</button>
+        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl">JOIN CHAT</button>
     </div>
 </div>
 
@@ -58,7 +62,7 @@
             </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="initiateCall()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/8136/8136031.png"></button>
+            <button onclick="initiateCall()" class="icon-btn" title="Call"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
             <button onclick="askNotify()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828940.png"></button>
         </div>
         
@@ -68,11 +72,11 @@
                     <span id="callerLabel" class="text-[10px] font-black uppercase">Call...</span>
                     <span id="callTimer" class="text-[11px] font-mono text-emerald-300 hidden">00:00</span>
                 </div>
-                <span id="callStatus" class="text-[8px] opacity-60 uppercase">Ringing...</span>
+                <span id="callStatus" class="text-[8px] opacity-60 uppercase">Connecting...</span>
             </div>
             <div class="flex gap-3">
                 <button onclick="ignoreCall()" class="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-3 invert"></button>
-                <button id="acceptBtn" onclick="acceptCall()" class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/8136/8136031.png" class="w-3 invert"></button>
+                <button id="acceptBtn" onclick="acceptCall()" class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-3 invert"></button>
             </div>
         </div>
     </header>
@@ -84,10 +88,10 @@
             <input type="file" id="fileIn" accept="image/*" onchange="sendPhoto(this)" class="hidden">
             <button onclick="document.getElementById('fileIn').click()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" class="!w-5"></button>
             <button id="recBtn" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/1082/1082810.png" class="!w-5"></button>
-            <input id="msgInput" type="text" placeholder="60s Vanish Mode On..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
+            <input id="msgInput" type="text" placeholder="60s Vanish Mode..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
             <button onclick="sendMsg()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3106/3106856.png" class="!w-5"></button>
         </div>
-        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl font-bold text-[10px] uppercase">End Call Session</button>
+        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600/30 text-red-400 border border-red-500/40 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest">End Call Session</button>
     </footer>
 </div>
 
@@ -110,7 +114,7 @@
         listenMsgs(); setupVoice(); setupTyping(); listenForCalls();
     }
 
-    // --- TIMER ENGINE ---
+    // --- CALL TIMER ---
     function startTimer() {
         callTimer.classList.remove('hidden');
         callStatus.innerText = "Connected";
@@ -123,9 +127,9 @@
         }, 1000);
     }
 
-    function stopTimer() { clearInterval(timerInterval); callTimer.innerText = "00:00"; callTimer.classList.add('hidden'); }
+    function stopTimer() { clearInterval(timerInterval); callTimer.innerText = "00:00"; callTimer.classList.add('hidden'); callStartTime = null; }
 
-    // --- CALLING LOGIC ---
+    // --- RTC CALLING (SESSION PERSISTENT) ---
     async function initiateCall() {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
@@ -142,16 +146,17 @@
     function listenForCalls() {
         db.ref(`rooms/${myRoom}/rtc/call`).on('value', async s => {
             const d = s.val();
-            if (d && d.from !== myName) {
+            if (!d) { stopRinging(); stopTimer(); hangupBtn.classList.add('hidden'); callBar.style.display="none"; return; }
+            if (d.from !== myName) {
                 if (d.status === 'ringing') { 
                     callBar.style.display = "flex"; callerLabel.innerText = d.from; 
                     acceptBtn.style.display = "flex"; ringtone.play().catch(()=>{}); 
                 }
                 if (d.status === 'connected') { stopRinging(); startTimer(); }
-                if (d.status === 'ignored') { stopRinging(); stopTimer(); }
+                if (d.status === 'ignored') { leaveCall(); }
             }
-            if (d && d.from === myName && d.status === 'connected') { startTimer(); }
-            if (d && d.to === myName && d.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(d.answer)); }
+            if (d.from === myName && d.status === 'connected') { startTimer(); }
+            if (d.to === myName && d.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(d.answer)); }
         });
     }
 
@@ -168,11 +173,20 @@
         hangupBtn.classList.remove('hidden');
     }
 
-    function stopRinging() { callBar.style.display = (callStartTime) ? "flex" : "none"; ringtone.pause(); ringtone.currentTime = 0; }
-    function ignoreCall() { stopRinging(); stopTimer(); db.ref(`rooms/${myRoom}/rtc/call`).update({ status: 'ignored' }); }
-    function leaveCall() { stopTimer(); localStream?.getTracks().forEach(t => t.stop()); pc?.close(); db.ref(`rooms/${myRoom}/rtc`).remove(); location.reload(); }
+    function stopRinging() { ringtone.pause(); ringtone.currentTime = 0; }
+    function ignoreCall() { db.ref(`rooms/${myRoom}/rtc/call`).update({ status: 'ignored' }); setTimeout(()=>db.ref(`rooms/${myRoom}/rtc`).remove(), 500); }
+    
+    // FIX: Removed location.reload() to stay in room
+    function leaveCall() { 
+        stopTimer(); 
+        localStream?.getTracks().forEach(t => t.stop()); 
+        pc?.close(); 
+        db.ref(`rooms/${myRoom}/rtc`).remove(); 
+        callBar.style.display = "none";
+        hangupBtn.classList.add('hidden');
+    }
 
-    // --- MESSAGING ENGINE (VANISH 60S) ---
+    // --- CHAT ENGINE ---
     function sendData(val, type) {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
         setTimeout(() => ref.remove(), 60000); 
@@ -205,7 +219,7 @@
             wrap.id = "m-"+id;
             let delIcon = (d.u === myName) ? `<div class="del-btn" onclick="deleteMsg('${id}')"><img src="https://cdn-icons-png.flaticon.com/512/3221/3221803.png"></div>` : "";
             let c = d.val;
-            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl w-64 shadow-lg">`;
+            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl w-64">`;
             if(d.type==='voice') c = `<audio controls src="${d.val}" class="h-8 invert opacity-70"></audio>`;
             wrap.innerHTML = `${delIcon}<div class="msg ${d.u===myName?'out':'in'}"><div class="text-[9px] font-black opacity-40 mb-1 uppercase">${d.u}</div>${c}<div class="text-[8px] text-right mt-1 opacity-30 font-bold italic">Vanish 60s</div></div>`;
             chatBox.appendChild(wrap); chatBox.scrollTop = chatBox.scrollHeight;
