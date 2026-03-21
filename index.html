@@ -53,6 +53,11 @@
             <button onclick="sendMsg()" class="bg-[#00a884] p-2 rounded-full text-[#111b21]">➤</button>
         </div>
     </footer>
+    <div id="imgModal" class="hidden fixed inset-0 z-[5000] bg-black/95 flex items-center justify-center p-4 transition-all duration-300" onclick="closeFullImg()">
+    <img id="fullImg" src="" class="max-w-full max-h-full object-contain rounded-sm shadow-2xl transform scale-95 transition-transform duration-300">
+    <div class="absolute top-6 right-6 text-white text-3xl font-light cursor-pointer">&times;</div>
+</div>
+
 </div>
 
 <div id="callUI">
