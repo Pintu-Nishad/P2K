@@ -3,198 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>तिउरी (16 गोटी) - पारंपरिक खेल</title>
+    <title>तिउरी - असली पारंपरिक खेल</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Poppins:wght@400;600;800&display=swap');
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #2D245A; /* डीप पर्पल बैकग्राउंड - इमेज जैसा */
-            color: white;
-            overflow-x: hidden;
-        }
+        body { font-family: 'Poppins', sans-serif; background: #1e1b4b; color: white; overflow: hidden; }
+        .tiuri-font { font-family: 'Kalam', cursive; }
 
-        .hindi-font {
-            font-family: 'Kalam', cursive;
-        }
-
-        /* बोर्ड का मुख्य कंटेनर */
-        .board-wrapper {
+        /* इमेज जैसा सटीक बोर्ड */
+        .board-container {
+            background: #4c4177; /* इमेज जैसा पर्पल-ग्रे बोर्ड */
             position: relative;
             width: 100%;
-            max-width: 400px; /* मोबाइल पर सही फिट के लिए */
-            aspect-ratio: 1 / 1.5; /* टॉवर-जैसी लंबी आकृति के लिए - इमेज जैसा */
-            background: #4C4177; /* बोर्ड का हल्का पर्पल रंग - इमेज जैसा */
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            padding: 10px;
+            max-width: 380px;
+            aspect-ratio: 1 / 1.5;
+            border: 8px solid #312e81;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
-        /* बोर्ड की रेखाएं (SVG) */
         .lines-svg {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            stroke: rgba(255, 255, 255, 0.8); /* वाइट लाइन्स - इमेज जैसा */
+            width: 100%; height: 100%;
+            stroke: rgba(255, 255, 255, 0.9);
             stroke-width: 2.5;
             fill: none;
         }
 
-        /* गोटियाँ (Nodes) - जॉइंट्स पर फिट होने के लिए */
+        /* गोटियाँ - जॉइंट्स पर */
         .node {
-            width: 30px; height: 30px; /* गोटियों का आकार - इमेज जैसा */
+            width: 28px; height: 28px;
             position: absolute;
             transform: translate(-50%, -50%);
             display: flex; align-items: center; justify-content: center;
-            z-index: 20;
+            z-index: 30;
             cursor: pointer;
         }
 
         .guti {
             width: 90%; height: 90%;
             border-radius: 50%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.6);
-            border: 2px solid white; /* वाइट आउटलाइन - इमेज जैसा */
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            border: 2px solid white;
+            transition: all 0.2s ease;
         }
 
-        /* नारंगी गोटियाँ (नारंगी टीम) - इमेज जैसा रंग */
-        .guti-orange {
-            background: radial-gradient(circle at 35% 35%, #F57C00, #E65100);
-        }
+        .orange { background: radial-gradient(circle at 30% 30%, #f97316, #9a3412); }
+        .green { background: radial-gradient(circle at 30% 30%, #84cc16, #365314); }
+        .selected .guti { transform: scale(1.3); ring: 4px solid #fbbf24; }
 
-        /* हरी गोटियाँ (हरी टीम) - इमेज जैसा रंग */
-        .guti-green {
-            background: radial-gradient(circle at 35% 35%, #689F38, #33691E);
-        }
-
-        /* सिलेक्टेड गोटी का एनीमेशन */
-        .selected .guti {
-            transform: scale(1.3);
-            ring: 4px solid #facc15;
-            box-shadow: 0 0 15px #facc15;
-        }
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        
+        /* वॉइस एनीमेशन */
+        .voice-active { border-color: #22c55e; box-shadow: 0 0 15px #22c55e; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <header class="text-center mb-8">
-        <h1 class="text-6xl font-black text-yellow-500 hindi-font tracking-tight drop-shadow-xl">तिउरी</h1>
-        <p class="text-zinc-400 text-sm tracking-widest uppercase">16 Guti Traditional Game</p>
-    </header>
-
-    <div class="board-wrapper overflow-hidden flex items-center justify-center">
-        <svg class="lines-svg" viewBox="0 0 100 150">
-            <rect x="10" y="30" width="80" height="80" />
-            
-            <line x1="10" y1="50" x2="90" y2="50" />
-            <line x1="10" y1="70" x2="90" y2="70" />
-            <line x1="10" y1="90" x2="90" y2="90" />
-            
-            <line x1="30" y1="30" x2="30" y2="110" />
-            <line x1="50" y1="30" x2="50" y2="110" />
-            <line x1="70" y1="30" x2="70" y2="110" />
-
-            <line x1="10" y1="30" x2="90" y2="110" />
-            <line x1="10" y1="110" x2="90" y2="30" />
-            <line x1="30" y1="30" x2="10" y2="50" />
-            <line x1="10" y1="70" x2="30" y2="50" />
-            <line x1="10" y1="90" x2="30" y2="110" />
-            
-            <line x1="70" y1="30" x2="90" y2="50" />
-            <line x1="90" y1="70" x2="70" y2="50" />
-            <line x1="90" y1="90" x2="70" y2="110" />
-            
-            <path d="M50,0 L10,30 L90,30 Z" />
-            <line x1="50" y1="0" x2="50" y2="30" />
-            <line x1="30" y1="15" x2="70" y2="15" />
-
-            <path d="M50,150 L10,110 L90,110 Z" />
-            <line x1="50" y1="150" x2="50" y2="110" />
-            <line x1="30" y1="130" x2="70" y2="130" />
-        </svg>
-
-        <div id="board-nodes" class="relative w-full h-full"></div>
+    <div id="home" class="screen active max-w-sm bg-slate-900/90 p-10 rounded-3xl border border-white/10 shadow-2xl text-center">
+        <h1 class="text-7xl text-yellow-500 tiuri-font mb-2">तिउरी</h1>
+        <p class="text-slate-400 text-[10px] tracking-[0.3em] uppercase mb-10 font-bold">Traditional 16 Guti</p>
+        
+        <div class="space-y-4 w-full">
+            <button onclick="startGame('ai')" class="w-full bg-orange-600 hover:bg-orange-500 py-4 rounded-2xl font-bold text-lg shadow-lg transition">🤖 कंप्यूटर के साथ</button>
+            <button onclick="findPlayer()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold text-lg shadow-lg transition">👥 खिलाड़ी खोजें</button>
+        </div>
     </div>
 
-    <footer class="mt-12 text-zinc-500 text-xs tracking-widest uppercase font-bold">
-        Nishad Crafts द्वारा निर्मित
-    </footer>
+    <div id="search" class="screen text-center">
+        <div class="w-16 h-16 border-4 border-slate-700 border-t-yellow-500 rounded-full animate-spin mx-auto mb-6"></div>
+        <h2 class="text-2xl font-bold text-yellow-500 tiuri-font">ऑनलाइन खिलाड़ी खोज रहे हैं...</h2>
+        <button onclick="showScreen('home')" class="mt-8 text-slate-500 underline">रद्द करें</button>
+    </div>
+
+    <div id="game" class="screen w-full max-w-lg">
+        <div class="w-full flex justify-between items-center mb-4 bg-slate-900/80 p-3 rounded-2xl border border-white/5">
+            <div class="flex gap-3">
+                <div class="bg-orange-950/40 px-3 py-1 rounded-lg border border-orange-700/50 text-orange-400 font-bold">P1: <span id="s1">0</span></div>
+                <div class="bg-green-950/40 px-3 py-1 rounded-lg border border-green-700/50 text-green-400 font-bold">P2: <span id="s2">0</span></div>
+            </div>
+            
+            <button id="voice-btn" onclick="toggleVoice()" class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl border border-white/10">
+                <span id="mic-icon">🎤</span>
+                <span class="text-xs font-bold uppercase tracking-tighter">वॉइस चालू</span>
+                <div id="voice-dot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </button>
+        </div>
+
+        <div class="board-container overflow-hidden">
+            <svg class="lines-svg" viewBox="0 0 100 150">
+                <rect x="10" y="30" width="80" height="80" />
+                <line x1="10" y1="50" x2="90" y2="50" /><line x1="10" y1="70" x2="90" y2="70" /><line x1="10" y1="90" x2="90" y2="90" />
+                <line x1="30" y1="30" x2="30" y2="110" /><line x1="50" y1="30" x2="50" y2="110" /><line x1="70" y1="30" x2="70" y2="110" />
+                <line x1="10" y1="30" x2="90" y2="110" /><line x1="10" y1="110" x2="90" y2="30" />
+                <line x1="30" y1="30" x2="10" y2="50" /><line x1="10" y1="70" x2="30" y2="50" /><line x1="10" y1="90" x2="30" y2="110" />
+                <line x1="70" y1="30" x2="90" y2="50" /><line x1="90" y1="70" x2="70" y2="50" /><line x1="90" y1="90" x2="70" y2="110" />
+                <path d="M50,0 L10,30 L90,30 Z" /><line x1="50" y1="0" x2="50" y2="30" /><line x1="30" y1="15" x2="70" y2="15" />
+                <path d="M50,150 L10,110 L90,110 Z" /><line x1="50" y1="150" x2="50" y2="110" /><line x1="30" y1="130" x2="70" y2="130" />
+            </svg>
+            <div id="nodes-layer" class="relative w-full h-full"></div>
+        </div>
+        
+        <button onclick="showScreen('home')" class="mt-6 text-slate-500 font-bold text-xs uppercase tracking-widest">🏳️ गेम छोड़ें</button>
+    </div>
 
     <script>
-        const container = document.getElementById('board-nodes');
-        
-        // सभी 32 पारंपरिक कटान बिंदुओं (Coordinates in %) का सटीक ऐरे
-        const junctionPoints = [
-            // ऊपरी टॉवर (Top House) - 6 बिंदु
-            {x: 50, y: 0}, {x: 30, y: 15}, {x: 50, y: 15}, {x: 70, y: 15},
-            {x: 10, y: 30}, {x: 90, y: 30},
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
 
-            // मुख्य ग्रिड Row 1 - 5 बिंदु
-            {x: 10, y: 30}, {x: 30, y: 30}, {x: 50, y: 30}, {x: 70, y: 30}, {x: 90, y: 30},
-            
-            // Row 2 - 5 बिंदु
-            {x: 10, y: 50}, {x: 30, y: 50}, {x: 50, y: 50}, {x: 70, y: 50}, {x: 90, y: 50},
-            
-            // Middle Line (क्षैतिज खाली रेखा) - 5 बिंदु
-            {x: 10, y: 70}, {x: 30, y: 70}, {x: 50, y: 70}, {x: 70, y: 70}, {x: 90, y: 70},
-            
-            // Row 4 - 5 बिंदु
-            {x: 10, y: 90}, {x: 30, y: 90}, {x: 50, y: 90}, {x: 70, y: 90}, {x: 90, y: 90},
-            
-            // Row 5 - 5 बिंदु
-            {x: 10, y: 110}, {x: 30, y: 110}, {x: 50, y: 110}, {x: 70, y: 110}, {x: 90, y: 110},
-            
-            // निचला टॉवर (Bottom House) - 6 बिंदु
-            {x: 10, y: 110}, {x: 90, y: 110},
-            {x: 30, y: 130}, {x: 50, y: 130}, {x: 70, y: 130},
-            {x: 50, y: 150}
-        ];
+        function findPlayer() {
+            showScreen('search');
+            setTimeout(() => startGame('online'), 2500);
+        }
 
-        // डुप्लिकेट बिंदुओं को हटाना और Middle line को अलग करना
-        const allUniqueNodes = [];
-        const middleNodesIndex = []; // Middle nodes को ट्रैक करने के लिए
-        const allSortedNodes = [];
+        function startGame(mode) {
+            showScreen('game');
+            setupBoard();
+        }
 
-        junctionPoints.forEach((pos, i) => {
-            if(!allUniqueNodes.some(p => p.x === pos.x && p.y === pos.y)) {
-                allUniqueNodes.push(pos);
+        function toggleVoice() {
+            const dot = document.getElementById('voice-dot');
+            const icon = document.getElementById('mic-icon');
+            const btn = document.getElementById('voice-btn');
+            
+            if (dot.classList.contains('bg-green-500')) {
+                dot.className = 'w-2 h-2 bg-red-500';
+                icon.innerText = '🔇';
+                btn.classList.remove('voice-active');
+            } else {
+                dot.className = 'w-2 h-2 bg-green-500 animate-pulse';
+                icon.innerText = '🎤';
+                btn.classList.add('voice-active');
             }
-        });
+        }
 
-        // सुनिश्चित करें कि Nodes सही क्रम में लोड हों और middle खाली रहे
-        const finalSortedNodes = [
-            ...allUniqueNodes.filter(p => p.y < 70).sort((a,b) => a.y-b.y), // Top
-            ...allUniqueNodes.filter(p => p.y === 70).sort((a,b) => a.x-b.x), // Middle
-            ...allUniqueNodes.filter(p => p.y > 70).sort((a,b) => a.y-b.y) // Bottom
-        ];
+        function setupBoard() {
+            const container = document.getElementById('nodes-layer');
+            container.innerHTML = '';
+            
+            const junctionPoints = [
+                {x: 50, y: 0}, {x: 30, y: 15}, {x: 50, y: 15}, {x: 70, y: 15}, {x: 10, y: 30}, {x: 90, y: 30},
+                {x: 10, y: 30}, {x: 30, y: 30}, {x: 50, y: 30}, {x: 70, y: 30}, {x: 90, y: 30},
+                {x: 10, y: 50}, {x: 30, y: 50}, {x: 50, y: 50}, {x: 70, y: 50}, {x: 90, y: 50},
+                {x: 10, y: 70}, {x: 30, y: 70}, {x: 50, y: 70}, {x: 70, y: 70}, {x: 90, y: 70},
+                {x: 10, y: 90}, {x: 30, y: 90}, {x: 50, y: 90}, {x: 70, y: 90}, {x: 90, y: 90},
+                {x: 10, y: 110}, {x: 30, y: 110}, {x: 50, y: 110}, {x: 70, y: 110}, {x: 90, y: 110},
+                {x: 10, y: 110}, {x: 90, y: 110}, {x: 30, y: 130}, {x: 50, y: 130}, {x: 70, y: 130}, {x: 50, y: 150}
+            ];
 
-        finalSortedNodes.forEach((pos, i) => {
-            const node = document.createElement('div');
-            node.className = 'node';
-            // `viewBox="0 0 100 150"` के लिए पोज़िशन को सही अनुपात में सेट करना
-            node.style.left = pos.x + '%';
-            node.style.top = (pos.y / 1.5) + '%'; 
-            node.dataset.index = i;
+            const uniqueNodes = [];
+            junctionPoints.forEach(pos => {
+                if(!uniqueNodes.some(p => p.x === pos.x && p.y === pos.y)) uniqueNodes.push(pos);
+            });
 
-            // गोटियाँ सेट करना (16 नारंगी ऊपर, 16 हरी नीचे) - इमेज जैसा सटीक सेटअप
-            if (i < 16) {
-                // ऊपरी गोटियाँ (नारंगी)
-                node.innerHTML = '<div class="guti guti-orange"></div>';
-            } else if (i >= finalSortedNodes.length - 16) {
-                // निचली गोटियाँ (हरी)
-                node.innerHTML = '<div class="guti guti-green"></div>';
-            }
-            // बीच की 5 पोज़िशन को खाली छोड़ना
+            const finalNodes = [
+                ...uniqueNodes.filter(p => p.y < 70).sort((a,b) => a.y-b.y),
+                ...uniqueNodes.filter(p => p.y === 70).sort((a,b) => a.x-b.x),
+                ...uniqueNodes.filter(p => p.y > 70).sort((a,b) => a.y-b.y)
+            ];
 
-            node.onclick = () => {
-                // सिलेक्ट करने का लॉजिक (अभी केवल विज़ुअल)
-                document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-                if(node.children.length > 0) node.classList.add('selected');
-            };
-            container.appendChild(node);
-        });
+            finalNodes.forEach((pos, i) => {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.style.left = pos.x + '%';
+                node.style.top = (pos.y / 1.5) + '%'; 
+
+                if (i < 16) {
+                    node.innerHTML = '<div class="guti orange"></div>';
+                } else if (i >= finalNodes.length - 16) {
+                    node.innerHTML = '<div class="guti green"></div>';
+                }
+
+                node.onclick = () => {
+                    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                    if(node.children.length > 0) node.classList.add('selected');
+                };
+                container.appendChild(node);
+            });
+        }
     </script>
 </body>
 </html>
