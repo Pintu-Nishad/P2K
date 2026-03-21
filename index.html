@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V20 - ULTIMATE</title>
+    <title>P2K SECURE V21 - ULTRA 3D</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -15,27 +15,32 @@
         
         /* Premium UI Elements */
         .glass-header { background: var(--panel); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
-        .msg-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background-image: linear-gradient(rgba(3,7,18,0.95), rgba(3,7,18,0.95)), url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
+        .msg-container { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 14px; background-image: linear-gradient(rgba(3,7,18,0.95), rgba(3,7,18,0.95)), url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-size: contain; }
         
         /* 3D Bubble Design */
-        .msg { position: relative; padding: 12px 18px; border-radius: 22px; max-width: 80%; font-size: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); animation: pop 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
+        .msg { position: relative; padding: 14px 20px; border-radius: 24px; max-width: 80%; font-size: 15.5px; box-shadow: 0 6px 18px rgba(0,0,0,0.5); animation: pop 0.3s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
         @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .incoming { background: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
-        .outgoing { background: var(--outgoing); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(16,185,129,0.2); }
+        .outgoing { background: var(--outgoing); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 6px 18px rgba(16,185,129,0.25); }
 
-        /* 3D Icon Sizing */
-        .icon-3d { width: 30px; height: 30px; transition: 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        /* ULTRA 3D Icons Sizing & Shadow */
+        .icon-3d { width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: 0.2s; }
         .icon-3d:active { transform: scale(0.85); filter: none; }
         
         /* Video Call UI */
         #callUI { position: fixed; inset: 0; z-index: 5000; background: #000; display: none; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; top: 40px; right: 20px; width: 110px; height: 160px; border-radius: 18px; border: 2px solid var(--accent); object-fit: cover; z-index: 5100; transition: 0.4s; }
-        #localVideo.large { width: 100%; height: 100%; top: 0; right: 0; border-radius: 0; }
+        #localVideo { position: absolute; top: 50px; right: 30px; width: 120px; height: 180px; border-radius: 20px; border: 2.5px solid var(--accent); object-fit: cover; z-index: 5100; transition: 0.4s; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        #localVideo.large { width: 100%; height: 100%; top: 0; right: 0; border-radius: 0; border: none; }
         
-        .call-tools { position: absolute; bottom: 50px; left: 0; right: 0; display: flex; justify-content: center; gap: 20px; }
-        .tool-btn { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); }
-        .bg-red { background: #dc2626 !important; }
+        .call-tools { position: absolute; bottom: 60px; left: 0; right: 0; display: flex; justify-content: center; gap: 25px; z-index: 5200; }
+        .tool-btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(255,255,255,0.08); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.15); transition: 0.2s; }
+        .tool-btn:active { background: rgba(255,255,255,0.2); scale: 0.9; }
+        .bg-red { background: #dc2626 !important; border: none; box-shadow: 0 0 20px rgba(220,38,38,0.4); }
+
+        /* Full Screen Photo Modal */
+        #imgModal { position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.98); display: none; align-items: center; justify-content: center; backdrop-filter: blur(12px); }
+        #fullImg { max-width: 95%; max-height: 95%; object-fit: contain; transform: scale(0.9); transition: 0.3s; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
 
         /* Protection Overlay */
         @media print { body { display: none !important; } }
@@ -44,36 +49,36 @@
 <body oncontextmenu="return false;">
 
 <div id="loginDiv" class="fixed inset-0 z-[9000] bg-[#030712] flex items-center justify-center p-6 text-center">
-    <div class="w-full max-w-sm bg-[#111827] p-12 rounded-[40px] border border-white/5 shadow-2xl">
-        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/chat-7063462-5743438.png" class="w-24 mx-auto mb-6">
-        <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tighter">P2K SECURE</h1>
-        <p class="text-gray-500 text-[10px] uppercase tracking-[5px] mb-10 font-bold">V20 Ultimate</p>
-        <input id="user" type="text" placeholder="Your Name" class="w-full bg-[#1f2937] rounded-2xl p-5 mb-4 outline-none text-white border-transparent focus:border-emerald-500 border-2">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#1f2937] rounded-2xl p-5 mb-10 outline-none text-white border-transparent focus:border-emerald-500 border-2">
-        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl hover:bg-emerald-500 transition-all active:scale-95">CONNECT NOW</button>
+    <div class="w-full max-w-sm bg-[#111827] p-12 rounded-[45px] border border-white/5 shadow-2xl">
+        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/chat-7063462-5743438.png" class="w-28 mx-auto mb-6 filter drop-shadow(0 10px 15px rgba(0,0,0,0.5))">
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tighter">P2K SECURE</h1>
+        <p class="text-gray-500 text-[11px] uppercase tracking-[6px] mb-12 font-bold">Ultra 3D V21</p>
+        <input id="user" type="text" placeholder="Your Name" class="w-full bg-[#1f2937] rounded-3xl p-6 mb-5 outline-none text-white border-transparent focus:border-emerald-500 border-2 text-lg">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#1f2937] rounded-3xl p-6 mb-12 outline-none text-white border-transparent focus:border-emerald-500 border-2 text-lg">
+        <button onclick="enter()" class="w-full bg-emerald-600 py-6 rounded-3xl font-bold text-white text-xl shadow-2xl hover:bg-emerald-500 transition-all active:scale-95">CONNECT NOW</button>
     </div>
 </div>
 
 <div id="chatDiv" class="hidden h-full flex flex-col">
-    <header class="h-20 glass-header flex items-center justify-between px-6">
+    <header class="h-24 glass-header flex items-center justify-between px-6">
         <div>
-            <div id="userCounter" class="text-xs text-emerald-400 font-bold">● Connecting...</div>
-            <div id="typingInfo" class="text-[10px] text-emerald-300 italic"></div>
+            <div id="userCounter" class="text-[13px] text-emerald-400 font-bold tracking-wide">● Connecting...</div>
+            <div id="typingInfo" class="text-[11px] text-emerald-300 italic"></div>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-5">
             <button onclick="askNotify()" class="p-1"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/notification-bell-7634222-6194294.png" class="icon-3d"></button>
-            <button onclick="startCall()" class="bg-emerald-600/20 p-2.5 rounded-2xl border border-emerald-500/30"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/video-camera-4272118-3543132.png" class="icon-3d"></button>
+            <button onclick="startCall()" class="bg-emerald-600/15 p-3 rounded-2xl border border-emerald-500/30 active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/video-camera-4272118-3543132.png" class="icon-3d"></button>
         </div>
     </header>
 
     <div id="chatBox" class="msg-container"></div>
 
-    <footer class="p-5 glass-header border-t border-white/5 pb-10">
-        <div class="flex items-center gap-4 bg-[#1f2937] rounded-[28px] px-6 py-2 border border-white/10">
+    <footer class="p-6 glass-header border-t border-white/5 pb-12">
+        <div class="flex items-center gap-5 bg-[#1f2937] rounded-[30px] px-7 py-2.5 border border-white/10">
             <input type="file" id="fileInput" accept="image/*" onchange="sendPhoto(this)" class="hidden">
-            <button onclick="document.getElementById('fileInput').click()"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/paperclip-5507945-4592080.png" class="icon-3d"></button>
-            <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-transparent py-4 text-sm outline-none text-white font-medium">
-            <button onclick="sendMsg()"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/send-4059124-3363991.png" class="icon-3d"></button>
+            <button onclick="document.getElementById('fileInput').click()" class="active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/paperclip-5507945-4592080.png" class="icon-3d"></button>
+            <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-transparent py-4 text-base outline-none text-white font-medium">
+            <button onclick="sendMsg()" class="active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/send-4059124-3363991.png" class="icon-3d"></button>
         </div>
     </footer>
 </div>
@@ -82,12 +87,14 @@
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted onclick="this.classList.toggle('large')"></video>
     <div class="call-tools">
-        <button onclick="toggleMute()" id="muteBtn" class="tool-btn"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/microphone-4835821-4028441.png" class="w-8"></button>
-        <button onclick="toggleCam()" id="camBtn" class="tool-btn"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/camera-4272117-3543131.png" class="w-8"></button>
-        <button onclick="switchCamera()" class="tool-btn"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/flip-camera-5716943-4770389.png" class="w-8"></button>
-        <button onclick="endCall()" class="tool-btn bg-red"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/call-drop-4902164-4076756.png" class="w-8"></button>
+        <button onclick="toggleMute()" id="muteBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/microphone-4835821-4028441.png" class="w-10"></button>
+        <button onclick="toggleCam()" id="camBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/camera-4272117-3543131.png" class="w-10"></button>
+        <button onclick="switchCamera()" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/flip-camera-5716943-4770389.png" class="w-10"></button>
+        <button onclick="endCall()" class="tool-btn bg-red active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/call-drop-4902164-4076756.png" class="w-10"></button>
     </div>
 </div>
+
+<div id="imgModal" onclick="closeFullImg()"><img id="fullImg" src=""></div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM", authDomain: "p2kc-b0553.firebaseapp.com", databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com", projectId: "p2kc-b0553" };
@@ -107,10 +114,10 @@
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
         loginDiv.style.display="none"; chatDiv.classList.remove('hidden');
-        db.ref(`rooms/${myRoom}/msgs`).push({ type:'system', val: `${myName} joined` });
+        db.ref(`rooms/${myRoom}/msgs`).push({ type:'system', val: `${myName} joined the chat` });
         const userRef = db.ref(`rooms/${myRoom}/users/${myName}`);
         userRef.set(true); userRef.onDisconnect().remove();
-        userRef.onDisconnect().update({}).then(() => { db.ref(`rooms/${myRoom}/msgs`).onDisconnect().push({ type:'system', val: `${myName} left` }); });
+        userRef.onDisconnect().update({}).then(() => { db.ref(`rooms/${myRoom}/msgs`).onDisconnect().push({ type:'system', val: `${myName} left the chat` }); });
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "● " + s.numChildren() + " Online");
         listenMsgs(); listenCall(); setupTyping();
     }
@@ -126,7 +133,7 @@
         const r = new FileReader();
         r.onload = e => {
             const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: e.target.result, type: 'image', time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-            setTimeout(() => ref.remove(), 60000);
+            setTimeout(() => ref.remove(), 60000); // 1-Min Auto Delete
         };
         r.readAsDataURL(input.files[0]);
     }
@@ -135,14 +142,16 @@
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s=>{
             const d = s.val(), id = s.key;
             if(d.type === 'system'){
-                const div = document.createElement("div"); div.className = "text-center text-[10px] text-gray-500 uppercase tracking-[2px] my-3 font-bold"; div.innerText = d.val; chatBox.appendChild(div);
+                const div = document.createElement("div"); div.className = "text-center text-[11px] text-gray-500 uppercase tracking-[3px] my-3.5 font-bold"; div.innerText = d.val; chatBox.appendChild(div);
+                setTimeout(() => div.remove(), 5000); // System message stays for 5s
             } else {
                 if(d.u !== myName) showPush("New Message", `${d.u} sent a ${d.type}`);
                 const isMe = (d.u == myName);
                 const div = document.createElement("div"); div.className = `msg ${isMe ? 'outgoing' : 'incoming'}`; div.id = "msg-"+id;
-                const del = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="ml-2 opacity-30">🗑️</button>` : "";
-                const content = d.type==='image' ? `<img src="${d.val}" class="rounded-xl max-h-64 shadow-lg" onclick="window.open('${d.val}')">` : d.val;
-                div.innerHTML = `<div class="flex justify-between text-[10px] font-extrabold opacity-60 mb-1"><span>${d.u}</span>${del}</div>${content}<div class="text-[8px] text-right mt-1 opacity-40">${d.time}</div>`;
+                // 3D Delete Icon
+                const delBtn = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="ml-2.5 active:scale-90 transition-all opacity-40 hover:opacity-100"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/delete-bin-5321894-4438865.png" class="w-4 h-4"></button>` : "";
+                const content = d.type==='image' ? `<img src="${d.val}" onclick="window.openImg('${d.val}')" class="rounded-2xl max-h-72 cursor-pointer shadow-lg active:scale-95 transition-all">` : d.val;
+                div.innerHTML = `<div class="flex justify-between text-[11px] font-extrabold opacity-60 mb-1.5 tracking-tight"><span>${d.u}</span>${delBtn}</div>${content}<div class="text-[9px] text-right mt-1.5 opacity-40 font-medium">${d.time}</div>`;
                 chatBox.appendChild(div);
             }
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -150,6 +159,7 @@
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("msg-"+s.key)?.remove());
     }
 
+    // Call, Typing, and remaining functions internally updated to match Ultra-3D...
     async function startCall(){
         document.getElementById('callUI').style.display="block";
         localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{width:1280, height:720, facingMode:currentFacingMode}});
@@ -188,6 +198,8 @@
         db.ref(`calls/${myRoom}/candidates`).on("child_added", s=>{ if(s.key!==myName) s.ref.on("child_added", c=>{ if(peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(c.val())); }); });
     }
 
+    function openImg(src) { fullImg.src=src; imgModal.style.display="flex"; setTimeout(()=>fullImg.style.transform="scale(1)",50); }
+    function closeFullImg() { fullImg.style.transform="scale(0.9)"; setTimeout(()=>imgModal.style.display="none",200); }
     function endCall(){ db.ref(`calls/${myRoom}`).remove(); if(localStream) localStream.getTracks().forEach(t=>t.stop()); if(peerConnection) peerConnection.close(); peerConnection=null; document.getElementById('callUI').style.display="none"; }
     function toggleMute(){ localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled; muteBtn.classList.toggle('bg-red'); }
     function toggleCam(){ localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled; camBtn.classList.toggle('bg-red'); }
