@@ -2,145 +2,180 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>तिउरी - Tiuri Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>वीर 16 (सोलह गोटी) - पारंपरिक स्ट्रक्चर</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
-        body { background: #0f172a; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        .tiuri-font { font-family: 'Kalam', cursive; }
+        body { background: #1a1a1a; font-family: sans-serif; overflow: hidden; }
         
-        /* तिउरी का असली बोर्ड */
-        .tiuri-board {
-            background: #4e342e; 
-            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+        /* असली बड़े बोर्ड का स्ट्रक्चर */
+        .game-board {
+            background: #2D245A; /* पर्पल-ब्लू बैकग्राउंड - इमेज जैसा */
             position: relative; 
-            width: 92vw; max-width: 420px; 
-            aspect-ratio: 1 / 1.6;
-            border: 10px solid #2b1d1a; border-radius: 15px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            width: 100vw; 
+            height: calc(100vw * 1.6); /* टॉवर-जैसी लंबी आकृति के लिए - इमेज जैसा */
+            max-width: 500px; 
+            max-height: 800px;
             margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
         .lines-svg {
             position: absolute; width: 100%; height: 100%;
-            stroke: #d7ccc8; stroke-width: 2.5; fill: none;
-            filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5));
+            stroke: white; stroke-width: 1.5; fill: none;
         }
 
         .node {
-            width: 36px; height: 36px; position: absolute;
+            width: 20px; height: 20px; position: absolute;
             transform: translate(-50%, -50%); z-index: 30;
             display: flex; align-items: center; justify-content: center;
         }
 
         .guti {
-            width: 85%; height: 85%; border-radius: 50%;
-            position: absolute; border: 2px solid rgba(255,255,255,0.4);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.6);
-            cursor: pointer; transition: 0.2s;
+            width: 90%; height: 90%; border-radius: 50%;
+            position: absolute; border: 2px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            cursor: pointer; transition: 0.1s;
         }
 
-        .orange { background: radial-gradient(circle at 35% 35%, #f97316, #9a3412); } 
-        .green { background: radial-gradient(circle at 35% 35%, #84cc16, #365314); } 
-
-        .selected .guti { transform: scale(1.3); filter: brightness(1.2); border-color: #fbbf24; }
-        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; }
-        .active { display: flex; }
+        .orange { background: radial-gradient(circle at 35% 35%, #F57C00, #E65100); } /* Player 1 */
+        .green { background: radial-gradient(circle at 35% 35%, #689F38, #33691E); } /* Player 2 */
+        
+        /* सिलेक्टेड गोटी के लिए इफेक्ट */
+        .selected .guti { transform: scale(1.2); ring: 4px solid #facc15; }
     </style>
 </head>
-<body class="text-white">
+<body class="flex flex-col items-center min-h-screen p-4">
 
-    <div id="home" class="screen active bg-slate-900">
-        <h1 class="text-8xl text-yellow-500 tiuri-font mb-12 drop-shadow-2xl">तिउरी</h1>
-        <div class="flex flex-col gap-6">
-            <button onclick="play('ai')" class="w-72 bg-orange-600 p-5 rounded-2xl font-black text-xl shadow-xl hover:bg-orange-500 transition-all">🤖 कंप्यूटर (AI)</button>
-            <button onclick="play('pvp')" class="w-72 bg-indigo-600 p-5 rounded-2xl font-black text-xl shadow-xl hover:bg-indigo-500 transition-all">👥 दो खिलाड़ी (PVP)</button>
+    <div class="w-full max-w-lg flex justify-between items-center mb-6 bg-black/40 p-3 rounded-2xl border border-white/10 shadow-xl">
+        <div class="flex gap-4 font-bold text-sm">
+            <span class="text-orange-400">P1: 16</span>
+            <span class="text-green-400">P2: 16</span>
         </div>
-        <p class="mt-24 text-slate-500 text-[10px] font-bold uppercase tracking-widest italic">Nishad Crafts Presents</p>
+        <div class="text-xl font-extrabold text-yellow-500 tracking-wider">वीर 16</div>
+        <button id="voice-btn" class="bg-green-600 px-4 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">🎤 Voice चालू</button>
     </div>
 
-    <div id="game-ui" class="screen">
-        <div class="w-full max-w-sm flex justify-between items-center mb-4 p-4 bg-black/40 rounded-3xl border border-white/10">
-            <div id="status" class="bg-orange-600 px-6 py-1 rounded-full text-sm font-bold shadow-lg">आपकी बारी</div>
-            <div class="text-2xl font-black tiuri-font text-yellow-500">तिउरी</div>
-            <div class="flex gap-4 text-xs font-bold">
-                <span class="text-orange-400">P1: <b id="s1">16</b></span>
-                <span class="text-green-400">P2: <b id="s2">16</b></span>
-            </div>
-        </div>
+    <div class="game-board" id="board">
+        <svg class="lines-svg" viewBox="0 0 100 160">
+            <rect x="10" y="40" width="80" height="80" />
+            
+            <line x1="10" y1="60" x2="90" y2="60" />
+            <line x1="10" y1="80" x2="90" y2="80" />
+            <line x1="10" y1="100" x2="90" y2="100" />
+            
+            <line x1="30" y1="40" x2="30" y2="120" />
+            <line x1="50" y1="40" x2="50" y2="120" />
+            <line x1="70" y1="40" x2="70" y2="120" />
 
-        <div class="tiuri-board" id="board">
-            <svg class="lines-svg" viewBox="0 0 100 160">
-                <rect x="10" y="40" width="80" height="80" />
-                <line x1="10" y1="60" x2="90" y2="60" /><line x1="10" y1="80" x2="90" y2="80" /><line x1="10" y1="100" x2="90" y2="100" />
-                <line x1="30" y1="40" x2="30" y2="120" /><line x1="50" y1="40" x2="50" y2="120" /><line x1="70" y1="40" x2="70" y2="120" />
-                <line x1="10" y1="40" x2="90" y2="120" /><line x1="10" y1="120" x2="90" y2="40" />
-                <path d="M50,0 L10,40 L90,40 Z" /><line x1="50" y1="0" x2="50" y2="40" /><line x1="30" y1="20" x2="70" y2="20" />
-                <path d="M50,160 L10,120 L90,120 Z" /><line x1="50" y1="160" x2="50" y2="120" /><line x1="30" y1="140" x2="70" y2="140" />
-            </svg>
-            <div id="nodes-layer" class="w-full h-full relative"></div>
-        </div>
-        
-        <button onclick="location.reload()" class="mt-8 text-slate-500 font-bold uppercase text-[10px] tracking-widest">🏳️ मेन्यू में जाएँ</button>
+            <line x1="10" y1="40" x2="90" y2="120" />
+            <line x1="10" y1="120" x2="90" y2="40" />
+            <line x1="30" y1="40" x2="10" y2="60" />
+            <line x1="10" y1="80" x2="30" y2="60" />
+            <line x1="10" y1="100" x2="30" y2="120" />
+            
+            <line x1="70" y1="40" x2="90" y2="60" />
+            <line x1="90" y1="80" x2="70" y2="60" />
+            <line x1="90" y1="100" x2="70" y2="120" />
+            
+            <path d="M50,0 L10,40 L90,40 Z" />
+            <line x1="50" y1="0" x2="50" y2="40" />
+            <line x1="30" y1="20" x2="70" y2="20" />
+
+            <path d="M50,160 L10,120 L90,120 Z" />
+            <line x1="50" y1="160" x2="50" y2="120" />
+            <line x1="30" y1="140" x2="70" y2="140" />
+        </svg>
+        <div id="nodes-layer" class="w-full h-full relative"></div>
     </div>
 
     <script>
-        let mode = 'ai', turn = 'orange', selected = null;
-        const pts = [
-            {x:50, y:0}, {x:30, y:20}, {x:50, y:20}, {x:70, y:20}, 
-            {x:10, y:40}, {x:30, y:40}, {x:50, y:40}, {x:70, y:40}, {x:90, y:40},
-            {x:10, y:60}, {x:30, y:60}, {x:50, y:60}, {x:70, y:60}, {x:90, y:60},
-            {x:10, y:80}, {x:30, y:80}, {x:50, y:80}, {x:70, y:80}, {x:90, y:80},
-            {x:10, y:100}, {x:30, y:100}, {x:50, y:100}, {x:70, y:100}, {x:90, y:100},
-            {x:10, y:120}, {x:30, y:120}, {x:50, y:120}, {x:70, y:120}, {x:90, y:120},
-            {x:30, y:140}, {x:50, y:140}, {x:70, y:140}, {x:50, y:160}
+        const layer = document.getElementById('nodes-layer');
+        let selectedNode = null;
+        let turn = 'orange';
+
+        // सभी 32 पारंपरिक कटान बिंदुओं (Coordinates) का सटीक ऐरे
+        const junctionPoints = [
+            // ऊपरी टॉवर (Top House) - 6 बिंदु
+            {x: 50, y: 0}, {x: 30, y: 20}, {x: 50, y: 20}, {x: 70, y: 20},
+            {x: 10, y: 40}, {x: 90, y: 40},
+
+            // मुख्य ग्रिड Row 1 - 5 बिंदु
+            {x: 10, y: 40}, {x: 30, y: 40}, {x: 50, y: 40}, {x: 70, y: 40}, {x: 90, y: 40},
+            
+            // Row 2 - 5 बिंदु
+            {x: 10, y: 60}, {x: 30, y: 60}, {x: 50, y: 60}, {x: 70, y: 60}, {x: 90, y: 60},
+            
+            // Middle Line (क्षैतिज खाली रेखा) - 5 बिंदु
+            {x: 10, y: 80}, {x: 30, y: 80}, {x: 50, y: 80}, {x: 70, y: 80}, {x: 90, y: 80},
+            
+            // Row 4 - 5 बिंदु
+            {x: 10, y: 100}, {x: 30, y: 100}, {x: 50, y: 100}, {x: 70, y: 100}, {x: 90, y: 100},
+            
+            // Row 5 - 5 बिंदु
+            {x: 10, y: 120}, {x: 30, y: 120}, {x: 50, y: 120}, {x: 70, y: 120}, {x: 90, y: 120},
+            
+            // निचला टॉवर (Bottom House) - 6 बिंदु
+            {x: 10, y: 120}, {x: 90, y: 120},
+            {x: 30, y: 140}, {x: 50, y: 140}, {x: 70, y: 140},
+            {x: 50, y: 160}
         ];
 
-        function play(m) {
-            mode = m; document.getElementById('home').classList.remove('active');
-            document.getElementById('game-ui').classList.add('active');
-            const layer = document.getElementById('nodes-layer');
-            pts.forEach((p, i) => {
-                const n = document.createElement('div'); n.className = 'node';
-                n.style.left = p.x + '%'; n.style.top = (p.y / 1.6) + '%';
-                if (i < 16) n.innerHTML = '<div class="guti green"></div>';
-                else if (i >= pts.length - 16) n.innerHTML = '<div class="guti orange"></div>';
-                n.onclick = () => {
-                    const g = n.querySelector('.guti');
-                    if(g) {
-                        if((turn === 'orange' && g.classList.contains('orange')) || (turn === 'green' && g.classList.contains('green'))) {
-                            document.querySelectorAll('.node').forEach(x => x.classList.remove('selected'));
-                            n.classList.add('selected'); selected = n;
-                        }
-                    } else if(selected) {
-                        n.innerHTML = selected.innerHTML; selected.innerHTML = '';
-                        selected.classList.remove('selected'); selected = null;
-                        turn = turn === 'orange' ? 'green' : 'orange';
-                        updateTurn();
-                    }
-                };
-                layer.appendChild(n);
-            });
-        }
+        // डुप्लिकेट बिंदुओं को हटाना और Middle line को अलग करना
+        const allUniqueNodes = [];
+        const middleNodesIndex = []; // Middle nodes को ट्रैक करने के लिए
+        const allSortedNodes = [];
 
-        function updateTurn() {
-            const st = document.getElementById('status');
-            st.innerText = turn === 'orange' ? 'आपकी बारी' : (mode === 'ai' ? 'AI सोच रहा है...' : 'दोस्त की बारी');
-            st.className = `px-6 py-1 rounded-full text-sm font-bold shadow-lg ${turn === 'orange' ? 'bg-orange-600' : 'bg-green-600'}`;
-            if(mode === 'ai' && turn === 'green') setTimeout(aiMove, 1000);
-        }
-
-        function aiMove() {
-            const gutis = Array.from(document.querySelectorAll('.node')).filter(n => n.querySelector('.green'));
-            const empty = Array.from(document.querySelectorAll('.node')).filter(n => n.innerHTML === '');
-            if(gutis.length > 0 && empty.length > 0) {
-                const f = gutis[Math.floor(Math.random() * gutis.length)];
-                const t = empty[Math.floor(Math.random() * empty.length)];
-                t.innerHTML = f.innerHTML; f.innerHTML = '';
-                turn = 'orange'; updateTurn();
+        junctionPoints.forEach((pos, i) => {
+            if(!allUniqueNodes.some(p => p.x === pos.x && p.y === pos.y)) {
+                allUniqueNodes.push(pos);
             }
-        }
+        });
+
+        // सुनिश्चित करें कि Nodes सही क्रम में लोड हों और middle खाली रहे
+        const finalSortedNodes = [
+            ...allUniqueNodes.filter(p => p.y < 80).sort((a,b) => a.y-b.y), // Top
+            ...allUniqueNodes.filter(p => p.y === 80).sort((a,b) => a.x-b.x), // Middle
+            ...allUniqueNodes.filter(p => p.y > 80).sort((a,b) => a.y-b.y) // Bottom
+        ];
+
+        finalSortedNodes.forEach((pos, i) => {
+            const node = document.createElement('div');
+            node.className = 'node';
+            // `viewBox="0 0 100 160"` के लिए पोज़िशन को सही अनुपात में सेट करना
+            node.style.left = pos.x + '%';
+            node.style.top = (pos.y / 1.6) + '%'; 
+            node.dataset.index = i;
+
+            // गोटियाँ सेट करना (16 नारंगी ऊपर, 16 हरी नीचे) - इमेज जैसा सटीक सेटअप
+            if (i < 16) {
+                // ऊपरी गोटियाँ (नारंगी)
+                node.innerHTML = '<div class="guti orange"></div>';
+            } else if (i >= finalSortedNodes.length - 16) {
+                // निचली गोटियाँ (हरी)
+                node.innerHTML = '<div class="guti green"></div>';
+            }
+            // बीच की 5 पोज़िशन को खाली छोड़ना
+
+            node.onclick = () => {
+                const guti = node.querySelector('.guti');
+                if(guti) {
+                    if((turn === 'orange' && guti.classList.contains('orange')) || (turn === 'green' && guti.classList.contains('green'))) {
+                        document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                        node.classList.add('selected');
+                        selectedNode = node;
+                    }
+                } else if(selectedNode) {
+                    node.appendChild(selectedNode.querySelector('.guti'));
+                    selectedNode.classList.remove('selected');
+                    selectedNode = null;
+                    turn = (turn === 'orange') ? 'green' : 'orange';
+                    document.getElementById('voice-btn').innerText = (turn === 'orange' ? '🎤 Voice चालू (P1)' : '🎤 Voice चालू (P2)');
+                }
+            };
+            layer.appendChild(node);
+        });
     </script>
 </body>
 </html>
