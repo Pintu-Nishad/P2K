@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V27 - AUDIO GROUP</title>
+    <title>P2K SECURE V28 - REAL WEBRTC</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,9 +13,9 @@
         :root { --accent: #10b981; --bg: #020617; }
         body { background: var(--bg); color: white; font-family: 'Manrope', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
         
-        /* UI Layout Fixes */
+        /* Layout Fixes */
         .header { height: 80px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; }
-        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); padding-bottom: 120px; }
+        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); padding-bottom: 130px; }
         .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 200; }
 
         /* Bubbles */
@@ -27,14 +27,12 @@
         .btn-meme { width: 38px; height: 38px; cursor: pointer; transition: 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
         .btn-meme:active { transform: scale(0.8); }
 
-        /* Join Call Notification */
-        #callNotify { display: none; background: #059669; color: white; padding: 8px 15px; border-radius: 50px; font-size: 12px; font-weight: 800; animation: blink 1s infinite; cursor: pointer; }
-        @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
-
-        /* Audio Grid (Hidden) */
-        #audioContainer { display: none; }
+        /* Join Call Flashing Alert */
+        #callNotify { display: none; background: #ef4444; color: white; padding: 8px 16px; border-radius: 50px; font-size: 11px; font-weight: 900; animation: pulse 1s infinite; cursor: pointer; border: 2px solid white; }
+        @keyframes pulse { 0% { transform: scale(1); shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1.05); shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { transform: scale(1); } }
         
         #loginDiv { position: fixed; inset: 0; z-index: 10001; background: #020617; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        audio { height: 35px; width: 200px; filter: invert(1); margin-top: 5px; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -44,7 +42,7 @@
         <img src="https://cdn-icons-png.flaticon.com/512/10435/10435921.png" class="w-20 mx-auto mb-6">
         <h1 style="font-family: 'Orbitron';" class="text-3xl font-black text-emerald-400 mb-8 tracking-wider">P2K SECURE</h1>
         <input id="user" type="text" placeholder="Your Name" class="w-full bg-slate-800 rounded-2xl p-5 mb-4 outline-none border border-transparent focus:border-emerald-500">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
+        <input id="pass" type="password" placeholder="Secret Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
         <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all">CONNECT NOW</button>
     </div>
 </div>
@@ -52,21 +50,19 @@
 <div id="appUI" class="hidden h-full flex flex-col">
     <header class="header flex items-center justify-between px-6">
         <div>
-            <div id="userCounter" class="text-emerald-400 font-bold text-xs uppercase tracking-tighter">● Online: 0</div>
+            <div id="userCounter" class="text-emerald-400 font-bold text-xs uppercase tracking-tighter">● Offline</div>
             <div id="typingInfo" class="text-[9px] text-white/50 italic"></div>
         </div>
         
-        <div id="callNotify" onclick="joinAudioCall()">📞 JOIN CALL</div>
+        <div id="callNotify" onclick="answerCall()">📞 JOIN GROUP CALL</div>
 
         <div class="flex gap-4">
             <button onclick="askNotify()"><img src="https://cdn-icons-png.flaticon.com/512/3602/3602145.png" class="btn-meme"></button>
-            <button onclick="startAudioCall()"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435905.png" class="btn-meme"></button>
+            <button onclick="initiateCall()"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435905.png" class="btn-meme"></button>
         </div>
     </header>
 
     <div id="chatBox" class="msg-area"></div>
-
-    <div id="audioContainer"></div>
 
     <footer class="footer">
         <div class="flex items-center gap-3 bg-slate-800/60 rounded-full px-5 py-1.5 border border-white/5">
@@ -78,7 +74,7 @@
             <input id="msgInput" type="text" placeholder="Type a secure message..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
             <button onclick="sendMsg()"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435882.png" class="btn-meme"></button>
         </div>
-        <button id="hangupBtn" onclick="endCall()" class="hidden w-full mt-3 bg-red-600 py-2 rounded-full font-black text-xs uppercase">Leave Call</button>
+        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600 py-2 rounded-full font-black text-[10px] uppercase">End My Call</button>
     </footer>
 </div>
 
@@ -87,10 +83,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, myRoom, localStream, peers = {}, mediaRec, chunks = [];
-
-    // Security: Anti-Screenshot
-    window.addEventListener('keyup', e => { if(e.key==='PrintScreen'){ navigator.clipboard.writeText(""); alert("SECURE"); }});
+    let myName, myRoom, localStream, pc, mediaRec, chunks = [];
+    const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
     function enter() {
         myName = user.value.trim(); myRoom = pass.value.trim();
@@ -102,7 +96,92 @@
         listenMsgs(); listenCalls(); setupVoice(); setupTyping();
     }
 
-    // Voice Notes Logic
+    // --- REAL WEBRTC AUDIO CALL LOGIC ---
+    async function initiateCall() {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        pc = new RTCPeerConnection(configuration);
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        
+        pc.onicecandidate = e => { if (e.candidate) db.ref(`rooms/${myRoom}/calls/candidates/${myName}`).push(e.candidate.toJSON()); };
+        pc.ontrack = e => playRemoteStream(e.streams[0]);
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        db.ref(`rooms/${myRoom}/calls/offer`).set({ offer: offer.toJSON(), from: myName });
+        
+        hangupBtn.classList.remove('hidden');
+        alert("Ringing all users...");
+    }
+
+    function listenCalls() {
+        // Listen for incoming offer
+        db.ref(`rooms/${myRoom}/calls/offer`).on('value', async s => {
+            const d = s.val();
+            if (d && d.from !== myName) {
+                callNotify.style.display = "block";
+                callNotify.innerText = "📞 JOIN " + d.from.toUpperCase() + "'S CALL";
+            } else {
+                callNotify.style.display = "none";
+            }
+        });
+
+        // Listen for answer
+        db.ref(`rooms/${myRoom}/calls/answer`).on('value', async s => {
+            const d = s.val();
+            if (d && d.to === myName && pc) {
+                await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+            }
+        });
+
+        // Listen for candidates
+        db.ref(`rooms/${myRoom}/calls/candidates`).on('child_added', s => {
+            if (s.key !== myName) {
+                s.ref.on('child_added', c => {
+                    if (pc) pc.addIceCandidate(new RTCIceCandidate(c.val()));
+                });
+            }
+        });
+    }
+
+    async function answerCall() {
+        callNotify.style.display = "none";
+        hangupBtn.classList.remove('hidden');
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        const offerData = (await db.ref(`rooms/${myRoom}/calls/offer`).once('value')).val();
+        pc = new RTCPeerConnection(configuration);
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        
+        pc.onicecandidate = e => { if (e.candidate) db.ref(`rooms/${myRoom}/calls/candidates/${myName}`).push(e.candidate.toJSON()); };
+        pc.ontrack = e => playRemoteStream(e.streams[0]);
+
+        await pc.setRemoteDescription(new RTCSessionDescription(offerData.offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        
+        db.ref(`rooms/${myRoom}/calls/answer`).set({ answer: answer.toJSON(), to: offerData.from, from: myName });
+    }
+
+    function playRemoteStream(stream) {
+        let audio = document.getElementById("remoteAudio");
+        if (!audio) {
+            audio = document.createElement("audio");
+            audio.id = "remoteAudio";
+            audio.autoplay = true;
+            document.body.appendChild(audio);
+        }
+        audio.srcObject = stream;
+    }
+
+    function leaveCall() {
+        localStream?.getTracks().forEach(t => t.stop());
+        pc?.close(); pc = null;
+        db.ref(`rooms/${myRoom}/calls`).remove();
+        hangupBtn.classList.add('hidden');
+        location.reload(); 
+    }
+
+    // --- VOICE NOTES & MESSAGING ---
     async function setupVoice() {
         try {
             const s = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -125,7 +204,7 @@
     function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
     function sendData(val, type) {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-        setTimeout(() => ref.remove(), 60000); // 1-Min Vanish
+        setTimeout(() => ref.remove(), 60000); 
     }
 
     function listenMsgs() {
@@ -141,7 +220,7 @@
                 div.id = "m-"+id;
                 let c = d.val;
                 if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl max-h-60">`;
-                if(d.type==='voice') c = `<audio controls src="${d.val}" class="h-8 invert"></audio>`;
+                if(d.type==='voice') c = `<audio controls src="${d.val}"></audio>`;
                 div.innerHTML = `<div class="text-[9px] font-black opacity-50 mb-1">${d.u}</div>${c}<div class="text-[8px] text-right mt-1 opacity-40">${d.time}</div>`;
             }
             chatBox.appendChild(div);
@@ -150,92 +229,11 @@
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("m-"+s.key)?.remove());
     }
 
-    // --- MULTI-USER AUDIO CALL LOGIC ---
-    async function startAudioCall() {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        db.ref(`rooms/${myRoom}/callStatus`).set({ active: true, host: myName });
-        hangupBtn.classList.remove('hidden');
-        alert("Broadcasting call to all users...");
-    }
-
-    function listenCalls() {
-        db.ref(`rooms/${myRoom}/callStatus`).on('value', async s => {
-            const d = s.val();
-            if(d && d.active && d.host !== myName) {
-                callNotify.style.display = "block";
-                showPush("Incoming Call", `${d.host} is starting a group call!`);
-            } else {
-                callNotify.style.display = "none";
-            }
-        });
-
-        // Signaling for WebRTC
-        db.ref(`rooms/${myRoom}/signals/${myName}`).on('child_added', async s => {
-            const { from, offer, answer, candidate } = s.val();
-            if (offer) {
-                const pc = createPeer(from);
-                await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                const ans = await pc.createAnswer();
-                await pc.setLocalDescription(ans);
-                db.ref(`rooms/${myRoom}/signals/${from}`).push({ from: myName, answer: ans });
-            }
-            if (answer) peers[from].setRemoteDescription(new RTCSessionDescription(answer));
-            if (candidate) peers[from].addIceCandidate(new RTCIceCandidate(candidate));
-        });
-    }
-
-    async function joinAudioCall() {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        callNotify.style.display = "none";
-        hangupBtn.classList.remove('hidden');
-        
-        // Signal existing host/users
-        db.ref(`rooms/${myRoom}/users`).once('value', s => {
-            s.forEach(u => {
-                if (u.key !== myName) {
-                    const pc = createPeer(u.key);
-                    pc.createOffer().then(o => {
-                        pc.setLocalDescription(o);
-                        db.ref(`rooms/${myRoom}/signals/${u.key}`).push({ from: myName, offer: o });
-                    });
-                }
-            });
-        });
-    }
-
-    function createPeer(userId) {
-        const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-        peers[userId] = pc;
-        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-        pc.onicecandidate = e => { if (e.candidate) db.ref(`rooms/${myRoom}/signals/${userId}`).push({ from: myName, candidate: e.candidate }); };
-        pc.ontrack = e => {
-            let audio = document.getElementById("audio-"+userId);
-            if (!audio) {
-                audio = document.createElement('audio');
-                audio.id = "audio-"+userId; audio.autoplay = true;
-                audioContainer.appendChild(audio);
-            }
-            audio.srcObject = e.streams[0];
-        };
-        return pc;
-    }
-
-    function endCall() {
-        localStream?.getTracks().forEach(t => t.stop());
-        Object.values(peers).forEach(p => p.close());
-        peers = {};
-        db.ref(`rooms/${myRoom}/callStatus`).remove();
-        db.ref(`rooms/${myRoom}/signals/${myName}`).remove();
-        hangupBtn.classList.add('hidden');
-        location.reload(); // Hard reset for clean audio state
-    }
-
     function setupTyping() {
         msgInput.oninput = () => { db.ref(`rooms/${myRoom}/tp/${myName}`).set(true); clearTimeout(window.t); window.t = setTimeout(()=>db.ref(`rooms/${myRoom}/tp/${myName}`).remove(),2000); };
         db.ref(`rooms/${myRoom}/tp`).on('value', s => { let t=[]; s.forEach(u=>{ if(u.key!==myName) t.push(u.key); }); typingInfo.innerText = t.length>0 ? t.join(",")+" is typing..." : ""; });
     }
     function askNotify() { Notification.requestPermission(); }
-    function showPush(t, b) { if(Notification.permission==="granted") new Notification(t, {body:b}); }
 </script>
 </body>
 </html>
