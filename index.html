@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V25 - STABLE</title>
+    <title>P2K SECURE V26 - ULTRA</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,60 +13,69 @@
         :root { --accent: #10b981; --bg: #020617; }
         body { background: var(--bg); color: white; font-family: 'Manrope', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
         
-        /* Fixed UI Layout - No Shifting */
-        .header { height: 80px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 50; }
-        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); padding-bottom: 100px; }
-        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
+        /* Header Fix */
+        .header { height: 75px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; }
+        
+        /* Chat Area - Fixed UI Msg Overlap */
+        .msg-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); padding-bottom: 120px; scroll-behavior: smooth; }
 
-        /* Bubbles */
-        .msg { padding: 12px 18px; border-radius: 22px; max-width: 80%; font-size: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* Footer Fixed at Bottom */
+        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 200; }
+
+        /* Bubble Styles */
+        .msg { padding: 12px 16px; border-radius: 20px; max-width: 85%; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); animation: pop 0.2s ease-out; position: relative; }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .in { background: #1e293b; align-self: flex-start; border-bottom-left-radius: 4px; }
         .out { background: linear-gradient(135deg, #059669, #10b981); align-self: flex-end; border-bottom-right-radius: 4px; }
 
-        /* Meme Icons Styling */
-        .btn-meme { width: 38px; height: 38px; cursor: pointer; transition: 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        .btn-meme:active { transform: scale(0.8) rotate(-10deg); }
+        .btn-meme { width: 36px; height: 36px; cursor: pointer; transition: 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .btn-meme:active { transform: scale(0.8); }
 
-        /* Call Screen Full Fixed */
+        /* Call Screen */
         #callUI { position: fixed; inset: 0; z-index: 9999; background: #000; display: none; }
         #remoteVid { width: 100%; height: 100%; object-fit: cover; }
-        #localVid { position: absolute; top: 40px; right: 20px; width: 100px; height: 150px; border-radius: 12px; border: 2px solid var(--accent); object-fit: cover; z-index: 10000; }
+        #localVid { position: absolute; top: 40px; right: 20px; width: 100px; height: 140px; border-radius: 12px; border: 2px solid var(--accent); object-fit: cover; z-index: 10000; }
         
         #loginDiv { position: fixed; inset: 0; z-index: 10001; background: #020617; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        /* Audio Player Style */
+        audio { height: 30px; width: 180px; filter: invert(1); }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="loginDiv">
-    <div class="w-full max-w-sm bg-slate-900/50 backdrop-blur-xl p-10 rounded-[40px] border border-white/10 text-center">
-        <img src="https://cdn-icons-png.flaticon.com/512/10435/10435921.png" class="w-20 mx-auto mb-6">
-        <h1 style="font-family: 'Orbitron';" class="text-3xl font-black text-emerald-400 mb-8 tracking-wider">P2K SECURE</h1>
-        <input id="user" type="text" placeholder="Your Name" class="w-full bg-slate-800 rounded-2xl p-5 mb-4 outline-none border border-transparent focus:border-emerald-500">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
-        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all">CONNECT NOW</button>
+    <div class="w-full max-w-sm bg-slate-900/80 backdrop-blur-2xl p-8 rounded-[40px] border border-white/10 text-center shadow-2xl">
+        <img src="https://cdn-icons-png.flaticon.com/512/10435/10435921.png" class="w-16 mx-auto mb-4">
+        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-6 tracking-widest">P2K SECURE</h1>
+        <input id="user" type="text" placeholder="Profile Name" class="w-full bg-slate-800 rounded-xl p-4 mb-3 outline-none border border-transparent focus:border-emerald-500">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-xl p-4 mb-6 outline-none border border-transparent focus:border-emerald-500">
+        <button onclick="enterChat()" class="w-full bg-emerald-600 py-4 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all">ENTER VAULT</button>
     </div>
 </div>
 
 <div id="appUI" class="hidden h-full flex flex-col">
-    <header class="header flex items-center justify-between px-6">
+    <header class="header flex items-center justify-between px-5">
         <div>
-            <div id="userCounter" class="text-emerald-400 font-bold text-xs">● Loading Room...</div>
-            <div id="typingInfo" class="text-[10px] text-white/50 italic"></div>
+            <div id="userCounter" class="text-emerald-400 font-bold text-xs uppercase">● Offline</div>
+            <div id="typingInfo" class="text-[9px] text-white/40 italic"></div>
         </div>
-        <div class="flex gap-4">
+        <div class="flex gap-3">
             <button onclick="askNotify()"><img src="https://cdn-icons-png.flaticon.com/512/3602/3602145.png" class="btn-meme"></button>
-            <button onclick="initCall()"><img src="https://cdn-icons-png.flaticon.com/512/4359/4359042.png" class="btn-meme"></button>
+            <button onclick="startVideoCall()"><img src="https://cdn-icons-png.flaticon.com/512/4359/4359042.png" class="btn-meme"></button>
         </div>
     </header>
 
     <div id="chatBox" class="msg-area"></div>
 
     <footer class="footer">
-        <div class="flex items-center gap-3 bg-slate-800/60 rounded-full px-5 py-1.5 border border-white/5">
+        <div class="flex items-center gap-2 bg-slate-800/80 rounded-full px-4 py-1 border border-white/5">
             <input type="file" id="fileIn" accept="image/*" onchange="sendPhoto(this)" class="hidden">
             <button onclick="document.getElementById('fileIn').click()"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435911.png" class="btn-meme"></button>
-            <input id="msgInput" type="text" placeholder="Type a secure message..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
+            
+            <button id="recBtn" class="active:scale-125 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435905.png" class="btn-meme"></button>
+            
+            <input id="msgInput" type="text" placeholder="Secure chat..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white font-medium">
             <button onclick="sendMsg()"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435882.png" class="btn-meme"></button>
         </div>
     </footer>
@@ -76,9 +85,7 @@
     <video id="remoteVid" autoplay playsinline></video>
     <video id="localVid" autoplay playsinline muted></video>
     <div class="absolute bottom-10 w-full flex justify-center gap-6">
-        <button onclick="toggleMic()" id="micBtn" class="bg-white/10 p-5 rounded-full border border-white/20"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435905.png" class="w-8"></button>
-        <button onclick="hangUp()" class="bg-red-600 p-6 rounded-full shadow-2xl"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435930.png" class="w-10"></button>
-        <button onclick="flipCam()" class="bg-white/10 p-5 rounded-full border border-white/20"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435932.png" class="w-8"></button>
+        <button onclick="endCall()" class="bg-red-600 p-5 rounded-full shadow-2xl"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435930.png" class="w-8"></button>
     </div>
 </div>
 
@@ -87,51 +94,63 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, myRoom, localStream, peer, mode="user";
+    let myName, myRoom, localStream, pc, mediaRecorder, audioChunks = [];
 
-    // SECURITY: Screenshot Protection
-    window.addEventListener('keyup', e => { if(e.key==='PrintScreen'){ navigator.clipboard.writeText(""); alert("SECURE MODE"); }});
+    // Security
+    window.onkeyup = e => { if(e.key==='PrintScreen') { navigator.clipboard.writeText(""); alert("🔒"); }};
 
-    function enter() {
+    function enterChat() {
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
         loginDiv.style.display="none"; appUI.classList.remove('hidden');
         db.ref(`rooms/${myRoom}/msgs`).push({ type:'sys', val: `${myName} Joined` });
         db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "● Online: " + s.numChildren());
-        listenMsgs(); listenForCalls(); setupTyping();
+        listenMessages(); listenCalls(); handleTyping(); setupVoice();
     }
 
-    function sendMsg() {
-        const val = msgInput.value.trim(); if(!val) return;
-        const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type: 'text', time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-        msgInput.value=""; setTimeout(() => ref.remove(), 60000);
-    }
-
-    function sendPhoto(input) {
-        if(!input.files[0]) return;
-        const r = new FileReader();
-        r.onload = e => {
-            const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: e.target.result, type: 'img', time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-            setTimeout(() => ref.remove(), 60000);
+    // Voice Recording Logic
+    async function setupVoice() {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.onload = e => sendData(e.target.result, 'voice');
+            reader.readAsDataURL(blob);
+            audioChunks = [];
         };
-        r.readAsDataURL(input.files[0]);
+        recBtn.onmousedown = () => { mediaRecorder.start(); recBtn.style.filter = "hue-rotate(90deg)"; };
+        recBtn.onmouseup = () => { mediaRecorder.stop(); recBtn.style.filter = "none"; };
+        // Mobile Touch
+        recBtn.ontouchstart = (e) => { e.preventDefault(); mediaRecorder.start(); recBtn.style.filter = "hue-rotate(90deg)"; };
+        recBtn.ontouchend = () => { mediaRecorder.stop(); recBtn.style.filter = "none"; };
     }
 
-    function listenMsgs() {
+    function sendMsg() { const v = msgInput.value.trim(); if(v) sendData(v, 'text'); msgInput.value=""; }
+    function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
+    
+    function sendData(val, type) {
+        const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+        setTimeout(() => ref.remove(), 60000);
+    }
+
+    function listenMessages() {
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s => {
             const d = s.val(), id = s.key;
             const div = document.createElement("div");
             if(d.type === 'sys') {
-                div.className = "text-center text-[10px] text-emerald-500 uppercase font-black my-4 opacity-40 tracking-widest";
+                div.className = "text-center text-[9px] text-emerald-500 uppercase font-black my-2 opacity-40 tracking-widest";
                 div.innerText = d.val;
             } else {
                 const isMe = d.u === myName;
                 div.className = `msg ${isMe ? 'out' : 'in'}`;
                 div.id = "m-"+id;
-                const del = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="ml-2 opacity-30 text-[10px]">🗑️</button>` : "";
-                const content = d.type==='img' ? `<img src="${d.val}" class="rounded-xl max-h-64 shadow-lg">` : d.val;
-                div.innerHTML = `<div class="flex justify-between text-[10px] font-black opacity-50 mb-1"><span>${d.u}</span>${del}</div>${content}<div class="text-[8px] text-right mt-1 opacity-40">${d.time}</div>`;
+                let content = d.val;
+                if(d.type==='img') content = `<img src="${d.val}" class="rounded-lg max-h-48">`;
+                if(d.type==='voice') content = `<audio controls src="${d.val}"></audio>`;
+                div.innerHTML = `<div class="text-[9px] font-black opacity-50 mb-1">${d.u}</div>${content}<div class="text-[8px] text-right mt-1 opacity-30">${d.time}</div>`;
             }
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -139,48 +158,44 @@
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("m-"+s.key)?.remove());
     }
 
-    // --- WebRTC PRO LOGIC ---
-    async function initCall() {
+    // WEB RTC PRO FIX
+    async function startVideoCall() {
         callUI.style.display="block";
-        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{facingMode:mode}});
+        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
         localVid.srcObject = localStream;
-        
-        peer = new RTCPeerConnection({ iceServers:[{urls:"stun:stun.l.google.com:19302"}] });
-        localStream.getTracks().forEach(t => peer.addTrack(t, localStream));
-        peer.ontrack = e => remoteVid.srcObject = e.streams[0];
-        peer.onicecandidate = e => { if(e.candidate) db.ref(`calls/${myRoom}/ice/${myName}`).push(e.candidate.toJSON()); };
-
-        const offer = await peer.createOffer();
-        await peer.setLocalDescription(offer);
-        db.ref(`calls/${myRoom}/conn`).set({offer, caller:myName});
+        pc = new RTCPeerConnection({ iceServers:[{urls:"stun:stun.l.google.com:19302"}] });
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+        pc.ontrack = e => remoteVid.srcObject = e.streams[0];
+        pc.onicecandidate = e => { if(e.candidate) db.ref(`calls/${myRoom}/ice/${myName}`).push(e.candidate.toJSON()); };
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        db.ref(`calls/${myRoom}/sig`).set({offer, from:myName});
     }
 
-    function listenForCalls() {
-        db.ref(`calls/${myRoom}/conn`).on("value", async s => {
+    function listenCalls() {
+        db.ref(`calls/${myRoom}/sig`).on("value", async s => {
             const d = s.val(); if(!d) return;
-            if(d.offer && d.caller !== myName && !peer) {
-                if(confirm("Incoming Video Call... Accept?")) {
+            if(d.offer && d.from !== myName && !pc) {
+                if(confirm("Accept Call?")) {
                     callUI.style.display="block";
                     localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
                     localVid.srcObject = localStream;
-                    peer = new RTCPeerConnection({ iceServers:[{urls:"stun:stun.l.google.com:19302"}] });
-                    localStream.getTracks().forEach(t => peer.addTrack(t, localStream));
-                    peer.ontrack = e => remoteVid.srcObject = e.streams[0];
-                    await peer.setRemoteDescription(new RTCSessionDescription(d.offer));
-                    const answer = await peer.createAnswer();
-                    await peer.setLocalDescription(answer);
-                    db.ref(`calls/${myRoom}/conn`).update({answer});
+                    pc = new RTCPeerConnection({ iceServers:[{urls:"stun:stun.l.google.com:19302"}] });
+                    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+                    pc.ontrack = e => remoteVid.srcObject = e.streams[0];
+                    await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+                    const ans = await pc.createAnswer();
+                    await pc.setLocalDescription(ans);
+                    db.ref(`calls/${myRoom}/sig`).update({ans});
                 }
             }
-            if(d.answer && d.caller === myName) await peer.setRemoteDescription(new RTCSessionDescription(d.answer));
+            if(d.ans && d.from === myName) await pc.setRemoteDescription(new RTCSessionDescription(d.ans));
         });
-        db.ref(`calls/${myRoom}/ice`).on("child_added", s => { if(s.key!==myName) s.ref.on("child_added", c => peer?.addIceCandidate(new RTCIceCandidate(c.val()))); });
+        db.ref(`calls/${myRoom}/ice`).on("child_added", s => { if(s.key!==myName) s.ref.on("child_added", c => pc?.addIceCandidate(new RTCIceCandidate(c.val()))); });
     }
 
-    function hangUp() { db.ref(`calls/${myRoom}`).remove(); localStream?.getTracks().forEach(t=>t.stop()); peer?.close(); peer=null; callUI.style.display="none"; }
-    function toggleMic() { localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled; micBtn.classList.toggle('bg-red-500'); }
-    async function flipCam() { mode = (mode==="user"?"environment":"user"); hangUp(); initCall(); }
-    function setupTyping() { msgInput.oninput = () => { db.ref(`rooms/${myRoom}/typ/${myName}`).set(true); clearTimeout(window.t); window.t = setTimeout(()=>db.ref(`rooms/${myRoom}/typ/${myName}`).remove(),2000); }; db.ref(`rooms/${myRoom}/typ`).on('value', s => { let t=[]; s.forEach(u=>{ if(u.key!==myName) t.push(u.key); }); typingInfo.innerText = t.length>0 ? t.join(",")+" is typing..." : ""; }); }
+    function endCall() { db.ref(`calls/${myRoom}`).remove(); localStream?.getTracks().forEach(t=>t.stop()); pc?.close(); pc=null; callUI.style.display="none"; }
+    function handleTyping() { msgInput.oninput = () => { db.ref(`rooms/${myRoom}/tp/${myName}`).set(true); clearTimeout(window.t); window.t = setTimeout(()=>db.ref(`rooms/${myRoom}/tp/${myName}`).remove(),2000); }; db.ref(`rooms/${myRoom}/tp`).on('value', s => { let t=[]; s.forEach(u=>{ if(u.key!==myName) t.push(u.key); }); typingInfo.innerText = t.length>0 ? t.join(",")+" typing..." : ""; }); }
     function askNotify() { Notification.requestPermission(); }
 </script>
 </body>
