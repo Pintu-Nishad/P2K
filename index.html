@@ -3,51 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>तिउरी - वर्किंग गेम</title>
+    <title>वीर 16 - असली नियम</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
-        body { background: #1a1c2c; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        body { background: #0f172a; font-family: sans-serif; overflow: hidden; touch-action: none; }
         .tiuri-font { font-family: 'Kalam', cursive; }
-        
-        /* लकड़ी जैसा बोर्ड */
         .board-container {
-            background: #4e342e; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            position: relative; width: 90vw; max-width: 380px; aspect-ratio: 1 / 1.5;
-            border: 10px solid #3e2723; border-radius: 15px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7); margin: auto;
+            background: #3e2723; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            position: relative; width: 92vw; max-width: 380px; aspect-ratio: 1 / 1.5;
+            border: 8px solid #2d1b18; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin: auto;
         }
-        .lines-svg { position: absolute; width: 100%; height: 100%; stroke: #d7ccc8; stroke-width: 2.5; fill: none; opacity: 0.8; }
-        
-        .node { width: 34px; height: 34px; position: absolute; transform: translate(-50%, -50%); z-index: 30; cursor: pointer; }
-        .guti { width: 100%; height: 100%; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.5); pointer-events: none; }
-        
-        .orange { background: radial-gradient(circle at 35% 35%, #ff5722, #bf360c); } 
-        .green { background: radial-gradient(circle at 35% 35%, #4caf50, #1b5e20); } 
-        .selected { transform: translate(-50%, -50%) scale(1.3); filter: drop-shadow(0 0 10px yellow); z-index: 40; }
-        
-        /* स्क्रीन मैनेजमेंट */
-        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; }
-        .active-screen { display: flex !important; }
+        .lines-svg { position: absolute; width: 100%; height: 100%; stroke: #d7ccc8; stroke-width: 2; fill: none; opacity: 0.6; }
+        .node { width: 34px; height: 34px; position: absolute; transform: translate(-50%, -50%); z-index: 30; display: flex; align-items: center; justify-content: center; }
+        .guti { width: 85%; height: 85%; border-radius: 50%; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.6); transition: 0.2s; }
+        .orange { background: radial-gradient(circle at 30% 30%, #ff5722, #bf360c); } 
+        .green { background: radial-gradient(circle at 30% 30%, #4caf50, #1b5e20); } 
+        .selected .guti { transform: scale(1.3); filter: drop-shadow(0 0 15px #facc15); border-color: #facc15; }
+        .highlight { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; pointer-events: none; }
     </style>
 </head>
-<body class="text-white">
+<body class="text-white flex flex-col items-center justify-center min-h-screen">
 
-    <div id="home-screen" class="screen active-screen bg-slate-900">
-        <h1 class="text-7xl text-yellow-500 tiuri-font mb-12 drop-shadow-2xl">तिउरी</h1>
-        <div class="flex flex-col gap-6">
-            <button id="ai-btn" onclick="initiateGame('ai')" class="w-72 bg-gradient-to-b from-orange-500 to-orange-700 p-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">🤖 कंप्यूटर (AI)</button>
-            <button id="pvp-btn" onclick="initiateGame('pvp')" class="w-72 bg-gradient-to-b from-indigo-500 to-indigo-700 p-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">👥 दो खिलाड़ी (PvP)</button>
+    <div id="menu" class="text-center">
+        <h1 class="text-7xl text-yellow-500 tiuri-font mb-10">वीर 16</h1>
+        <div class="flex flex-col gap-4">
+            <button onclick="start('ai')" class="w-64 bg-orange-600 p-4 rounded-xl font-bold shadow-lg">🤖 स्मार्ट कंप्यूटर</button>
+            <button onclick="start('pvp')" class="w-64 bg-indigo-600 p-4 rounded-xl font-bold shadow-lg">👥 दो खिलाड़ी</button>
         </div>
-        <p class="mt-20 text-slate-500 text-xs font-bold uppercase tracking-widest italic">Nishad Crafts Games</p>
     </div>
 
-    <div id="game-screen" class="screen bg-[#1a1c2c]">
-        <div class="w-full max-w-sm flex justify-between items-center mb-6 px-4">
-            <div id="turn-display" class="bg-orange-600 px-6 py-2 rounded-full font-bold text-sm shadow-lg border border-white/20">आपकी बारी</div>
-            <div class="flex gap-4 font-black">
-                <div class="text-orange-500">P1: <span id="score1">16</span></div>
-                <div class="text-green-500">P2: <span id="score2">16</span></div>
+    <div id="game" class="hidden w-full flex flex-col items-center">
+        <div class="flex justify-between w-full max-w-sm mb-4 px-4">
+            <div id="turn" class="bg-orange-600 px-4 py-1 rounded-full text-sm font-bold shadow-md">P1 बारी</div>
+            <div class="flex gap-3 text-xs font-bold">
+                <span class="text-orange-400">P1: <b id="p1-score">16</b></span>
+                <span class="text-green-400">P2: <b id="p2-score">16</b></span>
             </div>
         </div>
 
@@ -57,115 +48,105 @@
                 <line x1="10" y1="50" x2="90" y2="50" /><line x1="10" y1="70" x2="90" y2="70" /><line x1="10" y1="90" x2="90" y2="90" />
                 <line x1="30" y1="30" x2="30" y2="110" /><line x1="50" y1="30" x2="50" y2="110" /><line x1="70" y1="30" x2="70" y2="110" />
                 <line x1="10" y1="30" x2="90" y2="110" /><line x1="10" y1="110" x2="90" y2="30" />
-                <path d="M50,0 L10,30 L90,30 Z" /><line x1="50" y1="0" x2="50" y2="30" />
-                <path d="M50,150 L10,110 L90,110 Z" /><line x1="50" y1="150" x2="50" y2="110" />
+                <path d="M50,0 L10,30 L90,30 Z" /><line x1="50" y1="0" x2="50" y2="30" /><line x1="30" y1="15" x2="70" y2="15" />
+                <path d="M50,150 L10,110 L90,110 Z" /><line x1="50" y1="150" x2="50" y2="110" /><line x1="30" y1="130" x2="70" y2="130" />
             </svg>
-            <div id="nodes-layer" class="w-full h-full relative"></div>
+            <div id="nodes" class="w-full h-full relative"></div>
         </div>
-        
-        <button onclick="window.location.reload()" class="mt-10 text-slate-500 font-bold uppercase text-[10px] tracking-widest">🏳️ वापस मेन्यू में जाएँ</button>
     </div>
 
     <script>
-        let currentGameMode = 'ai';
-        let currentTurn = 'orange'; // orange (Player), green (AI/Player 2)
-        let selectedNode = null;
-
-        // बोर्ड के 37 सटीक पॉइंट्स (इमेज के अनुसार)
-        const boardPoints = [
-            {x:50, y:0}, {x:30, y:15}, {x:50, y:15}, {x:70, y:15}, {x:10, y:30}, {x:90, y:30},
-            {x:10, y:30}, {x:30, y:30}, {x:50, y:30}, {x:70, y:30}, {x:90, y:30},
-            {x:10, y:50}, {x:30, y:50}, {x:50, y:50}, {x:70, y:50}, {x:90, y:50},
-            {x:10, y:70}, {x:30, y:70}, {x:50, y:70}, {x:70, y:70}, {x:90, y:70},
-            {x:10, y:90}, {x:30, y:90}, {x:50, y:90}, {x:70, y:90}, {x:90, y:90},
-            {x:10, y:110}, {x:30, y:110}, {x:50, y:110}, {x:70, y:110}, {x:90, y:110},
-            {x:30, y:130}, {x:50, y:130}, {x:70, y:130}, {x:50, y:150}
+        let mode = 'ai', turn = 'orange', selected = null, p1Count = 16, p2Count = 16;
+        const pts = [
+            {id:0, x:50, y:0, adj:[1,2,3]}, {id:1, x:30, y:15, adj:[0,2,4,5]}, {id:2, x:50, y:15, adj:[0,1,3,6]}, {id:3, x:70, y:15, adj:[0,2,7,8]},
+            {id:4, x:10, y:30, adj:[1,5,9,10]}, {id:5, x:30, y:30, adj:[1,4,6,10,11]}, {id:6, x:50, y:30, adj:[2,5,7,11]}, {id:7, x:70, y:30, adj:[3,6,8,12,13]}, {id:8, x:90, y:30, adj:[3,7,13]},
+            {id:9, x:10, y:50, adj:[4,10,14]}, {id:10, x:30, y:50, adj:[4,5,9,11,15]}, {id:11, x:50, y:50, adj:[5,6,10,12,16]}, {id:12, x:70, y:50, adj:[7,8,11,13,17]}, {id:13, x:90, y:50, adj:[7,8,12,18]},
+            {id:14, x:10, y:70, adj:[9,15,19]}, {id:15, x:30, y:70, adj:[10,14,16,20]}, {id:16, x:50, y:70, adj:[11,15,17,21]}, {id:17, x:70, y:70, adj:[12,16,18,22]}, {id:18, x:90, y:70, adj:[13,17,23]},
+            {id:19, x:10, y:90, adj:[14,20,24]}, {id:20, x:30, y:90, adj:[15,19,21,24,25]}, {id:21, x:50, y:90, adj:[16,20,22,26]}, {id:22, x:70, y:90, adj:[17,21,23,27,28]}, {id:23, x:90, y:90, adj:[18,22,28]},
+            {id:24, x:10, y:110, adj:[19,20,25,31]}, {id:25, x:30, y:110, adj:[20,24,26,29,31]}, {id:26, x:50, y:110, adj:[21,25,27,30]}, {id:27, x:70, y:110, adj:[22,23,26,28,31]}, {id:28, x:90, y:110, adj:[23,27,31]},
+            {id:29, x:30, y:130, adj:[25,30,32]}, {id:30, x:50, y:130, adj:[26,29,31,32]}, {id:31, x:70, y:130, adj:[27,28,30,32]}, {id:32, x:50, y:150, adj:[29,30,31]}
         ];
 
-        // गेम शुरू करने का फंक्शन
-        function initiateGame(mode) {
-            currentGameMode = mode;
-            // होम स्क्रीन छुपाएं और गेम स्क्रीन दिखाएं
-            document.getElementById('home-screen').classList.remove('active-screen');
-            document.getElementById('game-screen').classList.add('active-screen');
-            buildBoard();
-        }
-
-        function buildBoard() {
-            const layer = document.getElementById('nodes-layer');
-            layer.innerHTML = '';
-            
-            boardPoints.forEach((p, i) => {
-                const node = document.createElement('div');
-                node.className = 'node';
-                node.style.left = p.x + '%';
-                node.style.top = (p.y / 1.5) + '%';
-                
-                // 16 हरी ऊपर, 16 नारंगी नीचे (बीच की लाइन खाली)
-                if (i < 16) {
-                    node.innerHTML = '<div class="guti green"></div>';
-                } else if (i >= boardPoints.length - 16) {
-                    node.innerHTML = '<div class="guti orange"></div>';
-                }
-
-                node.onclick = () => onNodeClick(node);
-                layer.appendChild(node);
+        function start(m) {
+            mode = m; document.getElementById('menu').style.display='none'; document.getElementById('game').style.display='flex';
+            const nodeLayer = document.getElementById('nodes'); nodeLayer.innerHTML = '';
+            pts.forEach((p, i) => {
+                const n = document.createElement('div'); n.className = 'node'; n.style.left = p.x + '%'; n.style.top = (p.y / 1.5) + '%'; n.id = 'n'+i;
+                if(i < 16) n.innerHTML = '<div class="guti green"></div>'; else if(i > 16) n.innerHTML = '<div class="guti orange"></div>';
+                n.onclick = () => click(i); nodeLayer.appendChild(n);
             });
         }
 
-        function onNodeClick(node) {
-            // अगर कंप्यूटर की बारी है तो यूजर कुछ नहीं कर सकता
-            if (currentGameMode === 'ai' && currentTurn === 'green') return;
-
-            const gutiInside = node.querySelector('.guti');
-
-            if (gutiInside) {
-                // अपनी गोटी सिलेक्ट करना
-                if ((currentTurn === 'orange' && gutiInside.classList.contains('orange')) || 
-                    (currentTurn === 'green' && gutiInside.classList.contains('green'))) {
-                    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-                    node.classList.add('selected');
-                    selectedNode = node;
+        function click(i) {
+            if(mode === 'ai' && turn === 'green') return;
+            const node = document.getElementById('n'+i), guti = node.querySelector('.guti');
+            if(guti) {
+                if((turn === 'orange' && guti.classList.contains('orange')) || (turn === 'green' && guti.classList.contains('green'))) {
+                    document.querySelectorAll('.node').forEach(x => x.classList.remove('selected'));
+                    node.classList.add('selected'); selected = i;
                 }
-            } else if (selectedNode) {
-                // खाली जगह पर गोटी चलना
-                node.innerHTML = selectedNode.innerHTML;
-                selectedNode.innerHTML = '';
-                selectedNode.classList.remove('selected');
-                selectedNode = null;
-                changeTurn();
+            } else if(selected !== null) move(selected, i);
+        }
+
+        function move(from, to) {
+            const fNode = document.getElementById('n'+from), tNode = document.getElementById('n'+to);
+            const isAdj = pts[from].adj.includes(to);
+            let captured = null;
+
+            if(!isAdj) { // जंप चेक (काटने के लिए)
+                pts[from].adj.forEach(mid => {
+                    const midNode = document.getElementById('n'+mid);
+                    const enemy = turn === 'orange' ? 'green' : 'orange';
+                    if(midNode.querySelector('.'+enemy)) {
+                        pts[mid].adj.forEach(end => {
+                            if(end === to && (pts[from].x + pts[end].x) / 2 === pts[mid].x && (pts[from].y + pts[end].y) / 2 === pts[mid].y) captured = midNode;
+                        });
+                    }
+                });
+            }
+
+            if(isAdj || captured) {
+                tNode.innerHTML = fNode.innerHTML; fNode.innerHTML = ''; 
+                if(captured) { 
+                    captured.innerHTML = ''; 
+                    if(turn === 'orange') { p2Count--; document.getElementById('p2-score').innerText = p2Count; }
+                    else { p1Count--; document.getElementById('p1-score').innerText = p1Count; }
+                }
+                selected = null; document.querySelectorAll('.node').forEach(x => x.classList.remove('selected'));
+                turn = turn === 'orange' ? 'green' : 'orange';
+                updateTurn();
+                if(mode === 'ai' && turn === 'green') setTimeout(ai, 800);
             }
         }
 
-        function changeTurn() {
-            currentTurn = (currentTurn === 'orange') ? 'green' : 'orange';
-            const statusBox = document.getElementById('turn-display');
-            
-            if (currentTurn === 'orange') {
-                statusBox.innerText = "आपकी बारी";
-                statusBox.className = "bg-orange-600 px-6 py-2 rounded-full font-bold text-sm shadow-lg border border-white/20";
-            } else {
-                statusBox.innerText = (currentGameMode === 'ai') ? "AI सोच रहा है..." : "दोस्त की बारी";
-                statusBox.className = "bg-green-600 px-6 py-2 rounded-full font-bold text-sm shadow-lg border border-white/20";
-                
-                // अगर AI मोड है तो कंप्यूटर को चलने दें
-                if (currentGameMode === 'ai') {
-                    setTimeout(aiLogic, 1000);
-                }
-            }
+        function updateTurn() {
+            const t = document.getElementById('turn'); t.innerText = turn === 'orange' ? 'P1 बारी' : 'AI बारी';
+            t.className = `px-4 py-1 rounded-full text-sm font-bold shadow-md ${turn === 'orange' ? 'bg-orange-600' : 'bg-green-600'}`;
         }
 
-        function aiLogic() {
-            const aiPieces = Array.from(document.querySelectorAll('.node')).filter(n => n.querySelector('.green'));
-            const freeSpots = Array.from(document.querySelectorAll('.node')).filter(n => n.innerHTML === '');
-            
-            if (aiPieces.length > 0 && freeSpots.length > 0) {
-                const randomPiece = aiPieces[Math.floor(Math.random() * aiPieces.length)];
-                const randomTarget = freeSpots[Math.floor(Math.random() * freeSpots.length)];
-                
-                randomTarget.innerHTML = randomPiece.innerHTML;
-                randomPiece.innerHTML = '';
-                changeTurn();
+        function ai() {
+            // स्मार्ट AI: पहले काटने वाली चाल खोजेगा, फिर रैंडम
+            let moveFound = false;
+            pts.forEach((p, from) => {
+                if(document.getElementById('n'+from).querySelector('.green')) {
+                    p.adj.forEach(mid => {
+                        if(document.getElementById('n'+mid).querySelector('.orange')) {
+                            p.adj.forEach(end => { // जंप चेक
+                                if(!document.getElementById('n'+end).querySelector('.guti') && (pts[from].x + pts[end].x) / 2 === pts[mid].x) {
+                                   if(!moveFound) { move(from, end); moveFound = true; }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+            if(!moveFound) { // रैंडम मूव
+                const green = Array.from(document.querySelectorAll('.node')).filter(n => n.querySelector('.green'));
+                for(let gn of green) {
+                    const fromId = parseInt(gn.id.replace('n',''));
+                    const possible = pts[fromId].adj.filter(a => !document.getElementById('n'+a).querySelector('.guti'));
+                    if(possible.length > 0) { move(fromId, possible[0]); break; }
+                }
             }
         }
     </script>
