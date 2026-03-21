@@ -3,43 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K Pro V13 - Secure Chat</title>
-    <link rel="stylesheet" href="style.css">
+    <title>P2K SECURE V13</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="zoomOverlay" onclick="this.style.display='none'"><img id="zoomImg" src=""></div>
 
-<div id="loginDiv" class="fixed inset-0 z-[1000] bg-[#111b21] flex items-center justify-center p-6 text-center">
-    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-2xl shadow-2xl">
-        <h1 class="text-2xl font-bold mb-6 text-[#00a884]">P2K Secure</h1>
-        <input id="user" type="text" placeholder="Name" class="w-full bg-[#2a3942] rounded-lg p-3 mb-4 outline-none text-white">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-lg p-3 mb-6 outline-none text-white">
-        <button onclick="enter()" class="w-full bg-[#00a884] py-3 rounded-lg font-bold text-[#111b21]">Join Chat</button>
+<div id="loginDiv" class="fixed inset-0 z-[3000] bg-[#111b21] flex items-center justify-center p-6 text-center">
+    <div class="w-full max-w-sm bg-[#202c33] p-8 rounded-2xl shadow-2xl border border-gray-800">
+        <h1 class="text-3xl font-bold mb-2 text-[#00a884]">P2K SECURE</h1>
+        <p class="text-gray-400 text-xs mb-8 uppercase tracking-widest">Professional Edition</p>
+        <input id="user" type="text" placeholder="Name" class="w-full bg-[#2a3942] rounded-lg p-4 mb-4 outline-none text-white border border-transparent focus:border-[#00a884]">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-lg p-4 mb-8 outline-none text-white border border-transparent focus:border-[#00a884]">
+        <button onclick="enter()" class="w-full bg-[#00a884] py-4 rounded-xl font-bold text-[#111b21] active:scale-95 transition-all">CONNECT</button>
     </div>
 </div>
 
 <div id="chatDiv" class="hidden h-full flex flex-col">
-    <header class="h-14 bg-[#202c33] flex items-center justify-between px-4 border-b border-gray-800">
-        <button onclick="location.reload()" class="text-red-400 text-[10px] font-bold">EXIT</button>
+    <header class="h-16 bg-[#202c33] flex items-center justify-between px-4 border-b border-gray-800">
+        <button onclick="location.reload()" class="text-red-500 text-[10px] font-bold border border-red-900 px-2 py-1 rounded">EXIT</button>
         <div class="text-center">
-            <b id="roomTitle" class="text-xs text-white">Room</b>
-            <span id="userCounter" class="text-[8px] block text-[#00a884]">Online: 0</span>
+            <b id="roomTitle" class="text-sm text-white block">Room</b>
+            <span id="userCounter" class="text-[10px] text-[#00a884]">Online: 0</span>
         </div>
-        <button onclick="startCall()" class="bg-[#00a884] text-[#111b21] px-4 py-1.5 rounded-full font-bold text-xs">VIDEO CALL</button>
+        <button onclick="startCall()" class="bg-[#00a884] text-[#111b21] px-4 py-2 rounded-full font-bold text-xs">VIDEO CALL</button>
     </header>
 
     <div id="chatBox"></div>
 
     <footer class="input-area">
-        <input type="checkbox" id="ghostMode" class="w-4 h-4 accent-[#00a884]">
+        <input type="checkbox" id="ghostMode" class="w-5 h-5 accent-[#00a884]">
         <input type="file" id="fileInput" accept="image/*" onchange="sendPhoto(this)" class="hidden">
-        <button onclick="document.getElementById('fileInput').click()" class="text-[#8696a0] text-xl">📎</button>
-        <input id="msgInput" type="text" placeholder="Message..." class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 text-sm outline-none text-white">
-        <button onclick="sendMsg()" class="bg-[#00a884] p-2.5 rounded-full text-[#111b21]">➤</button>
+        <button onclick="document.getElementById('fileInput').click()" class="text-[#8696a0] text-2xl">📎</button>
+        <input id="msgInput" type="text" placeholder="Message..." class="flex-1 bg-[#2a3942] rounded-full px-4 py-2.5 text-sm outline-none text-white">
+        <button onclick="sendMsg()" class="bg-[#00a884] p-3 rounded-full text-[#111b21]">➤</button>
     </footer>
 </div>
 
