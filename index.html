@@ -1,204 +1,73 @@
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mosquito Killer - Sound Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
-        body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #020617; }
-        .game-font { font-family: 'Bungee', cursive; }
-        
-        .room {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                        url('https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000');
-            background-size: cover; background-position: center;
-            height: 100vh; width: 100vw; position: relative;
-        }
+// 1. Firebase और PeerJS सेटअप
+const peer = new Peer(); // अपनी रैंडम आईडी जनरेट करेगा
+const db = firebase.database(); // फायरबेस कनेक्शन
 
-        .mosquito {
-            position: absolute; font-size: 3.5rem; cursor: pointer;
-            z-index: 50; user-select: none; transition: transform 0.1s;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
-            animation: fly 0.5s infinite alternate ease-in-out;
-        }
-
-        @keyframes fly {
-            from { transform: translateY(0px) rotate(-5deg); }
-            to { transform: translateY(-10px) rotate(5deg); }
-        }
-
-        .splat-text {
-            position: absolute; color: #ef4444; font-weight: 900;
-            pointer-events: none; animation: fadeUp 0.5s forwards;
-            z-index: 60;
-        }
-
-        @keyframes fadeUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
-        }
-    </style>
-</head>
-<body class="text-white">
-
-    <audio id="slap-sound" preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="home-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950">
-        <div class="mb-8 animate-bounce text-8xl">🦟</div>
-        <h1 class="text-6xl md:text-8xl text-red-600 game-font mb-2 drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] text-center">MOSQUITO<br><span class="text-white">KILLER</span></h1>
-        <p class="text-slate-500 mb-12 font-bold tracking-[0.4em] text-xs uppercase">Nishad Crafts Audio Engine</p>
-        
-        <div class="flex flex-col gap-6 w-80">
-            <button onclick="initGame('ai')" class="bg-blue-600 p-6 rounded-2xl font-black text-2xl shadow-[0_10px_0_rgb(29,78,216)] hover:translate-y-1 hover:shadow-[0_5px_0_rgb(29,78,216)] transition-all active:scale-95">
-                🤖 कंप्यूटर <span class="block text-[10px] opacity-70">30s चैलेंज</span>
-            </button>
-            <button onclick="initGame('user')" class="bg-orange-600 p-6 rounded-2xl font-black text-2xl shadow-[0_10px_0_rgb(194,65,12)] hover:translate-y-1 hover:shadow-[0_5px_0_rgb(194,65,12)] transition-all active:scale-95">
-                👥 दूसरा यूजर <span class="block text-[10px] opacity-70">1:30 मुकाबला</span>
-            </button>
-        </div>
-    </div>
-
-    <div id="countdown-screen" class="hidden fixed inset-0 z-[90] flex items-center justify-center bg-black/90 backdrop-blur-sm">
-        <div id="countdown-text" class="text-9xl font-black game-font text-yellow-500 italic">3</div>
-    </div>
-
-    <div id="game-playground" class="hidden room flex flex-col">
-        <div class="w-full p-6 flex justify-between items-center bg-black/80 border-b border-white/10">
-            <div class="text-center">
-                <span class="text-[10px] text-blue-400 font-bold uppercase">User 1</span>
-                <div id="score1" class="text-4xl font-black">00</div>
-            </div>
-            
-            <div class="text-center">
-                <div id="timer" class="text-5xl font-black text-yellow-500 game-font">00</div>
-                <div id="mode-text" class="text-[9px] text-slate-400 uppercase tracking-tighter mt-1">Ready</div>
-            </div>
-
-            <div class="text-center">
-                <span id="p2-label" class="text-[10px] text-red-400 font-bold uppercase">AI</span>
-                <div id="score2" class="text-4xl font-black">00</div>
-            </div>
-        </div>
-        <div id="room-area" class="relative flex-grow cursor-crosshair"></div>
-    </div>
-
-    <script>
-        let s1 = 0, s2 = 0, timeLeft = 0, gameActive = false, gameMode = '';
-        const slapSound = document.getElementById('slap-sound');
-
-        function playSlap() {
-            slapSound.currentTime = 0; // आवाज को फिर से शुरू से बजाने के लिए
-            slapSound.play();
-        }
-
-        function initGame(mode) {
-            gameMode = mode;
-            timeLeft = (mode === 'ai') ? 30 : 90;
-            document.getElementById('p2-label').innerText = (mode === 'ai') ? "Computer" : "User 2";
-            document.getElementById('mode-text').innerText = (mode === 'ai') ? "30s Sprint" : "90s Battle";
-
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('countdown-screen').classList.remove('hidden');
-            
-            let count = 3;
-            const countText = document.getElementById('countdown-text');
-            const interval = setInterval(() => {
-                count--;
-                if(count > 0) countText.innerText = count;
-                else if(count === 0) {
-                    countText.innerText = "KILL!";
-                    countText.style.color = "#ef4444";
-                } else {
-                    clearInterval(interval);
-                    document.getElementById('countdown-screen').classList.add('hidden');
-                    document.getElementById('game-playground').classList.remove('hidden');
-                    startGame();
-                }
-            }, 1000);
-        }
-
-        function startGame() {
-            gameActive = true;
-            const spawner = setInterval(() => {
-                if(!gameActive) clearInterval(spawner);
-                spawn();
-            }, 600);
-
-            if(gameMode === 'ai') {
-                const ai = setInterval(() => {
-                    if(!gameActive) clearInterval(ai);
-                    aiAction();
-                }, 1000);
+// 2. रैंडम प्लेयर खोजना
+function findRandomOpponent() {
+    showStatus("खिलाड़ी की तलाश जारी है...");
+    
+    const playersRef = db.ref('online_players');
+    
+    // पहले से इंतज़ार कर रहे खिलाड़ियों को देखें
+    playersRef.once('value', (snapshot) => {
+        let found = false;
+        snapshot.forEach((child) => {
+            const player = child.val();
+            if (player.status === 'waiting' && child.key !== peer.id) {
+                // मैच मिल गया!
+                connectToOpponent(child.key);
+                found = true;
+                return true; 
             }
+        });
 
-            const clock = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').innerText = timeLeft;
-                if(timeLeft <= 0) {
-                    clearInterval(clock);
-                    endGame();
-                }
-            }, 1000);
-        }
-
-        function spawn() {
-            if(!gameActive) return;
-            const area = document.getElementById('room-area');
-            const m = document.createElement('div');
-            m.className = 'mosquito';
-            m.innerHTML = '🦟';
-            m.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-            m.style.top = Math.random() * (window.innerHeight - 250) + 'px';
+        if (!found) {
+            // कोई नहीं मिला, तो खुद "waiting" लिस्ट में जुड़ें
+            playersRef.child(peer.id).set({
+                status: 'waiting',
+                name: 'Player_' + Math.floor(Math.random() * 100)
+            });
             
-            m.onclick = (e) => {
-                if(m.innerHTML === '🦟') {
-                    s1 += 10;
-                    document.getElementById('score1').innerText = s1;
-                    playSlap(); // साउंड बजाएं
-                    createSplatText(e.clientX, e.clientY, "SPLAT!");
-                    killEffect(m);
-                }
-            };
-            area.appendChild(m);
-            setTimeout(() => { if(m.parentNode) m.remove(); }, 2000);
+            // जब कोई दूसरा हमसे कनेक्ट करेगा तो यह ट्रिगर होगा
+            peer.on('connection', (conn) => {
+                setupGame(conn);
+                playersRef.child(peer.id).remove(); // लिस्ट से हट जाएं
+            });
         }
+    });
+}
 
-        function aiAction() {
-            const targets = Array.from(document.querySelectorAll('.mosquito')).filter(m => m.innerHTML === '🦟');
-            if(targets.length > 0) {
-                s2 += 10;
-                document.getElementById('score2').innerText = s2;
-                playSlap(); // AI के लिए भी साउंड
-                killEffect(targets[0]);
-            }
-        }
+// 3. दूसरे प्लेयर से हाथ मिलाना (Voice + Data)
+async function connectToOpponent(targetId) {
+    const conn = peer.connect(targetId);
+    setupGame(conn);
 
-        function createSplatText(x, y, text) {
-            const span = document.createElement('span');
-            span.className = 'splat-text game-font';
-            span.innerText = text;
-            span.style.left = x + 'px';
-            span.style.top = y + 'px';
-            document.body.appendChild(span);
-            setTimeout(() => span.remove(), 500);
-        }
+    // माइक एक्सेस और वॉइस कॉल
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const call = peer.call(targetId, stream);
+        
+        call.on('stream', (remoteStream) => {
+            const audio = new Audio();
+            audio.srcObject = remoteStream;
+            audio.play();
+            showStatus("वॉइस चैट चालू है! 🎙️");
+        });
+    } catch (err) {
+        console.error("माइक नहीं मिला:", err);
+    }
+}
 
-        function killEffect(el) {
-            el.innerHTML = '💥';
-            el.style.transform = 'scale(2)';
-            setTimeout(() => el.remove(), 200);
+// 4. गेम के अंदर बातचीत और स्कोर सिंक
+function setupGame(connection) {
+    document.getElementById('countdown-screen').classList.remove('hidden');
+    
+    connection.on('data', (data) => {
+        if(data.type === 'kill') {
+            s2 = data.score;
+            document.getElementById('score2').innerText = s2;
+            // जब वो मच्छर मारे, तो आपकी स्क्रीन पर भी '💥' दिखे
+            showSplatOnOpponentAction(data.x, data.y);
         }
-
-        function endGame() {
-            gameActive = false;
-            let finalMsg = s1 > s2 ? "जीत आपकी हुई!" : (s2 > s1 ? "कंप्यूटर जीत गया!" : "मैच ड्रा रहा!");
-            alert(`समय समाप्त!\nआपका स्कोर: ${s1}\nविपक्षी स्कोर: ${s2}\n\n${finalMsg}`);
-            location.reload();
-        }
-    </script>
-</body>
-</html>
+    });
+}
