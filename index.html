@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mosquito Killer 3D - Nishad Crafts</title>
+    <title>3D Mosquito Killer - Nishad Crafts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
@@ -13,26 +13,35 @@
         
         .room-bg { 
             background-size: cover; background-position: center; 
-            height: 100vh; width: 100vw; position: relative; transition: 1.5s ease-in-out;
+            height: 100vh; width: 100vw; position: relative; transition: 1.5s;
         }
 
-        /* 3D Flying Animation */
+        /* मच्छर के पंख और उड़ने का एनीमेशन */
         .mosquito {
             position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer;
-            user-select: none; transition: all 0.5s ease-out;
-            animation: fly 3s infinite ease-in-out;
-            filter: drop-shadow(0 15px 10px rgba(0,0,0,0.4));
+            user-select: none;
+            animation: flyAround 3s infinite ease-in-out, wingVibrate 0.05s infinite;
+            filter: drop-shadow(0 12px 6px rgba(0,0,0,0.6));
+            transition: transform 0.2s;
         }
 
-        @keyframes fly {
-            0%, 100% { transform: translateY(0) rotate(5deg) scale(1); }
-            50% { transform: translateY(-20px) rotate(-5deg) scale(1.1); }
+        @keyframes flyAround {
+            0%, 100% { transform: translate(0, 0) rotate(5deg); }
+            25% { transform: translate(20px, -30px) rotate(-8deg); }
+            50% { transform: translate(-15px, 15px) rotate(12deg); }
+            75% { transform: translate(-25px, -20px) rotate(-12deg); }
         }
 
-        .mic-container { position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 100; }
-        .mic-btn { padding: 20px; border-radius: 999px; transition: 0.3s; border: 3px solid; }
-        .active-mic { border-color: #22c55e; box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); background: rgba(0,0,0,0.7); }
-        .muted-mic { border-color: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); background: rgba(0,0,0,0.7); }
+        @keyframes wingVibrate {
+            0% { skewX: 0deg; scale: 1; opacity: 0.9; }
+            50% { skewX: 8deg; scale: 1.08; opacity: 1; }
+            100% { skewX: -8deg; scale: 1; opacity: 0.9; }
+        }
+
+        .mic-container { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .mic-btn { padding: 18px; border-radius: 999px; border: 3px solid; transition: 0.3s; background: rgba(0,0,0,0.8); }
+        .active-mic { border-color: #22c55e; box-shadow: 0 0 25px #22c55e; }
+        .muted-mic { border-color: #ef4444; box-shadow: 0 0 25px #ef4444; }
     </style>
 </head>
 <body>
@@ -40,36 +49,36 @@
     <audio id="slap-sound" src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3" preload="auto"></audio>
     <audio id="buzz-sound" src="https://www.soundjay.com/nature/sounds/mosquito-flying-01.mp3" loop preload="auto"></audio>
 
-    <div id="home-screen" class="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-slate-950 px-6 text-center">
-        <h1 class="text-6xl text-red-600 game-font mb-4">3D MOSQUITO<br><span class="text-white text-4xl">KILLER</span></h1>
-        <p class="text-slate-400 mb-10 text-sm tracking-widest uppercase">Nishad-Crafts Reality Engine</p>
+    <div id="home-screen" class="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-slate-950 text-center p-6">
+        <h1 class="text-6xl text-red-600 game-font mb-2">MOSQUITO<br><span class="text-white text-4xl">KILLER 3D</span></h1>
+        <p class="text-slate-500 mb-10 text-[10px] tracking-[0.3em] font-bold">NISHAD CRAFTS ENGINE</p>
         
         <div class="flex flex-col gap-6 w-full max-w-xs">
-            <button onclick="window.startMode('ai')" class="bg-blue-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1d4ed8] active:translate-y-1">🤖 कंप्यूटर मोड</button>
-            <button onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ऑनलाइन (Auto)</button>
+            <button onclick="window.startMode('ai')" class="bg-blue-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1d4ed8] active:translate-y-1">🤖 COMPUTER (No Mic)</button>
+            <button onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ONLINE (With Voice)</button>
         </div>
     </div>
 
     <div id="status-screen" class="hidden fixed inset-0 z-[105] flex flex-col items-center justify-center bg-black/95">
         <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-6"></div>
-        <div id="status-msg" class="text-xl font-bold">खिलाड़ी से कनेक्ट हो रहे हैं...</div>
+        <div id="status-msg" class="text-xl font-bold">खिलाड़ी खोज रहे हैं...</div>
         <div id="countdown-text" class="hidden text-9xl font-black game-font text-yellow-500">3</div>
     </div>
 
     <div id="game-room" class="hidden room-bg flex flex-col">
-        <div class="w-full p-4 flex justify-between items-center bg-black/80 backdrop-blur-lg border-b border-white/10">
+        <div class="w-full p-4 flex justify-between items-center bg-black/90 border-b border-white/10 backdrop-blur-xl">
             <div class="text-center"><p class="text-[10px] text-blue-400 font-bold">YOU</p><div id="score1" class="text-4xl font-black">0</div></div>
             <div id="timer" class="text-5xl font-black text-yellow-500 game-font">00</div>
-            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold">ENEMY</p><div id="score2" class="text-4xl font-black">0</div></div>
+            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold uppercase">Enemy</p><div id="score2" class="text-4xl font-black">0</div></div>
         </div>
         
         <div id="room-area" class="relative flex-grow overflow-hidden"></div>
 
-        <div class="mic-container flex flex-col items-center gap-2">
+        <div id="mic-section" class="hidden mic-container flex flex-col items-center gap-2">
             <button id="mic-btn" onclick="window.toggleMic()" class="mic-btn active-mic active:scale-90">
                 <span id="mic-icon" class="text-3xl">🎙️</span>
             </button>
-            <span id="mic-text" class="text-[10px] font-bold text-green-500 uppercase tracking-tighter">Mic: Live</span>
+            <span id="mic-text" class="text-[10px] font-bold text-green-500 uppercase tracking-widest">Voice: On</span>
         </div>
     </div>
 
@@ -90,82 +99,74 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let peer, conn, localStream, myScore = 0, oppScore = 0, timeLeft = 0, gameActive = false, isMuted = false;
+        let peer, conn, localStream, myScore = 0, oppScore = 0, timeLeft = 0, gameActive = false, isMuted = false, mode = '';
         const slap = document.getElementById('slap-sound');
         const buzz = document.getElementById('buzz-sound');
 
-        // --- 1. Audio & Mic Fixes ---
-        async function getStream() {
-            if (localStream) return localStream;
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                return localStream;
-            } catch (e) { console.log("Mic Denied"); return null; }
+        // साउंड अनलॉक
+        async function playBuzz() {
+            try { await buzz.play(); buzz.volume = 0.5; } catch (e) { console.log("Sound locked"); }
         }
 
         window.toggleMic = function() {
             if (!localStream) return;
             isMuted = !isMuted;
             localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-            const btn = document.getElementById('mic-btn');
-            btn.className = isMuted ? "mic-btn muted-mic active:scale-90" : "mic-btn active-mic active:scale-90";
             document.getElementById('mic-icon').innerText = isMuted ? "🔇" : "🎙️";
-            document.getElementById('mic-text').innerText = isMuted ? "Mic: Muted" : "Mic: Live";
+            document.getElementById('mic-btn').className = isMuted ? "mic-btn muted-mic" : "mic-btn active-mic";
+            document.getElementById('mic-text').innerText = isMuted ? "Voice: Off" : "Voice: On";
             document.getElementById('mic-text').className = isMuted ? "text-[10px] font-bold text-red-500 uppercase" : "text-[10px] font-bold text-green-500 uppercase";
         };
 
-        // --- 2. Background Fix ---
-        function setRandomBackground() {
-            const seed = Math.floor(Math.random() * 1000);
-            const url = `https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${seed}&auto=format&fit=crop&w=1200&q=80`;
-            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${url}')`;
-        }
-
-        window.startMode = function(m) {
-            // Unlock Audio context for sounds
-            buzz.play().catch(() => console.log("Waiting for user interaction")); 
-            buzz.volume = 0.3;
+        window.startMode = async function(m) {
+            mode = m;
+            await playBuzz();
+            // बैकग्राउंड चेंज
+            const r = Math.floor(Math.random() * 900);
+            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${r}&auto=format&w=1200')`;
             
-            setRandomBackground();
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('status-screen').classList.remove('hidden');
 
-            if(m === 'ai') { runCountdown(30); return; }
+            if(mode === 'ai') {
+                runCountdown(30);
+            } else {
+                document.getElementById('mic-section').classList.remove('hidden');
+                initMultiplayer();
+            }
+        };
 
+        function initMultiplayer() {
             peer = new Peer();
-            peer.on('open', (myId) => {
-                onDisconnect(ref(db, 'lobby/' + myId)).remove();
+            peer.on('open', (id) => {
+                onDisconnect(ref(db, 'lobby/' + id)).remove();
                 get(ref(db, 'lobby')).then(snap => {
-                    let target = null;
+                    let tid = null;
                     if(snap.exists()) {
-                        for(let id in snap.val()) { if(id !== myId) { target = id; break; } }
+                        for(let i in snap.val()) { if(i !== id) { tid = i; break; } }
                     }
-                    if(target) {
-                        connectTo(target);
-                        remove(ref(db, 'lobby/' + target));
-                    } else {
-                        set(ref(db, 'lobby/' + myId), { status: 'waiting' });
-                    }
+                    if(tid) { connectTo(tid); remove(ref(db, 'lobby/' + tid)); }
+                    else { set(ref(db, 'lobby/' + id), { status: 'waiting' }); }
                 });
             });
 
-            peer.on('connection', c => { conn = c; handleConn(); runCountdown(90); });
+            peer.on('connection', c => { conn = c; handleData(); runCountdown(90); });
             peer.on('call', async call => {
-                const s = await getStream();
-                call.answer(s);
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                call.answer(localStream);
                 call.on('stream', rs => { const a = new Audio(); a.srcObject = rs; a.play(); });
             });
-        };
+        }
 
         async function connectTo(tid) {
             conn = peer.connect(tid);
-            handleConn();
-            const s = await getStream();
-            peer.call(tid, s);
+            handleData();
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            peer.call(tid, localStream);
             runCountdown(90);
         }
 
-        function handleConn() {
+        function handleData() {
             conn.on('data', d => { if(d.type === 'kill') { oppScore = d.score; document.getElementById('score2').innerText = oppScore; } });
         }
 
@@ -184,8 +185,9 @@
 
         function startGame() {
             gameActive = true;
-            buzz.play();
-            setInterval(() => { if(gameActive) spawn(); }, 800);
+            if(mode === 'ai') document.getElementById('p2-label').innerText = "Computer";
+            setInterval(() => { if(gameActive) spawn(); }, 750);
+            if(mode === 'ai') setInterval(() => { if(gameActive) aiPlay(); }, 1200);
             const clk = setInterval(() => { 
                 timeLeft--; 
                 document.getElementById('timer').innerText = timeLeft; 
@@ -198,20 +200,28 @@
             const m = document.createElement('div');
             m.className = 'mosquito'; m.innerHTML = '🦟';
             m.style.left = Math.random() * (window.innerWidth - 80) + 'px';
-            m.style.top = Math.random() * (window.innerHeight - 320) + 'px';
+            m.style.top = Math.random() * (window.innerHeight - 380) + 'px';
             
             m.onclick = () => { 
                 myScore += 10; document.getElementById('score1').innerText = myScore;
                 slap.currentTime = 0; slap.play();
                 if(conn) conn.send({type:'kill', score:myScore});
-                m.style.transform = "scale(0.1) rotate(360deg)";
-                setTimeout(() => m.remove(), 200);
+                m.remove();
             };
             area.appendChild(m);
             setTimeout(() => { if(m.parentNode) m.remove(); }, 2500);
         }
 
-        function endGame() { gameActive = false; buzz.pause(); alert("गेम खत्म!"); location.reload(); }
+        function aiPlay() {
+            const targets = document.querySelectorAll('.mosquito');
+            if(targets.length > 0) {
+                oppScore += 10;
+                document.getElementById('score2').innerText = oppScore;
+                targets[0].remove();
+            }
+        }
+
+        function endGame() { gameActive = false; buzz.pause(); alert("Game Over!"); location.reload(); }
     </script>
 </body>
 </html>
