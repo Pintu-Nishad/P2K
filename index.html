@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V21 - ULTRA 3D</title>
+    <title>P2K SECURE V22 - MEME-IFY</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -23,9 +23,11 @@
         .incoming { background: #1f2937; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
         .outgoing { background: var(--outgoing); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 6px 18px rgba(16,185,129,0.25); }
 
-        /* ULTRA 3D Icons Sizing & Shadow */
-        .icon-3d { width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); transition: 0.2s; }
-        .icon-3d:active { transform: scale(0.85); filter: none; }
+        /* Meme Icon Sizing & Style */
+        .icon-meme { width: 38px; height: 38px; object-fit: contain; transition: 0.2s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .icon-meme:active { transform: scale(0.85); filter: none; }
+        .icon-meme-del { width: 18px; height: 18px; object-fit: contain; opacity: 0.5; transition: 0.2s; }
+        .icon-meme-del:hover { opacity: 1; scale: 1.1; }
         
         /* Video Call UI */
         #callUI { position: fixed; inset: 0; z-index: 5000; background: #000; display: none; }
@@ -50,10 +52,10 @@
 
 <div id="loginDiv" class="fixed inset-0 z-[9000] bg-[#030712] flex items-center justify-center p-6 text-center">
     <div class="w-full max-w-sm bg-[#111827] p-12 rounded-[45px] border border-white/5 shadow-2xl">
-        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/chat-7063462-5743438.png" class="w-28 mx-auto mb-6 filter drop-shadow(0 10px 15px rgba(0,0,0,0.5))">
+        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968771.png" class="w-28 mx-auto mb-6">
         <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tighter">P2K SECURE</h1>
-        <p class="text-gray-500 text-[11px] uppercase tracking-[6px] mb-12 font-bold">Ultra 3D V21</p>
-        <input id="user" type="text" placeholder="Your Name" class="w-full bg-[#1f2937] rounded-3xl p-6 mb-5 outline-none text-white border-transparent focus:border-emerald-500 border-2 text-lg">
+        <p class="text-gray-500 text-[11px] uppercase tracking-[6px] mb-12 font-bold">Meme V22 Edition</p>
+        <input id="user" type="text" placeholder="Profile Name" class="w-full bg-[#1f2937] rounded-3xl p-6 mb-5 outline-none text-white border-transparent focus:border-emerald-500 border-2 text-lg">
         <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#1f2937] rounded-3xl p-6 mb-12 outline-none text-white border-transparent focus:border-emerald-500 border-2 text-lg">
         <button onclick="enter()" class="w-full bg-emerald-600 py-6 rounded-3xl font-bold text-white text-xl shadow-2xl hover:bg-emerald-500 transition-all active:scale-95">CONNECT NOW</button>
     </div>
@@ -66,8 +68,8 @@
             <div id="typingInfo" class="text-[11px] text-emerald-300 italic"></div>
         </div>
         <div class="flex items-center gap-5">
-            <button onclick="askNotify()" class="p-1"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/notification-bell-7634222-6194294.png" class="icon-3d"></button>
-            <button onclick="startCall()" class="bg-emerald-600/15 p-3 rounded-2xl border border-emerald-500/30 active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/video-camera-4272118-3543132.png" class="icon-3d"></button>
+            <button onclick="askNotify()" class="p-1"><img src="https://cdn-icons-png.flaticon.com/512/3602/3602145.png" class="icon-meme"></button>
+            <button onclick="startCall()" class="bg-emerald-600/15 p-3 rounded-2xl border border-emerald-500/30 active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/4359/4359042.png" class="icon-meme"></button>
         </div>
     </header>
 
@@ -76,9 +78,9 @@
     <footer class="p-6 glass-header border-t border-white/5 pb-12">
         <div class="flex items-center gap-5 bg-[#1f2937] rounded-[30px] px-7 py-2.5 border border-white/10">
             <input type="file" id="fileInput" accept="image/*" onchange="sendPhoto(this)" class="hidden">
-            <button onclick="document.getElementById('fileInput').click()" class="active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/paperclip-5507945-4592080.png" class="icon-3d"></button>
+            <button onclick="document.getElementById('fileInput').click()" class="active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435911.png" class="icon-meme"></button>
             <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-transparent py-4 text-base outline-none text-white font-medium">
-            <button onclick="sendMsg()" class="active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/send-4059124-3363991.png" class="icon-3d"></button>
+            <button onclick="sendMsg()" class="active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435882.png" class="icon-meme"></button>
         </div>
     </footer>
 </div>
@@ -87,10 +89,10 @@
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo" autoplay playsinline muted onclick="this.classList.toggle('large')"></video>
     <div class="call-tools">
-        <button onclick="toggleMute()" id="muteBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/microphone-4835821-4028441.png" class="w-10"></button>
-        <button onclick="toggleCam()" id="camBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/camera-4272117-3543131.png" class="w-10"></button>
-        <button onclick="switchCamera()" class="tool-btn active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/flip-camera-5716943-4770389.png" class="w-10"></button>
-        <button onclick="endCall()" class="tool-btn bg-red active:scale-90 transition-all"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/call-drop-4902164-4076756.png" class="w-10"></button>
+        <button onclick="toggleMute()" id="muteBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435905.png" class="w-10"></button>
+        <button onclick="toggleCam()" id="camBtn" class="tool-btn active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435919.png" class="w-10"></button>
+        <button onclick="switchCamera()" class="tool-btn active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435932.png" class="w-10"></button>
+        <button onclick="endCall()" class="tool-btn bg-red active:scale-90 transition-all"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435930.png" class="w-10"></button>
     </div>
 </div>
 
@@ -108,7 +110,7 @@
     document.addEventListener('keydown', e => { if (e.ctrlKey && (e.key==='p' || e.key==='s' || (e.shiftKey && e.key==='i'))) e.preventDefault(); });
 
     function askNotify() { Notification.requestPermission(); }
-    function showPush(t, b) { if(Notification.permission === "granted" && document.visibilityState !== "visible") new Notification(t, {body:b, icon:'https://cdn3d.iconscout.com/3d/premium/thumb/chat-7063462-5743438.png'}); }
+    function showPush(t, b) { if(Notification.permission === "granted" && document.visibilityState !== "visible") new Notification(t, {body:b, icon:'https://cdn-icons-png.flaticon.com/512/5968/5968771.png'}); }
 
     function enter(){
         myName = user.value.trim(); myRoom = pass.value.trim();
@@ -148,8 +150,8 @@
                 if(d.u !== myName) showPush("New Message", `${d.u} sent a ${d.type}`);
                 const isMe = (d.u == myName);
                 const div = document.createElement("div"); div.className = `msg ${isMe ? 'outgoing' : 'incoming'}`; div.id = "msg-"+id;
-                // 3D Delete Icon
-                const delBtn = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="ml-2.5 active:scale-90 transition-all opacity-40 hover:opacity-100"><img src="https://cdn3d.iconscout.com/3d/premium/thumb/delete-bin-5321894-4438865.png" class="w-4 h-4"></button>` : "";
+                // Meme Delete Icon: Trash Can Sticker
+                const delBtn = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="ml-2.5 active:scale-90 transition-all opacity-40 hover:opacity-100"><img src="https://cdn-icons-png.flaticon.com/512/10435/10435898.png" class="icon-meme-del"></button>` : "";
                 const content = d.type==='image' ? `<img src="${d.val}" onclick="window.openImg('${d.val}')" class="rounded-2xl max-h-72 cursor-pointer shadow-lg active:scale-95 transition-all">` : d.val;
                 div.innerHTML = `<div class="flex justify-between text-[11px] font-extrabold opacity-60 mb-1.5 tracking-tight"><span>${d.u}</span>${delBtn}</div>${content}<div class="text-[9px] text-right mt-1.5 opacity-40 font-medium">${d.time}</div>`;
                 chatBox.appendChild(div);
@@ -159,7 +161,7 @@
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("msg-"+s.key)?.remove());
     }
 
-    // Call, Typing, and remaining functions internally updated to match Ultra-3D...
+    // Call, Typing, and remaining functions internally updated to match Meme-ify...
     async function startCall(){
         document.getElementById('callUI').style.display="block";
         localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{width:1280, height:720, facingMode:currentFacingMode}});
