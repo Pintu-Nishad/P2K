@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V34 - REPO RING</title>
+    <title>P2K SECURE V35 - PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -12,21 +12,14 @@
     <style>
         :root { --accent: #10b981; --bg: #020617; }
         body { background: var(--bg); color: white; font-family: 'Manrope', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
-        
-        /* Layout Fixes */
         .header { height: 75px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; position: relative; }
-        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #020617; padding-bottom: 140px; }
-        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(20px); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
-
-        /* Header Call Bar Notification */
+        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #020617; padding-bottom: 140px; }
+        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
         #callBar { position: absolute; top: 75px; left: 0; width: 100%; height: 60px; background: #065f46; display: none; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 90; border-bottom: 2px solid #10b981; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-
-        /* Bubbles */
-        .msg { padding: 10px 15px; border-radius: 18px; max-width: 85%; font-size: 14px; position: relative; }
+        .msg { padding: 10px 15px; border-radius: 18px; max-width: 85%; font-size: 14px; cursor: pointer; position: relative; }
         .out { background: #059669; align-self: flex-end; border-bottom-right-radius: 2px; }
         .in { background: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
-
         .icon-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
         .icon-btn img { width: 24px; height: 24px; filter: brightness(0) invert(1); }
         #loginDiv { position: fixed; inset: 0; z-index: 10001; background: #020617; display: flex; align-items: center; justify-content: center; }
@@ -36,10 +29,10 @@
 
 <div id="loginDiv">
     <div class="w-full max-w-sm bg-slate-900/50 p-10 rounded-[40px] border border-white/10 text-center">
-        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 uppercase tracking-widest">P2K SECURE</h1>
+        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 uppercase tracking-widest text-shadow-lg">P2K SECURE</h1>
         <input id="user" type="text" placeholder="Username" class="w-full bg-slate-800 rounded-2xl p-5 mb-4 outline-none border border-transparent focus:border-emerald-500">
         <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
-        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl">START CHAT</button>
+        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl active:scale-95 transition-all">JOIN PRIVATE CHAT</button>
     </div>
 </div>
 
@@ -55,10 +48,9 @@
             </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="initiateCall()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
+            <button onclick="initiateCall()" class="icon-btn" title="Call"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
             <button onclick="askNotify()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828940.png"></button>
         </div>
-        
         <div id="callBar">
             <div class="flex items-center gap-2 text-white">
                 <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -74,14 +66,14 @@
     <div id="chatBox" class="msg-area"></div>
 
     <footer class="footer">
-        <div class="flex items-center gap-3 bg-slate-800/40 rounded-3xl px-4 py-1.5 border border-white/5">
+        <div class="flex items-center gap-3 bg-slate-800/40 rounded-3xl px-4 py-1.5 border border-white/5 shadow-inner">
             <input type="file" id="fileIn" accept="image/*" onchange="sendPhoto(this)" class="hidden">
             <button onclick="document.getElementById('fileIn').click()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" class="!w-5"></button>
             <button id="recBtn" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/1082/1082810.png" class="!w-5"></button>
-            <input id="msgInput" type="text" placeholder="Your message..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
+            <input id="msgInput" type="text" placeholder="Type message..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
             <button onclick="sendMsg()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3106/3106856.png" class="!w-5"></button>
         </div>
-        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl font-bold text-[10px] uppercase">End Current Call</button>
+        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600/20 text-red-400 border border-red-500/30 py-2 rounded-xl font-bold text-[10px] uppercase">End My Call</button>
     </footer>
 </div>
 
@@ -90,32 +82,23 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, myRoom, localStream, pc, 
-    // Uses ring.mp3 from the same repository folder
-    ringtone = new Audio('ring.mp3'); 
+    let myName, myRoom, localStream, pc, ringtone = new Audio('ring.mp3'); 
     ringtone.loop = true;
 
     function enter() {
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
         loginDiv.style.display="none"; appUI.classList.remove('hidden');
-
-        // REAL-TIME PRESENCE (Auto-remover for inactive users)
         const myStatusRef = db.ref(`rooms/${myRoom}/users/${myName}`);
         db.ref(".info/connected").on("value", (snap) => {
-            if (snap.val() === true) {
-                myStatusRef.onDisconnect().remove();
-                myStatusRef.set(true);
-            }
+            if (snap.val() === true) { myStatusRef.onDisconnect().remove(); myStatusRef.set(true); }
         });
-
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "Online: " + s.numChildren());
         listenMsgs(); setupVoice(); setupTyping(); listenForCalls();
     }
 
-    // --- RTC CALL ENGINE ---
     async function initiateCall() {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
         localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
         pc.onicecandidate = e => { if(e.candidate) db.ref(`rooms/${myRoom}/rtc/ice/${myName}`).push(e.candidate.toJSON()); };
@@ -130,13 +113,8 @@
         db.ref(`rooms/${myRoom}/rtc/call`).on('value', async s => {
             const d = s.val();
             if (d && d.from !== myName) {
-                if (d.status === 'ringing') {
-                    callBar.style.display = "flex";
-                    callerLabel.innerText = d.from;
-                    ringtone.play().catch(() => console.log("User must interact for audio"));
-                } else if (d.status === 'ignored' || d.status === 'connected') {
-                    stopRinging();
-                }
+                if (d.status === 'ringing') { callBar.style.display = "flex"; callerLabel.innerText = d.from; ringtone.play().catch(()=>{}); }
+                else if (d.status === 'ignored' || d.status === 'connected') { stopRinging(); }
             }
             if (d && d.to === myName && d.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(d.answer)); }
         });
@@ -164,13 +142,23 @@
     function stopRinging() { callBar.style.display = "none"; ringtone.pause(); ringtone.currentTime = 0; }
     function leaveCall() { localStream?.getTracks().forEach(t => t.stop()); pc?.close(); db.ref(`rooms/${myRoom}/rtc`).remove(); location.reload(); }
 
-    // --- CHAT & MEDIA ---
-    function sendMsg() { const v = msgInput.value.trim(); if(v) sendData(v, 'text'); msgInput.value=""; }
-    function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
     function sendData(val, type) {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
-        setTimeout(() => ref.remove(), 60000); // 1 Min Vanish Mode
+        setTimeout(() => ref.remove(), 60000); 
     }
+
+    // --- SENDER ONLY DELETE LOGIC ---
+    function deleteMsg(id, senderName) {
+        if (senderName === myName) {
+            if (confirm("Delete for everyone?")) {
+                db.ref(`rooms/${myRoom}/msgs/${id}`).remove();
+            }
+        }
+    }
+
+    function sendMsg() { const v = msgInput.value.trim(); if(v) sendData(v, 'text'); msgInput.value=""; }
+    function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
+    
     async function setupVoice() {
         const s = await navigator.mediaDevices.getUserMedia({ audio: true });
         const mediaRec = new MediaRecorder(s);
@@ -185,20 +173,23 @@
         recBtn.onmousedown = () => { mediaRec.start(); recBtn.style.filter="hue-rotate(90deg)"; };
         recBtn.onmouseup = () => { mediaRec.stop(); recBtn.style.filter="none"; };
     }
+
     function listenMsgs() {
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s => {
             const d = s.val(), id = s.key;
             const div = document.createElement("div");
             div.className = `msg ${d.u === myName ? 'out' : 'in'}`;
             div.id = "m-"+id;
+            div.onclick = () => deleteMsg(id, d.u);
             let c = d.val;
-            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl">`;
+            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl w-64">`;
             if(d.type==='voice') c = `<audio controls src="${d.val}" class="h-8 invert"></audio>`;
             div.innerHTML = `<div class="text-[9px] font-black opacity-40 mb-1">${d.u}</div>${c}<div class="text-[8px] text-right mt-1 opacity-30">${d.time}</div>`;
             chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         });
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("m-"+s.key)?.remove());
     }
+
     function setupTyping() {
         msgInput.oninput = () => { db.ref(`rooms/${myRoom}/tp/${myName}`).set(true); setTimeout(()=>db.ref(`rooms/${myRoom}/tp/${myName}`).remove(),2000); };
         db.ref(`rooms/${myRoom}/tp`).on('value', s => { let t=[]; s.forEach(u=>{ if(u.key!==myName) t.push(u.key); }); typingInfo.innerText = t.length>0 ? t.join(",")+" typing..." : ""; });
