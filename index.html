@@ -2,159 +2,49 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>तिउरी - वर्किंग गेम</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>तिउरी - Bead 16 Style</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
-        body { background: #1e1b4b; font-family: sans-serif; touch-action: manipulation; }
+        body { background: #1a1c2c; font-family: sans-serif; touch-action: none; overflow: hidden; }
         .tiuri-font { font-family: 'Kalam', cursive; }
         
-        /* इमेज जैसा सटीक बोर्ड */
+        /* प्ले स्टोर वाले गेम जैसा अट्रैक्टिव बोर्ड */
         .board-container {
-            background: #4c4177; position: relative;
-            width: 90vw; max-width: 380px; aspect-ratio: 1 / 1.5;
-            border: 8px solid #312e81; border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); margin: auto;
+            background: #4e342e; background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            position: relative; width: 90vw; max-width: 400px; aspect-ratio: 1 / 1.5;
+            border: 10px solid #3e2723; border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.7); margin: auto;
         }
-        .lines-svg { position: absolute; width: 100%; height: 100%; stroke: white; stroke-width: 2.5; fill: none; }
+        .lines-svg { position: absolute; width: 100%; height: 100%; stroke: #d7ccc8; stroke-width: 2.5; fill: none; opacity: 0.8; }
         
-        .node { width: 30px; height: 30px; position: absolute; transform: translate(-50%, -50%); z-index: 30; }
-        .guti { width: 100%; height: 100%; border-radius: 50%; border: 2px solid white; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+        .node { width: 34px; height: 34px; position: absolute; transform: translate(-50%, -50%); z-index: 30; }
+        .guti { width: 100%; height: 100%; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.9); cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 6px 8px rgba(0,0,0,0.5); }
         
-        .orange { background: radial-gradient(circle at 30% 30%, #f97316, #9a3412); } /* P1 गोटियाँ */
-        .green { background: radial-gradient(circle at 30% 30%, #84cc16, #365314); } /* CPU/P2 गोटियाँ */
-        .selected { transform: translate(-50%, -50%) scale(1.3); filter: drop-shadow(0 0 10px yellow); }
+        .orange { background: radial-gradient(circle at 35% 35%, #ff5722, #bf360c); } 
+        .green { background: radial-gradient(circle at 35% 35%, #4caf50, #1b5e20); } 
+        .selected { transform: translate(-50%, -50%) scale(1.4); filter: drop-shadow(0 0 12px #facc15); z-index: 40; }
         
-        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; }
+        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; }
         .active { display: flex; }
+        .highlight-move { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; }
     </style>
 </head>
 <body class="text-white">
 
-    <div id="home-screen" class="screen active">
-        <h1 class="text-7xl text-yellow-500 tiuri-font mb-10">तिउरी</h1>
-        <div class="space-y-6">
-            <button onclick="startGame('ai')" class="w-72 bg-orange-600 hover:bg-orange-500 p-5 rounded-2xl font-bold text-xl shadow-lg border-b-4 border-orange-800 transition-all">
-                🤖 कंप्यूटर के साथ खेलें
-            </button>
-            <button onclick="startGame('pvp')" class="w-72 bg-indigo-600 hover:bg-indigo-500 p-5 rounded-2xl font-bold text-xl shadow-lg border-b-4 border-indigo-800 transition-all">
-                👥 दोस्त के साथ खेलें
-            </button>
+    <div id="home-screen" class="screen active bg-slate-900">
+        <h1 class="text-7xl text-yellow-500 tiuri-font mb-12 drop-shadow-2xl">तिउरी</h1>
+        <div class="flex flex-col gap-6">
+            <button onclick="startGame('ai')" class="w-72 bg-gradient-to-b from-orange-500 to-orange-700 p-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">🤖 कंप्यूटर (AI)</button>
+            <button onclick="startGame('pvp')" class="w-72 bg-gradient-to-b from-indigo-500 to-indigo-700 p-5 rounded-2xl font-black text-xl shadow-xl active:scale-95 transition-all">👥 दो खिलाड़ी (PvP)</button>
         </div>
+        <p class="mt-20 text-slate-500 text-xs font-bold uppercase tracking-widest">Nishad Crafts Games</p>
     </div>
 
-    <div id="game-screen" class="screen p-4">
-        <div class="w-full max-w-sm flex justify-between items-center mb-4 bg-black/40 p-4 rounded-2xl">
-            <div id="status" class="bg-orange-600 px-4 py-1 rounded-full font-bold text-sm">आपकी बारी</div>
-            <div class="flex gap-4 font-bold text-sm">
-                <span class="text-orange-400">P1: 16</span>
-                <span class="text-green-400">P2: 16</span>
-            </div>
-        </div>
-
-        <div class="board-container">
-            <svg class="lines-svg" viewBox="0 0 100 150">
-                <rect x="10" y="30" width="80" height="80" />
-                <line x1="10" y1="50" x2="90" y2="50" /><line x1="10" y1="70" x2="90" y2="70" /><line x1="10" y1="90" x2="90" y2="90" />
-                <line x1="30" y1="30" x2="30" y2="110" /><line x1="50" y1="30" x2="50" y2="110" /><line x1="70" y1="30" x2="70" y2="110" />
-                <line x1="10" y1="30" x2="90" y2="110" /><line x1="10" y1="110" x2="90" y2="30" />
-                <path d="M50,0 L10,30 L90,30 Z" /><line x1="50" y1="0" x2="50" y2="30" />
-                <path d="M50,150 L10,110 L90,110 Z" /><line x1="50" y1="150" x2="50" y2="110" />
-            </svg>
-            <div id="nodes-layer" class="w-full h-full relative"></div>
-        </div>
-        
-        <button onclick="location.reload()" class="mt-8 text-zinc-500 font-bold uppercase text-xs tracking-widest">🏳️ गेम से बाहर निकलें</button>
-    </div>
-
-    <script>
-        let turn = 'orange';
-        let mode = 'ai';
-        let selectedNode = null;
-
-        const points = [
-            {x:50, y:0}, {x:30, y:15}, {x:50, y:15}, {x:70, y:15}, {x:10, y:30}, {x:90, y:30},
-            {x:10, y:30}, {x:30, y:30}, {x:50, y:30}, {x:70, y:30}, {x:90, y:30},
-            {x:10, y:50}, {x:30, y:50}, {x:50, y:50}, {x:70, y:50}, {x:90, y:50},
-            {x:10, y:70}, {x:30, y:70}, {x:50, y:70}, {x:70, y:70}, {x:90, y:70},
-            {x:10, y:90}, {x:30, y:90}, {x:50, y:90}, {x:70, y:90}, {x:90, y:90},
-            {x:10, y:110}, {x:30, y:110}, {x:50, y:110}, {x:70, y:110}, {x:90, y:110},
-            {x:30, y:130}, {x:50, y:130}, {x:70, y:130}, {x:50, y:150}
-        ];
-
-        function startGame(selectedMode) {
-            mode = selectedMode;
-            document.getElementById('home-screen').classList.remove('active');
-            document.getElementById('game-screen').classList.add('active');
-            initBoard();
-        }
-
-        function initBoard() {
-            const container = document.getElementById('nodes-layer');
-            container.innerHTML = '';
-            
-            // सटीक 32 गोटियों का सेटअप
-            points.forEach((p, i) => {
-                const node = document.createElement('div');
-                node.className = 'node';
-                node.style.left = p.x + '%';
-                node.style.top = (p.y / 1.5) + '%';
-                
-                if (i < 16) {
-                    node.innerHTML = '<div class="guti green"></div>';
-                } else if (i >= points.length - 16) {
-                    node.innerHTML = '<div class="guti orange"></div>';
-                }
-
-                node.onclick = () => handleMove(node);
-                container.appendChild(node);
-            });
-        }
-
-        function handleMove(node) {
-            if (mode === 'ai' && turn === 'green') return;
-
-            const guti = node.querySelector('.guti');
-            if (guti) {
-                if ((turn === 'orange' && guti.classList.contains('orange')) || (turn === 'green' && guti.classList.contains('green'))) {
-                    document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
-                    node.classList.add('selected');
-                    selectedNode = node;
-                }
-            } else if (selectedNode) {
-                // गोटी को नई जगह पर ले जाना
-                node.innerHTML = selectedNode.innerHTML;
-                selectedNode.innerHTML = '';
-                selectedNode.classList.remove('selected');
-                selectedNode = null;
-                switchTurn();
-            }
-        }
-
-        function switchTurn() {
-            turn = (turn === 'orange') ? 'green' : 'orange';
-            const status = document.getElementById('status');
-            status.innerText = (turn === 'orange') ? "आपकी बारी" : (mode === 'ai' ? "कंप्यूटर चल रहा है..." : "P2 की बारी");
-            status.className = `px-4 py-1 rounded-full font-bold text-sm ${turn === 'orange' ? 'bg-orange-600' : 'bg-green-600'}`;
-
-            if (mode === 'ai' && turn === 'green') {
-                setTimeout(makeCPUMove, 1000);
-            }
-        }
-
-        function makeCPUMove() {
-            const greenGutis = Array.from(document.querySelectorAll('.node')).filter(n => n.querySelector('.green'));
-            const emptyNodes = Array.from(document.querySelectorAll('.node')).filter(n => n.innerHTML === '');
-            
-            if (greenGutis.length > 0 && emptyNodes.length > 0) {
-                const from = greenGutis[Math.floor(Math.random() * greenGutis.length)];
-                const to = emptyNodes[Math.floor(Math.random() * emptyNodes.length)];
-                to.innerHTML = from.innerHTML;
-                from.innerHTML = '';
-                switchTurn();
-            }
-        }
-    </script>
-</body>
-</html>
+    <div id="game-screen" class="screen bg-[#1a1c2c]">
+        <div class="w-full max-w-sm flex justify-between items-center mb-6 px-4">
+            <div id="status-bar" class="bg-orange-600 px-6 py-2 rounded-full font-bold text-sm shadow-lg border border-white/20">आपकी बारी</div>
+            <div class="flex gap-4 font-black">
+                <div class="text-orange-500">P1: <span id="p1-score">16</span></div>
+                <div class="text-green-500">P2: <span id
