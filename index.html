@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V13 PRO - ADMIN EDITION</title>
+    <title>P2K SECURE V13 PRO - FIXED</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -12,65 +12,57 @@
     <style>
         :root { --bg: #0b141a; --panel: #111b21; --accent: #00a884; --outgoing: #005c4b; }
         body, html { height: 100%; margin: 0; background: var(--bg); color: #e9edef; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
-        #chatBox { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background-image: linear-gradient(rgba(11,20,26,0.9), rgba(11,20,26,0.9)), url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
-        .msg { position: relative; padding: 10px 14px; border-radius: 15px; max-width: 80%; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        .incoming { background: var(--panel); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #202c33; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background-image: linear-gradient(rgba(11,20,26,0.9), rgba(11,20,26,0.9)), url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+        .msg { position: relative; padding: 10px; border-radius: 12px; max-width: 85%; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .incoming { background: var(--panel); align-self: flex-start; border-bottom-left-radius: 2px; }
         .outgoing { background: var(--outgoing); align-self: flex-end; border-bottom-right-radius: 2px; }
-        .priv { border: 1.5px solid #f59e0b !important; background: rgba(245, 158, 11, 0.1) !important; backdrop-filter: blur(4px); }
-        #callUI { position: fixed; inset: 0; z-index: 2000; background: #000; display: none; flex-direction: column; }
+        
+        #callUI { position: fixed; inset: 0; z-index: 2000; background: #000; display: none; }
         #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; top: 30px; right: 20px; width: 110px; height: 160px; border-radius: 12px; border: 2px solid var(--accent); object-fit: cover; z-index: 2100; }
-        .call-tools { position: absolute; bottom: 40px; left: 0; right: 0; display: flex; justify-content: center; gap: 15px; z-index: 2200; }
-        .t-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .active-red { background: #ef4444 !important; border: none; }
+        /* Video Size Toggle Logic */
+        #localVideo { position: absolute; top: 20px; right: 20px; width: 100px; height: 150px; border-radius: 10px; border: 2px solid var(--accent); object-fit: cover; z-index: 2100; transition: 0.3s; }
+        #localVideo.large { width: 100%; height: 100%; top: 0; right: 0; border-radius: 0; border: none; }
+        
+        .call-tools { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 2200; }
+        .t-btn { width: 45px; height: 45px; border-radius: 50%; display: flex; items-center; justify-content: center; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
 <div id="loginDiv" class="fixed inset-0 z-[3000] bg-[#0b141a] flex items-center justify-center p-6">
-    <div class="w-full max-w-sm bg-[#111b21] p-10 rounded-[2.5rem] shadow-2xl border border-[#202c33] text-center">
-        <h1 class="text-3xl font-bold text-white mb-2">P2K SECURE</h1>
-        <p class="text-[10px] text-[#00a884] uppercase tracking-[0.3em] mb-10">V13 PRO EDITION</p>
-        <input id="user" type="text" placeholder="Username" class="w-full bg-[#2a3942] rounded-2xl p-4 mb-4 outline-none text-white text-sm border border-transparent focus:border-[#00a884]">
-        <input id="pass" type="password" placeholder="Key / Room ID" class="w-full bg-[#2a3942] rounded-2xl p-4 mb-8 outline-none text-white text-sm border border-transparent focus:border-[#00a884]">
-        <button onclick="enter()" class="w-full bg-[#00a884] py-4 rounded-2xl font-bold text-[#111b21] shadow-lg shadow-[#00a88433]">CONNECT SERVER</button>
+    <div class="w-full max-w-sm bg-[#111b21] p-8 rounded-3xl border border-[#202c33] text-center">
+        <h1 class="text-2xl font-bold text-white mb-6 uppercase tracking-widest">P2K SECURE</h1>
+        <input id="user" type="text" placeholder="Name" class="w-full bg-[#2a3942] rounded-xl p-4 mb-4 outline-none text-white">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-[#2a3942] rounded-xl p-4 mb-8 outline-none text-white">
+        <button onclick="enter()" class="w-full bg-[#00a884] py-4 rounded-xl font-bold text-[#111b21]">CONNECT</button>
     </div>
-</div>
-
-<div id="adminDiv" class="hidden fixed inset-0 z-[2500] bg-[#0b141a] p-6 overflow-y-auto">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-xl font-bold text-red-500 underline">ADMIN CONTROL PANEL</h1>
-        <button onclick="location.reload()" class="text-xs bg-gray-800 px-4 py-2 rounded">LOGOUT</button>
-    </div>
-    <div id="userList" class="grid gap-4">
-        </div>
 </div>
 
 <div id="chatDiv" class="hidden h-full flex flex-col">
-    <header class="h-20 bg-[#111b21]/80 backdrop-blur flex items-center justify-between px-6 border-b border-white/5">
-        <div><span class="text-[9px] font-black text-red-500 uppercase">Vanish Mode</span><div id="userCounter" class="text-[11px] text-[#00a884]">● 0 Online</div></div>
-        <h2 id="roomTitle" class="text-xs font-bold text-white tracking-widest opacity-70 uppercase">---</h2>
-        <button onclick="startCall()" class="bg-[#00a884] p-3 rounded-2xl"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg></button>
+    <header class="h-16 bg-[#111b21] flex items-center justify-between px-4 border-b border-white/5">
+        <div id="userCounter" class="text-[11px] text-[#00a884]">● 0 Online</div>
+        <h2 id="roomTitle" class="text-xs font-bold text-white uppercase tracking-tighter">Room</h2>
+        <button onclick="startCall()" class="bg-[#00a884] px-4 py-2 rounded-full text-[#111b21] font-bold text-xs">CALL</button>
     </header>
     <div id="chatBox"></div>
-    <footer class="p-4 bg-[#111b21] pb-10 border-t border-[#202c33]">
-        <div class="flex items-center gap-3 max-w-4xl mx-auto">
-            <input type="file" id="fileInput" accept="image/*" onchange="sendPhoto(this)" class="hidden"><button onclick="document.getElementById('fileInput').click()" class="text-[#8696a0]">📎</button>
-            <input id="msgInput" type="text" placeholder="Type @Name for private..." class="flex-1 bg-[#2a3942] rounded-full px-6 py-3 text-sm outline-none text-white">
-            <button onclick="sendMsg()" class="bg-[#00a884] p-3 rounded-full text-[#111b21]">➤</button>
+    <footer class="p-4 bg-[#111b21] pb-8">
+        <div class="flex items-center gap-3">
+            <input type="file" id="fileInput" accept="image/*" onchange="sendPhoto(this)" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()" class="text-[#8696a0]">📎</button>
+            <input id="msgInput" type="text" placeholder="Message..." class="flex-1 bg-[#2a3942] rounded-full px-4 py-2 text-sm outline-none text-white">
+            <button onclick="sendMsg()" class="bg-[#00a884] p-2 rounded-full text-[#111b21]">➤</button>
         </div>
     </footer>
 </div>
 
 <div id="callUI">
     <video id="remoteVideo" autoplay playsinline></video>
-    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="localVideo" autoplay playsinline muted onclick="this.classList.toggle('large')"></video>
     <div class="call-tools">
         <button id="muteBtn" onclick="toggleMute()" class="t-btn">🎤</button>
         <button id="camBtn" onclick="toggleCam()" class="t-btn">📹</button>
-        <button onclick="toggleFlash()" class="t-btn">💡</button>
         <button onclick="switchCamera()" class="t-btn">🔄</button>
-        <button onclick="endCall()" class="t-btn bg-red-600 border-none">📞</button>
+        <button onclick="endCall()" class="t-btn bg-red-600">📞</button>
     </div>
 </div>
 
@@ -79,161 +71,121 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, myRoom, localStream, peerConnection, currentFacingMode="user", isFlash=false, isMuted=false, isCamOff=false, isAdmin=false;
+    let myName, myRoom, localStream, peerConnection, currentFacingMode="user", isMuted=false, isCamOff=false, callAccepted=false;
 
     function enter(){
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
-
-        // Hidden Admin Trigger
-        if(myName === "Admin" && myRoom === "14665866") {
-            isAdmin = true; loginDiv.style.display="none"; adminDiv.classList.remove('hidden');
-            loadAdminPanel(); return;
-        }
-
         loginDiv.style.display="none"; chatDiv.classList.remove('hidden');
         roomTitle.innerText = myRoom;
-        db.ref(`rooms/${myRoom}/users/${myName}`).set({ status: "online", lastSeen: Date.now() });
+        db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
         db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
-        
-        // Kick Listener for normal users
-        db.ref(`rooms/${myRoom}/users/${myName}`).on('value', s => { if(!s.exists() && !isAdmin) { alert("You were removed from the room."); location.reload(); }});
-
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "● " + s.numChildren() + " Online");
         listenMsgs(); listenCall();
     }
 
-    // Admin Functions
-    function loadAdminPanel() {
-        // Admin default room for testing, you can change this
-        let targetRoom = prompt("Which Room ID to manage?", "123");
-        db.ref(`rooms/${targetRoom}/users`).on('value', snap => {
-            userList.innerHTML = "";
-            snap.forEach(u => {
-                let name = u.key;
-                let div = document.createElement('div');
-                div.className = "bg-[#111b21] p-4 rounded-xl border border-white/5 flex justify-between items-center shadow-lg";
-                div.innerHTML = `
-                    <span class="font-bold text-sm text-[#00a884]">${name}</span>
-                    <div class="flex gap-2">
-                        <button onclick="kickUser('${targetRoom}','${name}')" class="bg-red-900/30 text-red-500 text-[10px] px-3 py-1 rounded-lg border border-red-500/20">REMOVE</button>
-                        <button onclick="remoteMute('${targetRoom}','${name}')" class="bg-blue-900/30 text-blue-400 text-[10px] px-3 py-1 rounded-lg border border-blue-500/20">MUTE CALL</button>
-                    </div>`;
-                userList.appendChild(div);
-            });
-        });
-    }
-
-    function kickUser(room, name) { if(confirm(`Remove ${name}?`)) db.ref(`rooms/${room}/users/${name}`).remove(); }
-    function remoteMute(room, name) { db.ref(`rooms/${room}/users/${name}/muteTrigger`).set(Date.now()); }
-
-    // Remote Mute Listener (For all users)
-    function listenForMute() {
-        db.ref(`rooms/${myRoom}/users/${myName}/muteTrigger`).on('value', s => {
-            if(s.exists() && isMuted === false) toggleMute();
-        });
-    }
-
-    // Camera Toggle Function
-    function toggleCam() {
-        isCamOff = !isCamOff;
-        localStream.getVideoTracks()[0].enabled = !isCamOff;
-        camBtn.innerHTML = isCamOff ? "🚫" : "📹";
-        camBtn.classList.toggle('active-red', isCamOff);
-    }
-
-    function toggleMute(){ 
-        isMuted=!isMuted; 
-        localStream.getAudioTracks()[0].enabled=!isMuted; 
-        muteBtn.innerHTML=isMuted?"🔇":"🎤"; 
-        muteBtn.classList.toggle('active-red', isMuted); 
-    }
-
-    // Messaging Logic (Vanish + Private)
     function sendMsg(){
         const text = msgInput.value.trim(); if(!text) return;
-        let target = text.startsWith('@') ? text.split(' ')[0].replace('@', '') : null;
-        const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: text, type: 'text', target: target, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        msgInput.value=""; setTimeout(() => { ref.remove(); }, 60000);
+        const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: text, type: 'text', time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+        msgInput.value=""; setTimeout(() => ref.remove(), 60000);
     }
 
     function sendPhoto(input) {
         if (!input.files[0]) return;
         const reader = new FileReader();
         reader.onload = e => {
-            const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: e.target.result, type: 'image', time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-            setTimeout(() => { ref.remove(); }, 60000);
+            const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: e.target.result, type: 'image', time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+            setTimeout(() => ref.remove(), 60000);
         };
         reader.readAsDataURL(input.files[0]);
     }
 
     function listenMsgs(){
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s=>{
-            let d = s.val(); if(d.target && d.target !== myName && d.u !== myName) return;
-            let isMe = (d.u == myName);
+            let d = s.val(), id = s.key, isMe = (d.u == myName);
             let div = document.createElement("div");
-            div.className = `msg ${isMe ? 'outgoing' : 'incoming'} ${d.target ? 'priv' : ''}`;
-            div.id = "msg-"+s.key;
-            div.innerHTML = `<div class="text-[9px] font-bold ${isMe?'text-white':'text-[#00a884]'} mb-1">${d.u}</div>
-                ${d.type==='image' ? `<img src="${d.val}" class="rounded-xl max-h-60 shadow-md">` : `<div>${d.val}</div>`}
-                <div class="text-[7px] opacity-40 text-right mt-1">${d.time}</div>`;
+            div.className = `msg ${isMe ? 'outgoing' : 'incoming'}`;
+            div.id = "msg-"+id;
+            
+            let delBtn = isMe ? `<button onclick="db.ref('rooms/${myRoom}/msgs/${id}').remove()" class="text-[10px] ml-2 opacity-50">🗑️</button>` : "";
+            let downBtn = (!isMe && d.type==='image') ? `<button onclick="saveImg('${d.val}')" class="text-[10px] text-blue-400 ml-2">⬇️</button>` : "";
+
+            div.innerHTML = `<div class="flex justify-between text-[9px] font-bold mb-1"><span>${d.u}</span><div>${downBtn}${delBtn}</div></div>
+                ${d.type==='image' ? `<img src="${d.val}" class="rounded-lg max-h-64">` : d.val}
+                <div class="text-[7px] text-right mt-1 opacity-50">${d.time}</div>`;
             chatBox.appendChild(div); chatBox.scrollTop = chatBox.scrollHeight;
         });
-        db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => { const el = document.getElementById("msg-"+s.key); if(el) el.remove(); });
+        db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => { document.getElementById("msg-"+s.key)?.remove(); });
     }
 
-    // 1080p Video Call
+    function saveImg(url) { const a = document.createElement('a'); a.href=url; a.download="secure_p2k.jpg"; a.click(); }
+
+    // Video Call Logic
     async function startCall(){
-        callUI.style.display="flex";
-        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{width:1920, height:1080, facingMode:"user"}});
+        callUI.style.display="block";
+        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:{width:1280, height:720, facingMode:currentFacingMode}});
         document.getElementById('localVideo').srcObject = localStream;
         setupPeer();
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
         db.ref(`calls/${myRoom}`).set({offer:offer, caller:myName});
-        listenForMute();
     }
 
     function setupPeer(){
         peerConnection = new RTCPeerConnection({ iceServers:[{urls:"stun:stun.l.google.com:19302"}] });
-        localStream.getTracks().forEach(t => {
-            const sender = peerConnection.addTrack(t, localStream);
-            if(t.kind==='video'){
-                const p = sender.getParameters(); p.encodings = [{ degradationPreference: 'maintain-resolution' }];
-                sender.setParameters(p);
-            }
-        });
+        localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
         peerConnection.ontrack = e => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
         peerConnection.onicecandidate = e => { if(e.candidate) db.ref(`calls/${myRoom}/candidates/${myName}`).push(e.candidate.toJSON()); };
     }
 
     function listenCall(){
         db.ref(`calls/${myRoom}`).on("value", async snap=>{
-            let d = snap.val(); if(!d){ if(peerConnection) endCall(); return; }
-            if(d.offer && d.caller!==myName && !peerConnection){
-                if(confirm("Join call from "+d.caller)){
-                    callUI.style.display="flex"; localStream = await navigator.mediaDevices.getUserMedia({audio:true,video:true});
-                    document.getElementById('localVideo').srcObject=localStream; setupPeer(); listenForMute();
+            let d = snap.val(); 
+            if(!d) { if(peerConnection) endCall(); return; }
+            if(d.offer && d.caller !== myName && !callAccepted){
+                if(confirm("Call from " + d.caller)){
+                    callAccepted = true;
+                    callUI.style.display="block";
+                    localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:true});
+                    document.getElementById('localVideo').srcObject = localStream;
+                    setupPeer();
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(d.offer));
-                    const ans = await peerConnection.createAnswer(); await peerConnection.setLocalDescription(ans);
+                    const ans = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(ans);
                     db.ref(`calls/${myRoom}`).update({answer:ans});
                 }
             }
-            if(d.answer && d.caller===myName) await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
+            if(d.answer && d.caller === myName) await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
         });
-        db.ref(`calls/${myRoom}/candidates`).on("child_added", s=>{ if(s.key!==myName) s.ref.on("child_added", c=>{ if(peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(c.val())); }); });
+        db.ref(`calls/${myRoom}/candidates`).on("child_added", s=>{
+            if(s.key !== myName) s.ref.on("child_added", c=>{ if(peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(c.val())); });
+        });
     }
 
-    function endCall(){ db.ref(`calls/${myRoom}`).remove(); if(localStream) localStream.getTracks().forEach(t=>t.stop()); if(peerConnection) peerConnection.close(); peerConnection=null; callUI.style.display="none"; }
-    async function toggleFlash(){ const track=localStream.getVideoTracks()[0]; isFlash=!isFlash; track.applyConstraints({advanced:[{torch:isFlash}]}); }
-    async function switchCamera(){ 
-        currentFacingMode=currentFacingMode==="user"?"environment":"user"; 
-        const track=localStream.getVideoTracks()[0]; track.stop();
-        const newStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:currentFacingMode}});
-        const newTrack=newStream.getVideoTracks()[0];
-        peerConnection.getSenders().find(s=>s.track.kind==='video').replaceTrack(newTrack);
-        localStream.removeTrack(track); localStream.addTrack(newTrack);
+    function endCall(){ 
+        db.ref(`calls/${myRoom}`).remove(); 
+        if(localStream) localStream.getTracks().forEach(t=>t.stop()); 
+        if(peerConnection) peerConnection.close(); 
+        peerConnection=null; callUI.style.display="none"; callAccepted=false;
+    }
+
+    function toggleMute(){ isMuted=!isMuted; localStream.getAudioTracks()[0].enabled=!isMuted; muteBtn.classList.toggle('bg-red-500', isMuted); }
+    function toggleCam(){ isCamOff=!isCamOff; localStream.getVideoTracks()[0].enabled=!isCamOff; camBtn.classList.toggle('bg-red-500', isCamOff); }
+
+    async function switchCamera(){
+        if(!localStream) return;
+        currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+        const videoTrack = localStream.getVideoTracks()[0];
+        videoTrack.stop();
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+        const newTrack = newStream.getVideoTracks()[0];
+        localStream.removeTrack(videoTrack);
+        localStream.addTrack(newTrack);
         document.getElementById('localVideo').srcObject = localStream;
+        if(peerConnection){
+            const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+            sender.replaceTrack(newTrack);
+        }
     }
 </script>
 </body>
