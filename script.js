@@ -1,24 +1,32 @@
-const firebaseConfig = { apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM", authDomain: "p2kc-b0553.firebaseapp.com", databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com", projectId: "p2kc-b0553" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDMJHzj0g_sRYW2exwyVLZZs4Y_hnnrDNM", 
+    authDomain: "p2kc-b0553.firebaseapp.com", 
+    databaseURL: "https://p2kc-b0553-default-rtdb.firebaseio.com", 
+    projectId: "p2kc-b0553" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let myName, myRoom, localStream, peerConnection, currentFacingMode="user", isFlash=false;
 
 function enter(){
-    myName = user.value.trim(); myRoom = pass.value.trim();
+    myName = document.getElementById('user').value.trim(); 
+    myRoom = document.getElementById('pass').value.trim();
     if(!myName || !myRoom) return;
-    loginDiv.style.display="none"; chatDiv.classList.remove('hidden');
-    roomTitle.innerText = "ID: " + myRoom;
+    document.getElementById('loginDiv').style.display="none"; 
+    document.getElementById('chatDiv').classList.remove('hidden');
+    document.getElementById('roomTitle').innerText = "ID: " + myRoom;
     db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
     db.ref(`rooms/${myRoom}/users`).on('value', s => document.getElementById('userCounter').innerText = "Online: " + s.numChildren());
     listenMsgs(); listenCall();
 }
 
 function sendMsg(){
-    if(!msgInput.value.trim()) return;
-    const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: msgInput.value, type: 'text', time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-    if(ghostMode.checked) setTimeout(() => ref.remove(), 30000);
-    msgInput.value="";
+    const inp = document.getElementById('msgInput');
+    if(!inp.value.trim()) return;
+    const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: inp.value, type: 'text', time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
+    if(document.getElementById('ghostMode').checked) setTimeout(() => ref.remove(), 30000);
+    inp.value="";
 }
 
 function sendPhoto(input) {
@@ -26,7 +34,7 @@ function sendPhoto(input) {
     const reader = new FileReader();
     reader.onload = e => {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val: e.target.result, type: 'image', time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-        if(ghostMode.checked) setTimeout(() => ref.remove(), 30000);
+        if(document.getElementById('ghostMode').checked) setTimeout(() => ref.remove(), 30000);
     };
     reader.readAsDataURL(input.files[0]);
 }
@@ -36,22 +44,16 @@ function listenMsgs(){
         let d = s.val(), id = s.key;
         let div = document.createElement("div");
         div.className = "msg" + (d.u == myName ? " my-msg" : "");
-        div.id = "msg-"+id;
-        let actions = `<div class="msg-actions"><div class="icon-btn" onclick="deleteMsg('${id}')">🗑️</div>${d.type === 'image' ? `<div class="icon-btn" onclick="downloadImg('${d.val}')">⬇️</div>` : ''}</div>`;
-        let content = d.type === 'image' ? `<div class="img-wrap"><img src="${d.val}" onclick="openZoom('${d.val}')"></div>` : `<div class="text-sm">${d.val}</div>`;
-        div.innerHTML = `${actions}<div class="text-[8px] opacity-40 font-bold uppercase">${d.u}</div>${content}<div class="text-[7px] opacity-40 mt-1 text-right">${d.time}</div>`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        let content = d.type === 'image' ? `<img src="${d.val}" onclick="document.getElementById('zoomImg').src='${d.val}'; document.getElementById('zoomOverlay').style.display='flex'">` : `<div>${d.val}</div>`;
+        div.innerHTML = `<div class="text-[9px] text-[#00a884] font-bold uppercase">${d.u}</div>${content}<div class="text-[7px] opacity-40 text-right">${d.time}</div>`;
+        document.getElementById('chatBox').appendChild(div);
+        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
     });
-    db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => { const el = document.getElementById("msg-"+s.key); if(el) el.remove(); });
 }
 
-function deleteMsg(id) { if(confirm("Delete?")) db.ref(`rooms/${myRoom}/msgs/${id}`).remove(); }
-function openZoom(src) { zoomImg.src = src; zoomOverlay.style.display = 'flex'; }
-function downloadImg(b64) { const a = document.createElement('a'); a.href = b64; a.download = `P2K_${Date.now()}.png`; a.click(); }
-
+// Call Logic
 async function startCall(){
-    callUI.style.display = "block";
+    document.getElementById('callUI').style.display = "block";
     localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video: { facingMode: "user" } });
     document.getElementById('localVideo').srcObject = localStream;
     setupPeer();
@@ -72,8 +74,8 @@ function listenCall(){
         let d = snap.val();
         if(!d) { if(peerConnection) endCall(); return; }
         if(d.offer && d.caller !== myName && !peerConnection) {
-            if(confirm(d.caller + " is calling...")) {
-                callUI.style.display="block";
+            if(confirm("Video Call from " + d.caller)) {
+                document.getElementById('callUI').style.display="block";
                 localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:true });
                 document.getElementById('localVideo').srcObject = localStream;
                 setupPeer();
@@ -86,16 +88,21 @@ function listenCall(){
         if(d.answer && d.caller === myName) await peerConnection.setRemoteDescription(new RTCSessionDescription(d.answer));
     });
     db.ref(`calls/${myRoom}/candidates`).on("child_added", s => {
-        if(s.key !== myName) s.ref.on("child_added", c => { if(peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(c.val())).catch(e=>{}); });
+        if(s.key !== myName) s.ref.on("child_added", c => { if(peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(c.val())); });
     });
 }
 
-function endCall(){ db.ref(`calls/${myRoom}`).remove(); if(localStream) localStream.getTracks().forEach(t => t.stop()); if(peerConnection) peerConnection.close(); peerConnection = null; callUI.style.display = "none"; }
+function endCall(){ 
+    db.ref(`calls/${myRoom}`).remove(); 
+    if(localStream) localStream.getTracks().forEach(t => t.stop()); 
+    if(peerConnection) peerConnection.close(); 
+    peerConnection = null; document.getElementById('callUI').style.display = "none"; 
+}
 
 async function toggleFlash() {
     const track = localStream.getVideoTracks()[0];
     isFlash = !isFlash;
-    try { await track.applyConstraints({ advanced: [{ torch: isFlash }] }); } catch(e) { alert("Use Back Camera!"); }
+    track.applyConstraints({ advanced: [{ torch: isFlash }] }).catch(e => alert("Flash Error"));
 }
 
 async function switchCamera() {
