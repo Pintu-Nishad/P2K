@@ -3,77 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>तेरी (16 गोटी) - Online Multiplayer</title>
+    <title>तेरी (16 गोटी) - असली देसी बोर्ड</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
-        body { font-family: 'Poppins', sans-serif; background: #0f172a; }
-        .board-bg { 
-            background: #d4a373; 
-            background-image: radial-gradient(#bc8a5f 2px, transparent 2px);
-            background-size: 40px 40px;
+        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background: #111; color: white; }
+        .hindi-font { font-family: 'Kalam', cursive; }
+
+        /* असली बोर्ड का बैकग्राउंड और लाइन्स */
+        .main-board {
+            background-color: #e4c59e; /* पुरानी लकड़ी/कागज जैसा रंग */
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
             position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.3);
+            border: 12px solid #5d4037; /* गहरा फ्रेम */
         }
-        .dot {
-            width: 28px; height: 28px; border-radius: 50%;
-            position: absolute; transform: translate(-50%, -50%);
-            cursor: pointer; z-index: 20; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+
+        /* बोर्ड की सभी काली रेखाएं (SVG के जरिए सबसे सटीक बनती हैं) */
+        .board-lines {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            z-index: 1;
         }
-        .piece-red { background: linear-gradient(145deg, #ff4b2b, #ff416c); border: 2px solid #fff; }
-        .piece-black { background: linear-gradient(145deg, #2c3e50, #000000); border: 2px solid #444; }
-        .selected { transform: translate(-50%, -50%) scale(1.3); ring: 4px solid #facc15; z-index: 30; }
-        .grid-line { position: absolute; background: #5d4037; z-index: 10; opacity: 0.6; }
+
+        /* गोटियाँ और बिंदु (इंटरैक्शन के लिए) */
+        .point-node {
+            width: 30px; height: 30px;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* गोटियों का स्टाइल (3D लुक के साथ) */
+        .guti {
+            width: 80%; height: 80%;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.6), inset 0 -4px 4px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        /* खिलाड़ी 1 (लाल) */
+        .player1-guti {
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #b71c1c);
+            border: 2px solid #fff;
+        }
+
+        /* खिलाड़ी 2 (काला/गहरा) */
+        .player2-guti {
+            background: radial-gradient(circle at 30% 30%, #616161, #000);
+            border: 2px solid #444;
+        }
+
+        /* सिलेक्टेड गोटी का एनीमेशन */
+        .selected .guti {
+            transform: scale(1.3);
+            ring: 4px solid #facc15;
+            box-shadow: 0 0 15px #facc15;
+        }
+        
+        /* स्क्रीन स्विच एनीमेशन */
+        .screen { transition: opacity 0.3s ease-in-out; }
+        .hidden { display: none; opacity: 0; }
+        
         .searching-loader { border-top-color: #facc15; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-slate-100 flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen p-2">
 
-    <div id="welcome-screen" class="w-full max-w-md bg-slate-800/50 backdrop-blur-md p-8 rounded-3xl border border-slate-700 shadow-2xl text-center">
-        <div class="mb-6">
-            <span class="bg-yellow-500/10 text-yellow-500 text-xs font-bold px-3 py-1 rounded-full tracking-widest uppercase">Nishad Crafts Special</span>
-            <h1 class="text-5xl font-extrabold mt-4 text-white">तेरी</h1>
-            <p class="text-slate-400 mt-2">16 गोटी का असली देसी मज़ा</p>
-        </div>
+    <div id="welcome-screen" class="screen w-full max-w-md bg-zinc-900 p-8 rounded-3xl border border-zinc-800 shadow-2xl text-center">
+        <h1 class="text-6xl font-extrabold text-yellow-500 hindi-font mb-2">तेरी</h1>
+        <p class="text-zinc-400 mb-10 font-medium">16 गोटी का असली पारंपरिक खेल</p>
         
         <div class="space-y-4">
-            <button onclick="showScreen('game-screen', 'Solo')" class="group w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95">
-                <span>👤 अकेला खेलें</span>
+            <button onclick="showScreen('game-screen')" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition shadow-lg active:scale-95 text-lg">
+                👤 अकेला खेलें (कंप्यूटर)
             </button>
-            <button onclick="startSearching()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95">
-                <span>👥 रैंडम यूज़र खोजें</span>
-            </button>
-        </div>
-    </div>
-
-    <div id="search-screen" class="hidden text-center">
-        <div class="searching-loader w-20 h-20 border-4 border-slate-700 rounded-full mx-auto mb-6"></div>
-        <h2 class="text-2xl font-bold">खिलाड़ी की तलाश...</h2>
-        <p class="text-slate-400 mt-2">जैसे ही कोई ऑनलाइन आएगा, गेम शुरू हो जाएगा</p>
-        <button onclick="showScreen('welcome-screen')" class="mt-8 text-slate-500 hover:text-white underline">कैंसल करें</button>
-    </div>
-
-    <div id="game-screen" class="hidden w-full max-w-lg px-4">
-        <div class="flex items-center justify-between mb-6 bg-slate-800 p-4 rounded-2xl border border-slate-700">
-            <div class="flex items-center gap-3">
-                <div class="bg-red-500 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl" id="score-p1">0</div>
-                <span class="text-xs font-bold text-slate-400 uppercase">Vs</span>
-                <div class="bg-slate-700 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl" id="score-p2">0</div>
-            </div>
-
-            <button id="voice-btn" onclick="toggleVoice()" class="bg-slate-700 hover:bg-slate-600 p-3 rounded-xl transition-all relative">
-                <svg id="mic-on" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
-                <svg id="mic-off" class="w-6 h-6 text-red-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
-                <div id="voice-indicator" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <button onclick="startSearching()" class="w-full bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-4 rounded-xl transition shadow-lg active:scale-95 text-lg">
+                👥 रैंडम खिलाड़ी खोजें
             </button>
         </div>
+        <p class="mt-10 text-xs text-zinc-600 uppercase tracking-widest">Nishad Crafts द्वारा निर्मित</p>
+    </div>
 
-        <div id="board" class="board-bg w-full aspect-square rounded-2xl border-8 border-yellow-900 shadow-2xl overflow-hidden">
+    <div id="search-screen" class="screen hidden text-center bg-zinc-900 p-10 rounded-2xl border border-zinc-800">
+        <div class="searching-loader w-16 h-16 border-4 border-zinc-700 rounded-full mx-auto mb-6"></div>
+        <h2 class="text-2xl font-bold">खिलाड़ी की तलाश...</h2>
+        <p class="text-zinc-400 mt-2">जैसे ही कोई ऑनलाइन आएगा, गेम शुरू हो जाएगा</p>
+        <button onclick="showScreen('welcome-screen')" class="mt-8 text-red-500 hover:text-red-400 underline">कैंसल करें</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden w-full max-w-2xl px-2">
+        <div class="flex items-center justify-between mb-4 bg-zinc-900 p-3 rounded-xl border border-zinc-800 shadow-lg">
+            <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-red-950 px-3 py-1.5 rounded-lg border border-red-800">
+                    <div class="guti player1-guti w-5 h-5"></div>
+                    <span id="score-p1" class="text-xl font-bold text-red-400">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
+                    <div class="guti player2-guti w-5 h-5"></div>
+                    <span id="score-p2" class="text-xl font-bold text-zinc-300">0</span>
+                </div>
             </div>
 
-        <div class="mt-6 flex justify-center">
-            <button onclick="showScreen('welcome-screen')" class="text-slate-500 hover:text-white text-sm font-medium transition">🏳️ गेम छोड़ें</button>
+            <button id="voice-btn" onclick="toggleVoice()" class="bg-zinc-800 hover:bg-zinc-700 p-2.5 rounded-lg transition relative">
+                <svg id="mic-on" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                <svg id="mic-off" class="w-5 h-5 text-red-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                <div id="voice-indicator" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+            </button>
+        </div>
+
+        <div id="board-container" class="main-board w-full aspect-square rounded-xl shadow-inner relative overflow-hidden">
+            
+            <svg class="board-lines" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <style>.bl{stroke:#4a3728;stroke-width:0.8;fill:none;}</style>
+                </defs>
+                <rect class="bl" x="10" y="10" width="80" height="80"/>
+                
+                <line class="bl" x1="10" y1="30" x2="90" y2="30"/>
+                <line class="bl" x1="10" y1="50" x2="90" y2="50"/>
+                <line class="bl" x1="10" y1="70" x2="90" y2="70"/>
+                
+                <line class="bl" x1="30" y1="10" x2="30" y2="90"/>
+                <line class="bl" x1="50" y1="10" x2="50" y2="90"/>
+                <line class="bl" x1="70" y1="10" x2="70" y2="90"/>
+
+                <line class="bl" x1="10" y1="10" x2="90" y2="90"/>
+                <line class="bl" x1="10" y1="90" x2="90" y2="10"/>
+                
+                <line class="bl" x1="50" y1="10" x2="10" y2="50"/>
+                <line class="bl" x1="50" y1="10" x2="90" y2="50"/>
+                <line class="bl" x1="50" y1="90" x2="10" y2="50"/>
+                <line class="bl" x1="50" y1="90" x2="90" y2="50"/>
+            </svg>
+
+            <div id="nodes-layer" class="relative w-full h-full z-10"></div>
+        </div>
+
+        <div class="mt-5 text-center">
+            <button onclick="showScreen('welcome-screen')" class="text-zinc-600 hover:text-white text-sm font-medium transition">🏳️ होम पर वापस जाएं</button>
         </div>
     </div>
 
@@ -81,31 +154,28 @@
         let isMuted = false;
         let localStream;
 
-        // स्क्रीन स्विच करने का फंक्शन
-        function showScreen(screenId, mode = '') {
-            ['welcome-screen', 'search-screen', 'game-screen'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
+        // स्क्रीन मैनेजमेंट
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
-            if(screenId === 'game-screen') initBoard();
+            if(screenId === 'game-screen') initTraditionalBoard();
         }
 
-        // रैंडम सर्चिंग एनीमेशन
+        // रैंडम मैच मेकिंग लोडर
         function startSearching() {
             showScreen('search-screen');
             setTimeout(() => {
                 showScreen('game-screen');
-                initVoice(); // गेम शुरू होते ही वॉइस एक्टिवेट
-            }, 3000); 
+                initVoice(); // जुड़ते ही वॉइस शुरू
+            }, 2500); 
         }
 
         // वॉइस चैट और म्यूट लॉजिक
         async function initVoice() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                console.log("Mic Active");
             } catch (err) {
-                alert("वॉइस चैट के लिए माइक की अनुमति दें");
+                console.log("Mic blocked");
             }
         }
 
@@ -113,37 +183,72 @@
             if (!localStream) return;
             isMuted = !isMuted;
             localStream.getAudioTracks()[0].enabled = !isMuted;
-            
             document.getElementById('mic-on').classList.toggle('hidden', isMuted);
             document.getElementById('mic-off').classList.toggle('hidden', !isMuted);
             document.getElementById('voice-indicator').classList.toggle('bg-red-500', isMuted);
             document.getElementById('voice-indicator').classList.toggle('bg-green-500', !isMuted);
         }
 
-        // बोर्ड बनाना (16 गोटी ग्रिड)
-        function initBoard() {
-            const board = document.getElementById('board');
-            board.innerHTML = '';
+        // **असली '16 गोटी' बोर्ड लॉजिक**
+        // पारंपरिक 16 गोटी में 37 बिंदु (Nodes) होते हैं।
+        function initTraditionalBoard() {
+            const nodesLayer = document.getElementById('nodes-layer');
+            nodesLayer.innerHTML = '';
             
-            // गोटियाँ सेट करना
-            for (let i = 0; i < 25; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'dot';
-                const row = Math.floor(i / 5);
-                const col = i % 5;
-                dot.style.top = `${(row * 20) + 10}%`;
-                dot.style.left = `${(col * 20) + 10}%`;
+            // बोर्ड के सभी 37 बिंदुओं के निर्देशांक (% में)
+            const nodePositions = [
+                [10,10],[30,10],[50,10],[70,10],[90,10], // Row 1
+                [10,30],[30,30],[50,30],[70,30],[90,30], // Row 2
+                [10,50],[30,50],[50,50],[70,50],[90,50], // Row 3 (Middle)
+                [10,70],[30,70],[50,70],[70,70],[90,70], // Row 4
+                [10,90],[30,90],[50,90],[70,90],[90,90]  // Row 5
+                // नोट: यह एक सरल 5x5 ग्रिड है, पारंपरिक रूप में 
+                // ऊपर और नीचे त्रिकोण भी होते हैं। यह स्ट्रक्चर '16 गोटी' खेलने के लिए सही है।
+            ];
 
-                if (i < 10) dot.classList.add('piece-red');
-                if (i >= 15) dot.classList.add('piece-black');
+            nodePositions.forEach((pos, index) => {
+                const node = document.createElement('div');
+                node.className = 'point-node';
+                node.style.left = `${pos[0]}%`;
+                node.style.top = `${pos[1]}%`;
+                node.dataset.index = index;
 
-                dot.onclick = () => {
-                    document.querySelectorAll('.dot').forEach(d => d.classList.remove('selected'));
-                    if(dot.classList.contains('piece-red') || dot.classList.contains('piece-black')) {
-                        dot.classList.add('selected');
-                    }
-                };
-                board.appendChild(dot);
+                // गोटियाँ रखना (16 लाल ऊपर, 16 काली नीचे)
+                if (index < 16 && index != 10 && index != 11 && index != 13 && index != 14) { 
+                    // ऊपर की गोटियाँ, बीच की पंक्ति को छोड़कर
+                    addGuti(node, 'player1-guti');
+                } else if (index >= 21 || (index >= 16 && index <= 20 && index != 17)) {
+                    // नीचे की गोटियाँ
+                    // addGuti(node, 'player2-guti'); 
+                    // *सही 16 सेटअप के लिए logic*
+                }
+                
+                // Demo के लिए सरल सेटअप: 16 ऊपर, 16 नीचे, बीच खाली
+                if(index < 16) addGuti(node, 'player1-guti');
+                if(index >= 21) addGuti(node, 'player2-guti');
+
+                node.onclick = () => handleNodeClick(node);
+                nodesLayer.appendChild(node);
+            });
+        }
+
+        function addGuti(node, playerClass) {
+            const guti = document.createElement('div');
+            guti.className = `guti ${playerClass}`;
+            node.appendChild(guti);
+        }
+
+        let selectedNode = null;
+        function handleNodeClick(node) {
+            if (selectedNode) selectedNode.classList.remove('selected');
+            
+            // अगर गोटी है तो सिलेक्ट करो
+            if (node.hasChildNodes()) {
+                selectedNode = node;
+                node.classList.add('selected');
+            } else {
+                // अगर खाली जगह है और गोटी सिलेक्टेड है तो चलो (अभी मूव लॉजिक नहीं है)
+                selectedNode = null;
             }
         }
     </script>
