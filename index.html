@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>P2K SECURE V39 - FIX</title>
+    <title>P2K SECURE V40 - PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@500;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -12,71 +12,62 @@
     <style>
         :root { --accent: #10b981; --bg: #020617; }
         body { background: var(--bg); color: white; font-family: 'Manrope', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+        .header { height: 70px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; position: relative; }
+        .msg-area { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #020617; padding-bottom: 100px; }
+        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
         
-        .header { height: 75px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; z-index: 100; position: relative; }
-        
-        /* Fixed Scroll Area */
-        .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #020617; padding-bottom: 160px; scroll-behavior: smooth; }
-        
-        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
-        
-        #callBar { position: absolute; top: 75px; left: 0; width: 100%; height: 60px; background: #065f46; display: none; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 90; border-bottom: 2px solid #10b981; animation: slideDown 0.3s ease; }
+        /* Minimal Top Call UI */
+        #callBar { position: absolute; top: 0; left: 0; width: 100%; height: 70px; background: #064e3b; display: none; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 110; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 
         .msg-wrap { display: flex; flex-direction: column; position: relative; max-width: 85%; }
         .out-wrap { align-self: flex-end; }
         .in-wrap { align-self: flex-start; }
-        
-        .msg { padding: 10px 15px; border-radius: 18px; font-size: 14px; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .msg { padding: 10px 14px; border-radius: 18px; font-size: 14px; position: relative; }
         .out { background: #059669; border-bottom-right-radius: 2px; }
         .in { background: #1e293b; border-bottom-left-radius: 2px; }
 
-        .del-btn { position: absolute; top: -8px; right: -8px; background: #ef4444; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #020617; z-index: 10; }
-        .del-btn img { width: 12px; filter: invert(1); }
-
-        .icon-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .icon-btn img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+        .del-btn { position: absolute; top: -5px; right: -5px; background: #ef4444; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #020617; z-index: 10; }
+        .del-btn img { width: 10px; filter: invert(1); }
+        .icon-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .icon-btn img { width: 24px; filter: brightness(0) invert(1); }
         #loginDiv { position: fixed; inset: 0; z-index: 10001; background: #020617; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="loginDiv">
-    <div class="w-full max-w-sm bg-slate-900/50 p-10 rounded-[40px] border border-white/10 text-center">
-        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 uppercase tracking-widest text-shadow-lg">P2K SECURE</h1>
-        <input id="user" type="text" placeholder="Username" class="w-full bg-slate-800 rounded-2xl p-5 mb-4 outline-none border border-transparent focus:border-emerald-500">
-        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-800 rounded-2xl p-5 mb-8 outline-none border border-transparent focus:border-emerald-500">
-        <button onclick="enter()" class="w-full bg-emerald-600 py-5 rounded-2xl font-bold text-white shadow-xl">JOIN CHAT</button>
+    <div class="w-full max-w-sm p-8 text-center">
+        <h1 style="font-family: 'Orbitron';" class="text-2xl font-black text-emerald-400 mb-8 tracking-widest">P2K V40</h1>
+        <input id="user" type="text" placeholder="Username" class="w-full bg-slate-900 rounded-2xl p-4 mb-4 border border-white/10 outline-none focus:border-emerald-500">
+        <input id="pass" type="password" placeholder="Room ID" class="w-full bg-slate-900 rounded-2xl p-4 mb-6 border border-white/10 outline-none focus:border-emerald-500">
+        <button onclick="enter()" class="w-full bg-emerald-600 py-4 rounded-2xl font-bold">START SESSION</button>
     </div>
 </div>
 
 <div id="appUI" class="hidden h-full flex flex-col">
-    <header class="header flex items-center justify-between px-6">
+    <header class="header flex items-center justify-between px-4">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/30">
-                <img src="https://cdn-icons-png.flaticon.com/512/1177/1177568.png" class="w-6 opacity-80">
-            </div>
-            <div>
-                <div id="userCounter" class="text-emerald-400 font-bold text-[11px] uppercase tracking-wider">Online: 0</div>
-                <div id="typingInfo" class="text-[9px] text-white/40 italic h-3"></div>
-            </div>
+            <div id="userCounter" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500/20">Online: 0</div>
+            <div id="typingInfo" class="text-[9px] text-white/40 italic"></div>
         </div>
-        <div class="flex gap-2">
-            <button onclick="initiateCall()" class="icon-btn" title="Call"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
+        <div class="flex gap-1">
+            <button onclick="initiateCall()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
             <button onclick="askNotify()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828940.png"></button>
         </div>
         
         <div id="callBar">
-            <div class="flex flex-col text-white">
-                <div class="flex items-center gap-2">
-                    <span id="callerLabel" class="text-[10px] font-black uppercase">Call...</span>
-                    <span id="callTimer" class="text-[11px] font-mono text-emerald-300 hidden">00:00</span>
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-emerald-400/20 rounded-full flex items-center justify-center animate-pulse"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-4 invert"></div>
+                <div class="flex flex-col">
+                    <span id="callerLabel" class="text-[10px] font-black uppercase tracking-widest">Calling...</span>
+                    <span id="callTimer" class="text-[12px] font-mono text-emerald-300 hidden">00:00</span>
                 </div>
-                <span id="callStatus" class="text-[8px] opacity-60 uppercase">Connecting...</span>
             </div>
-            <div class="flex gap-3">
-                <button onclick="ignoreCall()" class="w-9 h-9 bg-red-600 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-3 invert"></button>
-                <button id="acceptBtn" onclick="acceptCall()" class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-3 invert"></button>
+            <div class="flex gap-2">
+                <button onclick="ignoreCall()" class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-4 invert"></button>
+                <button id="acceptBtn" onclick="acceptCall()" class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-4 invert"></button>
+                <button id="hangupTop" onclick="leaveCall()" class="hidden w-10 h-10 bg-red-500/50 border border-red-500 rounded-full flex items-center justify-center"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-4 invert"></button>
             </div>
         </div>
     </header>
@@ -84,14 +75,13 @@
     <div id="chatBox" class="msg-area"></div>
 
     <footer class="footer">
-        <div class="flex items-center gap-3 bg-slate-800/40 rounded-3xl px-4 py-1.5 border border-white/5 shadow-inner">
+        <div class="flex items-center gap-2 bg-slate-800/40 rounded-2xl px-3 py-1 border border-white/5">
             <input type="file" id="fileIn" accept="image/*" onchange="sendPhoto(this)" class="hidden">
             <button onclick="document.getElementById('fileIn').click()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" class="!w-5"></button>
             <button id="recBtn" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/1082/1082810.png" class="!w-5"></button>
-            <input id="msgInput" type="text" placeholder="60s Vanish Mode..." class="flex-1 bg-transparent py-3 text-sm outline-none text-white">
+            <input id="msgInput" type="text" placeholder="60s Vanish..." class="flex-1 bg-transparent py-3 text-sm outline-none">
             <button onclick="sendMsg()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3106/3106856.png" class="!w-5"></button>
         </div>
-        <button id="hangupBtn" onclick="leaveCall()" class="hidden w-full mt-3 bg-red-600/30 text-red-400 border border-red-500/40 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest">End Call Session</button>
     </footer>
 </div>
 
@@ -100,99 +90,93 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myName, myRoom, localStream, pc, ringtone = new Audio('ring.mp3'), 
-    callStartTime, timerInterval; 
+    let myName, myRoom, localStream, pc, ringtone = new Audio('ring.mp3'), timerInterval;
     ringtone.loop = true;
 
     function enter() {
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
         loginDiv.style.display="none"; appUI.classList.remove('hidden');
-        const myStatusRef = db.ref(`rooms/${myRoom}/users/${myName}`);
-        db.ref(".info/connected").on("value", s => { if(s.val()) { myStatusRef.onDisconnect().remove(); myStatusRef.set(true); } });
+        db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
+        db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "Online: " + s.numChildren());
         listenMsgs(); setupVoice(); setupTyping(); listenForCalls();
     }
 
-    // --- CALL TIMER ---
-    function startTimer() {
-        callTimer.classList.remove('hidden');
-        callStatus.innerText = "Connected";
-        callStartTime = Date.now();
-        timerInterval = setInterval(() => {
-            const sec = Math.floor((Date.now() - callStartTime) / 1000);
-            const m = String(Math.floor(sec / 60)).padStart(2, '0');
-            const s = String(sec % 60).padStart(2, '0');
-            callTimer.innerText = `${m}:${s}`;
-        }, 1000);
-    }
-
-    function stopTimer() { clearInterval(timerInterval); callTimer.innerText = "00:00"; callTimer.classList.add('hidden'); callStartTime = null; }
-
-    // --- RTC CALLING (SESSION PERSISTENT) ---
-    async function initiateCall() {
+    // --- AUDIO FIX & RTC ENGINE ---
+    async function setupRTC() {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
         localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+        
+        pc.onicecandidate = e => { if(e.candidate) db.ref(`rooms/${myRoom}/rtc/ice/${myName}`).push(e.candidate.toJSON()); };
+        pc.ontrack = e => { 
+            let a = new Audio(); a.srcObject = e.streams[0]; a.autoplay = true; 
+            document.body.appendChild(a); // Audio play fix
+        };
+    }
+
+    async function initiateCall() {
+        await setupRTC();
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         db.ref(`rooms/${myRoom}/rtc/call`).set({ offer, from: myName, status: 'ringing' });
-        hangupBtn.classList.remove('hidden');
-        callBar.style.display = "flex";
-        callerLabel.innerText = "Calling...";
-        acceptBtn.style.display = "none";
+        showCallUI("Calling...", false);
     }
 
     function listenForCalls() {
         db.ref(`rooms/${myRoom}/rtc/call`).on('value', async s => {
             const d = s.val();
-            if (!d) { stopRinging(); stopTimer(); hangupBtn.classList.add('hidden'); callBar.style.display="none"; return; }
-            if (d.from !== myName) {
-                if (d.status === 'ringing') { 
-                    callBar.style.display = "flex"; callerLabel.innerText = d.from; 
-                    acceptBtn.style.display = "flex"; ringtone.play().catch(()=>{}); 
-                }
-                if (d.status === 'connected') { stopRinging(); startTimer(); }
-                if (d.status === 'ignored') { leaveCall(); }
+            if(!d) { resetCallState(); return; }
+            if(d.from !== myName) {
+                if(d.status === 'ringing') { showCallUI(d.from, true); ringtone.play().catch(()=>{}); }
+                if(d.status === 'connected') { stopRinging(); startTimer(); }
+                if(d.status === 'ignored') { resetCallState(); }
             }
-            if (d.from === myName && d.status === 'connected') { startTimer(); }
-            if (d.to === myName && d.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(d.answer)); }
+            if(d.from === myName && d.status === 'connected') { startTimer(); }
+            if(d.to === myName && d.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(d.answer)); }
+        });
+        db.ref(`rooms/${myRoom}/rtc/ice`).on('child_added', s => {
+            if(s.key !== myName) s.ref.on('child_added', c => pc?.addIceCandidate(new RTCIceCandidate(c.val())));
         });
     }
 
     async function acceptCall() {
-        stopRinging();
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+        stopRinging(); await setupRTC();
         const snap = await db.ref(`rooms/${myRoom}/rtc/call`).once('value');
         await pc.setRemoteDescription(new RTCSessionDescription(snap.val().offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         db.ref(`rooms/${myRoom}/rtc/call`).update({ answer, to: snap.val().from, status: 'connected' });
-        hangupBtn.classList.remove('hidden');
+        showCallUI("Connected", false);
     }
 
+    function showCallUI(label, showAccept) {
+        callBar.style.display = "flex"; callerLabel.innerText = label;
+        acceptBtn.style.display = showAccept ? "flex" : "none";
+        hangupTop.style.display = showAccept ? "none" : "flex";
+    }
+
+    function startTimer() {
+        callTimer.classList.remove('hidden'); let sec = 0;
+        timerInterval = setInterval(() => {
+            sec++; let m = String(Math.floor(sec/60)).padStart(2,'0'), s = String(sec%60).padStart(2,'0');
+            callTimer.innerText = `${m}:${s}`;
+        }, 1000);
+    }
+
+    function resetCallState() { stopRinging(); clearInterval(timerInterval); callBar.style.display="none"; callTimer.classList.add('hidden'); }
     function stopRinging() { ringtone.pause(); ringtone.currentTime = 0; }
-    function ignoreCall() { db.ref(`rooms/${myRoom}/rtc/call`).update({ status: 'ignored' }); setTimeout(()=>db.ref(`rooms/${myRoom}/rtc`).remove(), 500); }
-    
-    // FIX: Removed location.reload() to stay in room
-    function leaveCall() { 
-        stopTimer(); 
-        localStream?.getTracks().forEach(t => t.stop()); 
-        pc?.close(); 
-        db.ref(`rooms/${myRoom}/rtc`).remove(); 
-        callBar.style.display = "none";
-        hangupBtn.classList.add('hidden');
-    }
+    function ignoreCall() { db.ref(`rooms/${myRoom}/rtc/call`).update({ status: 'ignored' }); }
+    function leaveCall() { localStream?.getTracks().forEach(t => t.stop()); pc?.close(); db.ref(`rooms/${myRoom}/rtc`).remove(); resetCallState(); }
 
-    // --- CHAT ENGINE ---
+    // --- MESSAGING (29 FEATURES) ---
     function sendData(val, type) {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
         setTimeout(() => ref.remove(), 60000); 
     }
 
-    function deleteMsg(id) { if (confirm("Delete for everyone?")) db.ref(`rooms/${myRoom}/msgs/${id}`).remove(); }
+    function deleteMsg(id) { if(confirm("Delete?")) db.ref(`rooms/${myRoom}/msgs/${id}`).remove(); }
     function sendMsg() { const v = msgInput.value.trim(); if(v) sendData(v, 'text'); msgInput.value=""; }
     function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
     
@@ -203,25 +187,21 @@
         mediaRec.ondataavailable = e => chunks.push(e.data);
         mediaRec.onstop = () => {
             const b = new Blob(chunks, { type: 'audio/webm' });
-            const r = new FileReader();
-            r.onload = e => sendData(e.target.result, 'voice');
-            r.readAsDataURL(b); chunks = [];
+            const r = new FileReader(); r.onload = e => sendData(e.target.result, 'voice'); r.readAsDataURL(b); chunks = [];
         };
-        recBtn.onmousedown = () => { mediaRec.start(); recBtn.style.filter="hue-rotate(90deg)"; };
-        recBtn.onmouseup = () => { mediaRec.stop(); recBtn.style.filter="none"; };
+        recBtn.onmousedown = () => mediaRec.start(); recBtn.onmouseup = () => mediaRec.stop();
     }
 
     function listenMsgs() {
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s => {
             const d = s.val(), id = s.key;
-            const wrap = document.createElement("div");
-            wrap.className = `msg-wrap ${d.u === myName ? 'out-wrap' : 'in-wrap'}`;
+            const wrap = document.createElement("div"); wrap.className = `msg-wrap ${d.u === myName ? 'out-wrap' : 'in-wrap'}`;
             wrap.id = "m-"+id;
-            let delIcon = (d.u === myName) ? `<div class="del-btn" onclick="deleteMsg('${id}')"><img src="https://cdn-icons-png.flaticon.com/512/3221/3221803.png"></div>` : "";
+            let del = (d.u === myName) ? `<div class="del-btn" onclick="deleteMsg('${id}')"><img src="https://cdn-icons-png.flaticon.com/512/3221/3221803.png"></div>` : "";
             let c = d.val;
-            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl w-64">`;
-            if(d.type==='voice') c = `<audio controls src="${d.val}" class="h-8 invert opacity-70"></audio>`;
-            wrap.innerHTML = `${delIcon}<div class="msg ${d.u===myName?'out':'in'}"><div class="text-[9px] font-black opacity-40 mb-1 uppercase">${d.u}</div>${c}<div class="text-[8px] text-right mt-1 opacity-30 font-bold italic">Vanish 60s</div></div>`;
+            if(d.type==='img') c = `<img src="${d.val}" class="rounded-xl w-60">`;
+            if(d.type==='voice') c = `<audio controls src="${d.val}" class="h-8 invert opacity-50"></audio>`;
+            wrap.innerHTML = `${del}<div class="msg ${d.u===myName?'out':'in'}"><div class="text-[8px] font-bold opacity-40 mb-1">${d.u}</div>${c}<div class="text-[7px] text-right mt-1 opacity-30 italic">60s Vanish</div></div>`;
             chatBox.appendChild(wrap); chatBox.scrollTop = chatBox.scrollHeight;
         });
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("m-"+s.key)?.remove());
