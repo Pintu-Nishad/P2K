@@ -2,144 +2,202 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>तिउरी - Tiuri Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosquito Killer - Sound Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@700&display=swap');
-        body { background: #0f172a; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        .tiuri-font { font-family: 'Kalam', cursive; }
+        @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+        body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #020617; }
+        .game-font { font-family: 'Bungee', cursive; }
         
-        /* तिउरी का असली बोर्ड */
-        .tiuri-board {
-            background: #4e342e; 
-            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
-            position: relative; 
-            width: 92vw; max-width: 420px; 
-            aspect-ratio: 1 / 1.6;
-            border: 10px solid #2b1d1a; border-radius: 15px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-            margin: auto;
+        .room {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000');
+            background-size: cover; background-position: center;
+            height: 100vh; width: 100vw; position: relative;
         }
 
-        .lines-svg {
-            position: absolute; width: 100%; height: 100%;
-            stroke: #d7ccc8; stroke-width: 2.5; fill: none;
-            filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.5));
+        .mosquito {
+            position: absolute; font-size: 3.5rem; cursor: pointer;
+            z-index: 50; user-select: none; transition: transform 0.1s;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+            animation: fly 0.5s infinite alternate ease-in-out;
         }
 
-        .node {
-            width: 36px; height: 36px; position: absolute;
-            transform: translate(-50%, -50%); z-index: 30;
-            display: flex; align-items: center; justify-content: center;
+        @keyframes fly {
+            from { transform: translateY(0px) rotate(-5deg); }
+            to { transform: translateY(-10px) rotate(5deg); }
         }
 
-        .guti {
-            width: 85%; height: 85%; border-radius: 50%;
-            position: absolute; border: 2px solid rgba(255,255,255,0.4);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.6);
-            cursor: pointer; transition: 0.2s;
+        .splat-text {
+            position: absolute; color: #ef4444; font-weight: 900;
+            pointer-events: none; animation: fadeUp 0.5s forwards;
+            z-index: 60;
         }
 
-        .orange { background: radial-gradient(circle at 35% 35%, #f97316, #9a3412); } 
-        .green { background: radial-gradient(circle at 35% 35%, #84cc16, #365314); } 
-
-        .selected .guti { transform: scale(1.3); filter: brightness(1.2); border-color: #fbbf24; }
-        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; }
-        .active { display: flex; }
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
     </style>
 </head>
 <body class="text-white">
 
-    <div id="home" class="screen active bg-slate-900">
-        <h1 class="text-8xl text-yellow-500 tiuri-font mb-12 drop-shadow-2xl">तिउरी</h1>
-        <div class="flex flex-col gap-6">
-            <button onclick="play('ai')" class="w-72 bg-orange-600 p-5 rounded-2xl font-black text-xl shadow-xl hover:bg-orange-500 transition-all">🤖 कंप्यूटर (AI)</button>
-            <button onclick="play('pvp')" class="w-72 bg-indigo-600 p-5 rounded-2xl font-black text-xl shadow-xl hover:bg-indigo-500 transition-all">👥 दो खिलाड़ी (PVP)</button>
+    <audio id="slap-sound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="home-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950">
+        <div class="mb-8 animate-bounce text-8xl">🦟</div>
+        <h1 class="text-6xl md:text-8xl text-red-600 game-font mb-2 drop-shadow-[0_0_30px_rgba(220,38,38,0.5)] text-center">MOSQUITO<br><span class="text-white">KILLER</span></h1>
+        <p class="text-slate-500 mb-12 font-bold tracking-[0.4em] text-xs uppercase">Nishad Crafts Audio Engine</p>
+        
+        <div class="flex flex-col gap-6 w-80">
+            <button onclick="initGame('ai')" class="bg-blue-600 p-6 rounded-2xl font-black text-2xl shadow-[0_10px_0_rgb(29,78,216)] hover:translate-y-1 hover:shadow-[0_5px_0_rgb(29,78,216)] transition-all active:scale-95">
+                🤖 कंप्यूटर <span class="block text-[10px] opacity-70">30s चैलेंज</span>
+            </button>
+            <button onclick="initGame('user')" class="bg-orange-600 p-6 rounded-2xl font-black text-2xl shadow-[0_10px_0_rgb(194,65,12)] hover:translate-y-1 hover:shadow-[0_5px_0_rgb(194,65,12)] transition-all active:scale-95">
+                👥 दूसरा यूजर <span class="block text-[10px] opacity-70">1:30 मुकाबला</span>
+            </button>
         </div>
-        <p class="mt-24 text-slate-500 text-[10px] font-bold uppercase tracking-widest italic">Nishad Crafts Presents</p>
     </div>
 
-    <div id="game-ui" class="screen">
-        <div class="w-full max-w-sm flex justify-between items-center mb-4 p-4 bg-black/40 rounded-3xl border border-white/10">
-            <div id="status" class="bg-orange-600 px-6 py-1 rounded-full text-sm font-bold shadow-lg">आपकी बारी</div>
-            <div class="text-2xl font-black tiuri-font text-yellow-500">तिउरी</div>
-            <div class="flex gap-4 text-xs font-bold">
-                <span class="text-orange-400">P1: <b id="s1">16</b></span>
-                <span class="text-green-400">P2: <b id="s2">16</b></span>
+    <div id="countdown-screen" class="hidden fixed inset-0 z-[90] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+        <div id="countdown-text" class="text-9xl font-black game-font text-yellow-500 italic">3</div>
+    </div>
+
+    <div id="game-playground" class="hidden room flex flex-col">
+        <div class="w-full p-6 flex justify-between items-center bg-black/80 border-b border-white/10">
+            <div class="text-center">
+                <span class="text-[10px] text-blue-400 font-bold uppercase">User 1</span>
+                <div id="score1" class="text-4xl font-black">00</div>
+            </div>
+            
+            <div class="text-center">
+                <div id="timer" class="text-5xl font-black text-yellow-500 game-font">00</div>
+                <div id="mode-text" class="text-[9px] text-slate-400 uppercase tracking-tighter mt-1">Ready</div>
+            </div>
+
+            <div class="text-center">
+                <span id="p2-label" class="text-[10px] text-red-400 font-bold uppercase">AI</span>
+                <div id="score2" class="text-4xl font-black">00</div>
             </div>
         </div>
-
-        <div class="tiuri-board" id="board">
-            <svg class="lines-svg" viewBox="0 0 100 160">
-                <rect x="10" y="40" width="80" height="80" />
-                <line x1="10" y1="60" x2="90" y2="60" /><line x1="10" y1="80" x2="90" y2="80" /><line x1="10" y1="100" x2="90" y2="100" />
-                <line x1="30" y1="40" x2="30" y2="120" /><line x1="50" y1="40" x2="50" y2="120" /><line x1="70" y1="40" x2="70" y2="120" />
-                <line x1="10" y1="40" x2="90" y2="120" /><line x1="10" y1="120" x2="90" y2="40" />
-                <path d="M50,0 L10,40 L90,40 Z" /><line x1="50" y1="0" x2="50" y2="40" /><line x1="30" y1="20" x2="70" y2="20" />
-                <path d="M50,160 L10,120 L90,120 Z" /><line x1="50" y1="160" x2="50" y2="120" /><line x1="30" y1="140" x2="70" y2="140" />
-            </svg>
-            <div id="nodes-layer" class="w-full h-full relative"></div>
-        </div>
-        
-        <button onclick="location.reload()" class="mt-8 text-slate-500 font-bold uppercase text-[10px] tracking-widest">🏳️ मेन्यू में जाएँ</button>
+        <div id="room-area" class="relative flex-grow cursor-crosshair"></div>
     </div>
 
     <script>
-        let mode = 'ai', turn = 'orange', selected = null;
-        const pts = [
-            {x:50, y:0}, {x:30, y:20}, {x:50, y:20}, {x:70, y:20}, 
-            {x:10, y:40}, {x:30, y:40}, {x:50, y:40}, {x:70, y:40}, {x:90, y:40},
-            {x:10, y:60}, {x:30, y:60}, {x:50, y:60}, {x:70, y:60}, {x:90, y:60},
-            {x:10, y:80}, {x:30, y:80}, {x:50, y:80}, {x:70, y:80}, {x:90, y:80},
-            {x:10, y:100}, {x:30, y:100}, {x:50, y:100}, {x:70, y:100}, {x:90, y:100},
-            {x:10, y:120}, {x:30, y:120}, {x:50, y:120}, {x:70, y:120}, {x:90, y:120},
-            {x:30, y:140}, {x:50, y:140}, {x:70, y:140}, {x:50, y:160}
-        ];
+        let s1 = 0, s2 = 0, timeLeft = 0, gameActive = false, gameMode = '';
+        const slapSound = document.getElementById('slap-sound');
 
-        function play(m) {
-            mode = m; document.getElementById('home').classList.remove('active');
-            document.getElementById('game-ui').classList.add('active');
-            const layer = document.getElementById('nodes-layer');
-            pts.forEach((p, i) => {
-                const n = document.createElement('div'); n.className = 'node';
-                n.style.left = p.x + '%'; n.style.top = (p.y / 1.6) + '%';
-                if (i < 16) n.innerHTML = '<div class="guti green"></div>';
-                else if (i >= pts.length - 16) n.innerHTML = '<div class="guti orange"></div>';
-                n.onclick = () => {
-                    const g = n.querySelector('.guti');
-                    if(g) {
-                        if((turn === 'orange' && g.classList.contains('orange')) || (turn === 'green' && g.classList.contains('green'))) {
-                            document.querySelectorAll('.node').forEach(x => x.classList.remove('selected'));
-                            n.classList.add('selected'); selected = n;
-                        }
-                    } else if(selected) {
-                        n.innerHTML = selected.innerHTML; selected.innerHTML = '';
-                        selected.classList.remove('selected'); selected = null;
-                        turn = turn === 'orange' ? 'green' : 'orange';
-                        updateTurn();
-                    }
-                };
-                layer.appendChild(n);
-            });
+        function playSlap() {
+            slapSound.currentTime = 0; // आवाज को फिर से शुरू से बजाने के लिए
+            slapSound.play();
         }
 
-        function updateTurn() {
-            const st = document.getElementById('status');
-            st.innerText = turn === 'orange' ? 'आपकी बारी' : (mode === 'ai' ? 'AI सोच रहा है...' : 'दोस्त की बारी');
-            st.className = `px-6 py-1 rounded-full text-sm font-bold shadow-lg ${turn === 'orange' ? 'bg-orange-600' : 'bg-green-600'}`;
-            if(mode === 'ai' && turn === 'green') setTimeout(aiMove, 1000);
+        function initGame(mode) {
+            gameMode = mode;
+            timeLeft = (mode === 'ai') ? 30 : 90;
+            document.getElementById('p2-label').innerText = (mode === 'ai') ? "Computer" : "User 2";
+            document.getElementById('mode-text').innerText = (mode === 'ai') ? "30s Sprint" : "90s Battle";
+
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('countdown-screen').classList.remove('hidden');
+            
+            let count = 3;
+            const countText = document.getElementById('countdown-text');
+            const interval = setInterval(() => {
+                count--;
+                if(count > 0) countText.innerText = count;
+                else if(count === 0) {
+                    countText.innerText = "KILL!";
+                    countText.style.color = "#ef4444";
+                } else {
+                    clearInterval(interval);
+                    document.getElementById('countdown-screen').classList.add('hidden');
+                    document.getElementById('game-playground').classList.remove('hidden');
+                    startGame();
+                }
+            }, 1000);
         }
 
-        function aiMove() {
-            const gutis = Array.from(document.querySelectorAll('.node')).filter(n => n.querySelector('.green'));
-            const empty = Array.from(document.querySelectorAll('.node')).filter(n => n.innerHTML === '');
-            if(gutis.length > 0 && empty.length > 0) {
-                const f = gutis[Math.floor(Math.random() * gutis.length)];
-                const t = empty[Math.floor(Math.random() * empty.length)];
-                t.innerHTML = f.innerHTML; f.innerHTML = '';
-                turn = 'orange'; updateTurn();
+        function startGame() {
+            gameActive = true;
+            const spawner = setInterval(() => {
+                if(!gameActive) clearInterval(spawner);
+                spawn();
+            }, 600);
+
+            if(gameMode === 'ai') {
+                const ai = setInterval(() => {
+                    if(!gameActive) clearInterval(ai);
+                    aiAction();
+                }, 1000);
             }
+
+            const clock = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if(timeLeft <= 0) {
+                    clearInterval(clock);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function spawn() {
+            if(!gameActive) return;
+            const area = document.getElementById('room-area');
+            const m = document.createElement('div');
+            m.className = 'mosquito';
+            m.innerHTML = '🦟';
+            m.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            m.style.top = Math.random() * (window.innerHeight - 250) + 'px';
+            
+            m.onclick = (e) => {
+                if(m.innerHTML === '🦟') {
+                    s1 += 10;
+                    document.getElementById('score1').innerText = s1;
+                    playSlap(); // साउंड बजाएं
+                    createSplatText(e.clientX, e.clientY, "SPLAT!");
+                    killEffect(m);
+                }
+            };
+            area.appendChild(m);
+            setTimeout(() => { if(m.parentNode) m.remove(); }, 2000);
+        }
+
+        function aiAction() {
+            const targets = Array.from(document.querySelectorAll('.mosquito')).filter(m => m.innerHTML === '🦟');
+            if(targets.length > 0) {
+                s2 += 10;
+                document.getElementById('score2').innerText = s2;
+                playSlap(); // AI के लिए भी साउंड
+                killEffect(targets[0]);
+            }
+        }
+
+        function createSplatText(x, y, text) {
+            const span = document.createElement('span');
+            span.className = 'splat-text game-font';
+            span.innerText = text;
+            span.style.left = x + 'px';
+            span.style.top = y + 'px';
+            document.body.appendChild(span);
+            setTimeout(() => span.remove(), 500);
+        }
+
+        function killEffect(el) {
+            el.innerHTML = '💥';
+            el.style.transform = 'scale(2)';
+            setTimeout(() => el.remove(), 200);
+        }
+
+        function endGame() {
+            gameActive = false;
+            let finalMsg = s1 > s2 ? "जीत आपकी हुई!" : (s2 > s1 ? "कंप्यूटर जीत गया!" : "मैच ड्रा रहा!");
+            alert(`समय समाप्त!\nआपका स्कोर: ${s1}\nविपक्षी स्कोर: ${s2}\n\n${finalMsg}`);
+            location.reload();
         }
     </script>
 </body>
