@@ -16,7 +16,6 @@
         .msg-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: #020617; padding-bottom: 120px; scroll-behavior: smooth; }
         .footer { position: fixed; bottom: 0; width: 100%; background: rgba(15, 23, 42, 0.98); padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
         
-        /* Minimal Top Call UI */
         #callBar { position: absolute; top: 0; left: 0; width: 100%; height: 75px; background: #064e3b; display: none; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 110; border-bottom: 3px solid #10b981; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
         .msg-wrap { display: flex; flex-direction: column; position: relative; max-width: 85%; }
@@ -26,8 +25,16 @@
         .out { background: #059669; border-bottom-right-radius: 2px; }
         .in { background: #1e293b; border-bottom-left-radius: 2px; }
 
-        .del-btn { position: absolute; top: -8px; right: -8px; background: #ef4444; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #020617; z-index: 10; }
-        .del-btn img { width: 12px; filter: invert(1); }
+        .del-btn, .download-btn { 
+            position: absolute; top: -8px; width: 22px; height: 22px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; border: 2px solid #020617; z-index: 10; 
+            border-radius: 50%; 
+        }
+        .del-btn { right: -8px; background: #ef4444; }
+        .download-btn { left: -8px; background: #3b82f6; }
+        .del-btn img, .download-btn img { width: 12px; filter: invert(1); }
+
         .icon-btn { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
         .icon-btn img { width: 26px; filter: brightness(0) invert(1); }
         #loginDiv { position: fixed; inset: 0; z-index: 10001; background: #020617; display: flex; align-items: center; justify-content: center; }
@@ -51,23 +58,23 @@
             <div id="typingInfo" class="text-[9px] text-white/40 italic"></div>
         </div>
         <div class="flex gap-2">
-            <button onclick="initiateCall()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png"></button>
-            <button onclick="askNotify()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828940.png"></button>
+            <button onclick="initiateCall()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/159/159832.png"></button>
+            <button onclick="askNotify()" class="icon-btn"><img src="https://cdn-icons-png.flaticon.com/512/891/891399.png"></button>
         </div>
         
         <div id="callBar">
             <div class="flex items-center gap-4">
                 <div class="w-10 h-10 bg-emerald-400 rounded-full flex items-center justify-center animate-bounce shadow-xl">
-                    <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-5 invert">
+                    <img src="https://cdn-icons-png.flaticon.com/512/159/159832.png" class="w-5 invert">
                 </div>
                 <div>
-                    <div id="callerLabel" class="text-[11px] font-black uppercase text-emerald-100">User Calling...</div>
+                    <div id="callerLabel" class="text-[11px] font-black uppercase text-emerald-100">Calling...</div>
                     <div id="callTimer" class="text-[14px] font-mono text-white hidden">00:00</div>
                 </div>
             </div>
             <div class="flex gap-3">
                 <button onclick="ignoreCall()" class="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center shadow-lg"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-4 invert"></button>
-                <button id="acceptBtn" onclick="acceptCall()" class="w-11 h-11 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg"><img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" class="w-4 invert"></button>
+                <button id="acceptBtn" onclick="acceptCall()" class="w-11 h-11 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg"><img src="https://cdn-icons-png.flaticon.com/512/159/159832.png" class="w-4 invert"></button>
                 <button id="hangupBtn" onclick="leaveCall()" class="hidden w-11 h-11 bg-red-500/30 border border-red-500 rounded-full flex items-center justify-center shadow-lg"><img src="https://cdn-icons-png.flaticon.com/512/1828/1828843.png" class="w-4 invert"></button>
             </div>
         </div>
@@ -78,10 +85,10 @@
     <footer class="footer">
         <div class="flex items-center gap-3 bg-slate-800/40 rounded-3xl px-4 py-1.5 border border-white/5">
             <input type="file" id="fileIn" accept="image/*" onchange="sendPhoto(this)" class="hidden">
-            <button onclick="document.getElementById('fileIn').click()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3767/3767084.png" class="!w-5"></button>
+            <button onclick="document.getElementById('fileIn').click()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3342/3342137.png" class="!w-5"></button>
             <button id="recBtn" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/1082/1082810.png" class="!w-5"></button>
             <input id="msgInput" type="text" placeholder="60s Vanish On..." class="flex-1 bg-transparent py-3 text-sm outline-none">
-            <button onclick="sendMsg()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/3106/3106856.png" class="!w-5"></button>
+            <button onclick="sendMsg()" class="icon-btn !w-8"><img src="https://cdn-icons-png.flaticon.com/512/724/724932.png" class="!w-5"></button>
         </div>
     </footer>
 </div>
@@ -98,38 +105,59 @@
         myName = user.value.trim(); myRoom = pass.value.trim();
         if(!myName || !myRoom) return;
         loginDiv.style.display="none"; appUI.classList.remove('hidden');
-        db.ref(`rooms/${myRoom}/users/${myName}`).set(true);
-        db.ref(`rooms/${myRoom}/users/${myName}`).onDisconnect().remove();
+        db.ref(`rooms/\( {myRoom}/users/ \){myName}`).set(true);
+        db.ref(`rooms/\( {myRoom}/users/ \){myName}`).onDisconnect().remove();
         db.ref(`rooms/${myRoom}/users`).on('value', s => userCounter.innerText = "ONLINE: " + s.numChildren());
         listenMsgs(); setupVoice(); setupTyping(); listenForCalls();
     }
 
-    // --- REAL WEB-RTC LOGIC (LOW LATENCY) ---
+    // === IMPROVED WEBRTC (BETTER CONNECTIVITY + LOW LATENCY) ===
     async function createPC() {
-        pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+        if (pc) { pc.close(); pc = null; }
         
+        pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+                { urls: "stun:stun1.l.google.com:19302" },
+                { urls: "stun:stun2.l.google.com:19302" },
+                { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+                { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" }
+            ],
+            iceCandidatePoolSize: 10
+        });
+
         pc.onicecandidate = e => { 
-            if(e.candidate) db.ref(`rooms/${myRoom}/rtc/ice/${myName}`).push(e.candidate.toJSON()); 
+            if(e.candidate) db.ref(`rooms/\( {myRoom}/rtc/ice/ \){myName}`).push(e.candidate.toJSON()); 
         };
-        
+
+        pc.oniceconnectionstatechange = () => {
+            if (pc.iceConnectionState === 'failed') {
+                alert("Connection failed. Try calling again.");
+                leaveCall();
+            }
+        };
+
         pc.ontrack = e => {
             const remoteAudio = new Audio();
             remoteAudio.srcObject = e.streams[0];
             remoteAudio.autoplay = true;
-            remoteAudio.play().catch(() => {
-                // Auto-play block handling
-                window.onclick = () => remoteAudio.play();
-            });
+            remoteAudio.play().catch(() => { window.onclick = () => remoteAudio.play(); });
             document.body.appendChild(remoteAudio);
         };
 
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { 
+                echoCancellation: true, 
+                noiseSuppression: true, 
+                autoGainControl: true 
+            } 
+        });
         localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     }
 
     async function initiateCall() {
         await createPC();
-        const offer = await pc.createOffer();
+        const offer = await pc.createOffer({ offerToReceiveAudio: true });
         await pc.setLocalDescription(offer);
         db.ref(`rooms/${myRoom}/rtc/call`).set({ offer, from: myName, status: 'ringing' });
         showCallBar("Calling...", false);
@@ -141,17 +169,21 @@
             if(!data) { closeUI(); return; }
             
             if(data.from !== myName) {
-                if(data.status === 'ringing') { showCallBar(data.from, true); ringtone.play().catch(()=>{}); }
+                if(data.status === 'ringing') { showCallBar(data.from + " calling...", true); ringtone.play().catch(()=>{}); }
                 if(data.status === 'connected') { stopRinging(); startTimer(); }
                 if(data.status === 'ignored') { closeUI(); }
             }
             if(data.from === myName && data.status === 'connected') { startTimer(); }
-            if(data.to === myName && data.answer && pc) { await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); }
+            if(data.to === myName && data.answer && pc) { 
+                await pc.setRemoteDescription(new RTCSessionDescription(data.answer)); 
+            }
         });
 
         db.ref(`rooms/${myRoom}/rtc/ice`).on('child_added', s => {
             if(s.key !== myName) {
-                s.ref.on('child_added', c => { if(pc) pc.addIceCandidate(new RTCIceCandidate(c.val())); });
+                s.ref.on('child_added', c => { 
+                    if(pc) pc.addIceCandidate(new RTCIceCandidate(c.val())).catch(()=>{}); 
+                });
             }
         });
     }
@@ -160,14 +192,17 @@
         stopRinging();
         await createPC();
         const snap = await db.ref(`rooms/${myRoom}/rtc/call`).once('value');
-        await pc.setRemoteDescription(new RTCSessionDescription(snap.val().offer));
+        const data = snap.val();
+        if(!data?.offer) return;
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        db.ref(`rooms/${myRoom}/rtc/call`).update({ answer, to: snap.val().from, status: 'connected' });
+        db.ref(`rooms/${myRoom}/rtc/call`).update({ answer, to: data.from, status: 'connected' });
     }
 
     function showCallBar(label, showAccept) {
-        callBar.style.display = "flex"; callerLabel.innerText = label;
+        callBar.style.display = "flex"; 
+        callerLabel.innerText = label;
         acceptBtn.style.display = showAccept ? "flex" : "none";
         hangupBtn.style.display = showAccept ? "none" : "flex";
     }
@@ -176,22 +211,43 @@
         callTimer.classList.remove('hidden'); let s = 0;
         callTimerInt = setInterval(() => {
             s++; let m = String(Math.floor(s/60)).padStart(2,'0'), sec = String(s%60).padStart(2,'0');
-            callTimer.innerText = `${m}:${sec}`;
+            callTimer.innerText = `\( {m}: \){sec}`;
         }, 1000);
     }
 
     function stopRinging() { ringtone.pause(); ringtone.currentTime = 0; }
     function ignoreCall() { db.ref(`rooms/${myRoom}/rtc/call`).update({ status: 'ignored' }); }
-    function closeUI() { stopRinging(); clearInterval(callTimerInt); callBar.style.display="none"; callTimer.classList.add('hidden'); }
-    function leaveCall() { localStream?.getTracks().forEach(t => t.stop()); pc?.close(); db.ref(`rooms/${myRoom}/rtc`).remove(); closeUI(); }
+    function closeUI() { 
+        stopRinging(); 
+        clearInterval(callTimerInt); 
+        callBar.style.display="none"; 
+        callTimer.classList.add('hidden'); 
+        if(pc) { pc.close(); pc = null; }
+    }
+    function leaveCall() { 
+        localStream?.getTracks().forEach(t => t.stop()); 
+        if(pc) { pc.close(); pc = null; }
+        db.ref(`rooms/${myRoom}/rtc`).remove(); 
+        closeUI(); 
+    }
 
-    // --- CHAT LOGIC (VANISH 60S) ---
+    // === CHAT LOGIC (unchanged except photo download) ===
     function sendData(val, type) {
         const ref = db.ref(`rooms/${myRoom}/msgs`).push({ u: myName, val, type, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
         setTimeout(() => ref.remove(), 60000); 
     }
 
-    function deleteMsg(id) { if(confirm("Delete for everyone?")) db.ref(`rooms/${myRoom}/msgs/${id}`).remove(); }
+    function deleteMsg(id) { if(confirm("Delete for everyone?")) db.ref(`rooms/\( {myRoom}/msgs/ \){id}`).remove(); }
+    
+    function downloadImage(url) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'p2k-photo-' + Date.now() + '.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     function sendMsg() { const v = msgInput.value.trim(); if(v) sendData(v, 'text'); msgInput.value=""; }
     function sendPhoto(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => sendData(e.target.result, 'img'); r.readAsDataURL(i.files[0]); } }
     
@@ -210,20 +266,26 @@
     function listenMsgs() {
         db.ref(`rooms/${myRoom}/msgs`).on("child_added", s => {
             const d = s.val(), id = s.key;
-            const wrap = document.createElement("div"); wrap.className = `msg-wrap ${d.u === myName ? 'out-wrap' : 'in-wrap'}`;
+            const wrap = document.createElement("div"); 
+            wrap.className = `msg-wrap ${d.u === myName ? 'out-wrap' : 'in-wrap'}`;
             wrap.id = "m-"+id;
+
             let delIcon = (d.u === myName) ? `<div class="del-btn" onclick="deleteMsg('${id}')"><img src="https://cdn-icons-png.flaticon.com/512/3221/3221803.png"></div>` : "";
+            let downloadIcon = (d.type === 'img') ? `<div class="download-btn" onclick="downloadImage('${d.val}')"><img src="https://cdn-icons-png.flaticon.com/512/724/724933.png"></div>` : "";
+
             let content = d.val;
             if(d.type==='img') content = `<img src="${d.val}" class="rounded-xl w-64 shadow-lg border border-white/10">`;
             if(d.type==='voice') content = `<audio controls src="${d.val}" class="h-8 invert opacity-60"></audio>`;
-            wrap.innerHTML = `${delIcon}<div class="msg ${d.u===myName?'out':'in'}"><div class="text-[9px] font-black opacity-40 mb-1 uppercase">${d.u}</div>${content}<div class="text-[8px] text-right mt-1 opacity-30 font-bold italic">VANISH 60S</div></div>`;
-            chatBox.appendChild(wrap); chatBox.scrollTop = chatBox.scrollHeight;
+
+            wrap.innerHTML = `\( {delIcon} \){downloadIcon}<div class="msg \( {d.u===myName?'out':'in'}"><div class="text-[9px] font-black opacity-40 mb-1 uppercase"> \){d.u}</div>${content}<div class="text-[8px] text-right mt-1 opacity-30 font-bold italic">VANISH 60S</div></div>`;
+            chatBox.appendChild(wrap); 
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
         db.ref(`rooms/${myRoom}/msgs`).on("child_removed", s => document.getElementById("m-"+s.key)?.remove());
     }
 
     function setupTyping() {
-        msgInput.oninput = () => { db.ref(`rooms/${myRoom}/tp/${myName}`).set(true); setTimeout(()=>db.ref(`rooms/${myRoom}/tp/${myName}`).remove(),2000); };
+        msgInput.oninput = () => { db.ref(`rooms/\( {myRoom}/tp/ \){myName}`).set(true); setTimeout(()=>db.ref(`rooms/\( {myRoom}/tp/ \){myName}`).remove(),2000); };
         db.ref(`rooms/${myRoom}/tp`).on('value', s => { let t=[]; s.forEach(u=>{ if(u.key!==myName) t.push(u.key); }); typingInfo.innerText = t.length>0 ? t.join(",")+" typing..." : ""; });
     }
     function askNotify() { Notification.requestPermission(); }
