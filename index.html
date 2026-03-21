@@ -10,36 +10,29 @@
         @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
         body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #020617; color: white; }
         .game-font { font-family: 'Bungee', cursive; }
+        .room-bg { background-size: cover; background-position: center; height: 100vh; width: 100vw; position: relative; transition: 1s; }
+        .mosquito { position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer; user-select: none; }
         
-        .room-bg { 
-            background-size: cover; 
-            background-position: center; 
-            height: 100vh; width: 100vw; 
-            position: relative; 
-            transition: background-image 0.8s ease-in-out;
-        }
-
-        .mosquito { position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer; user-select: none; transition: transform 0.1s; }
-        
-        /* Mic Button Animation */
-        .mic-active { box-shadow: 0 0 15px #22c55e; border-color: #22c55e; }
-        .mic-muted { box-shadow: 0 0 15px #ef4444; border-color: #ef4444; }
+        /* बटन को थोड़ा ऊपर किया गया है */
+        .mic-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .mic-active { box-shadow: 0 0 20px #22c55e; border: 2px solid #22c55e; background: rgba(0,0,0,0.6); }
+        .mic-muted { box-shadow: 0 0 20px #ef4444; border: 2px solid #ef4444; background: rgba(0,0,0,0.6); }
     </style>
 </head>
 <body>
 
     <audio id="slap-sound" src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3"></audio>
+    <audio id="buzz-sound" src="https://assets.mixkit.co/active_storage/sfx/29/29-preview.mp3" loop></audio>
 
-    <div id="home-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950">
-        <h1 class="text-6xl text-red-600 game-font mb-12 text-center drop-shadow-2xl">MOSQUITO<br><span class="text-white text-4xl">KILLER</span></h1>
+    <div id="home-screen" class="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-slate-950">
+        <h1 class="text-6xl text-red-600 game-font mb-12 text-center">MOSQUITO<br><span class="text-white text-4xl">KILLER</span></h1>
         <div class="flex flex-col gap-6 w-80">
             <button onclick="window.startMode('ai')" class="bg-blue-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1d4ed8] active:translate-y-1">🤖 कंप्यूटर</button>
-            <button onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ऑनलाइन खेलें</button>
+            <button onclick="window.startMode('user')" class="bg-orange-600 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#c2410c] active:translate-y-1">👥 ऑनलाइन (Auto-Match)</button>
         </div>
-        <p class="mt-8 text-slate-500 text-[10px] tracking-widest uppercase">Nishad Crafts Edition</p>
     </div>
 
-    <div id="status-screen" class="hidden fixed inset-0 z-[90] flex flex-col items-center justify-center bg-black/95">
+    <div id="status-screen" class="hidden fixed inset-0 z-[105] flex flex-col items-center justify-center bg-black/95">
         <div class="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-6"></div>
         <div id="status-msg" class="text-xl font-bold animate-pulse">खिलाड़ी खोज रहे हैं...</div>
         <div id="countdown-text" class="hidden text-9xl font-black game-font text-yellow-500">3</div>
@@ -47,18 +40,18 @@
 
     <div id="game-room" class="hidden room-bg flex flex-col">
         <div class="w-full p-4 flex justify-between items-center bg-black/80 border-b border-white/10 backdrop-blur-md">
-            <div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase">You</p><div id="score1" class="text-4xl font-black">0</div></div>
+            <div class="text-center"><p class="text-[10px] text-blue-400 font-bold">YOU</p><div id="score1" class="text-4xl font-black">0</div></div>
             <div class="text-center"><div id="timer" class="text-5xl font-black text-yellow-500 game-font">00</div></div>
-            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold uppercase">Opponent</p><div id="score2" class="text-4xl font-black">0</div></div>
+            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-400 font-bold">OPPONENT</p><div id="score2" class="text-4xl font-black">0</div></div>
         </div>
-
+        
         <div id="room-area" class="relative flex-grow overflow-hidden"></div>
 
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-2">
-            <button id="mic-btn" onclick="window.toggleMic()" class="mic-active bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all active:scale-90">
+        <div class="mic-container flex flex-col items-center gap-2">
+            <button id="mic-btn" onclick="window.toggleMic()" class="mic-active p-5 rounded-full backdrop-blur-md transition-all active:scale-90">
                 <span id="mic-icon" class="text-3xl">🎙️</span>
             </button>
-            <span id="mic-text" class="text-[10px] font-bold uppercase tracking-widest text-green-500">Mic On</span>
+            <span id="mic-text" class="text-[10px] font-bold text-green-500 uppercase tracking-widest">Voice Live</span>
         </div>
     </div>
 
@@ -81,112 +74,99 @@
 
         let peer, conn, localStream, myScore = 0, oppScore = 0, timeLeft = 0, gameActive = false, isMuted = false;
         const slap = document.getElementById('slap-sound');
+        const buzz = document.getElementById('buzz-sound');
 
-        // --- बैकग्राउंड चेंज लॉजिक (100+ Rooms) ---
-        function changeRoomBackground() {
-            const randomSeed = Math.floor(Math.random() * 500); // 500 अलग विकल्प
-            // Interior, Room, Luxury House की रैंडम इमेज
-            const url = `https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${randomSeed}&auto=format&fit=crop&w=1200&q=80`;
-            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('${url}')`;
-        }
-
-        // --- माइक कंट्रोल लॉजिक ---
-        window.toggleMic = function() {
-            if (!localStream) return;
-            isMuted = !isMuted;
-            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-            
-            const btn = document.getElementById('mic-btn');
-            const icon = document.getElementById('mic-icon');
-            const txt = document.getElementById('mic-text');
-
-            if (isMuted) {
-                btn.className = "mic-muted bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all";
-                icon.innerText = "🔇";
-                txt.innerText = "Muted";
-                txt.className = "text-[10px] font-bold uppercase tracking-widest text-red-500";
-            } else {
-                btn.className = "mic-active bg-black/60 backdrop-blur-lg border-2 p-5 rounded-full transition-all";
-                icon.innerText = "🎙️";
-                txt.innerText = "Mic On";
-                txt.className = "text-[10px] font-bold uppercase tracking-widest text-green-500";
-            }
-        };
-
-        async function getStream() {
+        // --- Voice Fix Logic (2-Way Audio) ---
+        async function getMicStream() {
             if (localStream) return localStream;
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 return localStream;
-            } catch (e) { alert("Mic permission required for voice chat!"); }
+            } catch (e) { alert("Mic permission needed!"); return null; }
         }
+
+        window.toggleMic = function() {
+            if (!localStream) return;
+            isMuted = !isMuted;
+            localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+            document.getElementById('mic-icon').innerText = isMuted ? "🔇" : "🎙️";
+            document.getElementById('mic-btn').className = isMuted ? "mic-muted p-5 rounded-full transition-all" : "mic-active p-5 rounded-full transition-all";
+            document.getElementById('mic-text').innerText = isMuted ? "Muted" : "Voice Live";
+            document.getElementById('mic-text').className = isMuted ? "text-[10px] font-bold text-red-500 uppercase" : "text-[10px] font-bold text-green-500 uppercase";
+        };
 
         window.startMode = function(m) {
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('status-screen').classList.remove('hidden');
-            changeRoomBackground(); // गेम शुरू होते ही बैकग्राउंड बदलें
+            
+            // रैंडम बैकग्राउंड
+            const bgId = Math.floor(Math.random() * 500);
+            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1513694203232-719a280e022f?sig=${bgId}&w=1000')`;
 
             if(m === 'ai') { runCountdown(30); return; }
 
             peer = new Peer();
-            peer.on('open', (id) => {
-                const lobbyRef = ref(db, 'lobby');
-                onDisconnect(ref(db, 'lobby/' + id)).remove();
-
-                get(lobbyRef).then((snap) => {
+            peer.on('open', (myId) => {
+                onDisconnect(ref(db, 'lobby/' + myId)).remove();
+                get(ref(db, 'lobby')).then(snap => {
                     let found = false;
                     if (snap.exists()) {
                         for (let tid in snap.val()) {
-                            if (tid !== id) {
+                            if (tid !== myId) {
                                 found = true;
-                                connectTo(tid);
+                                initiateConnection(tid);
                                 remove(ref(db, 'lobby/' + tid));
                                 break;
                             }
                         }
                     }
-                    if (!found) set(ref(db, 'lobby/' + id), { status: 'waiting' });
+                    if (!found) set(ref(db, 'lobby/' + myId), { status: 'waiting' });
                 });
             });
 
-            peer.on('connection', (c) => { conn = c; setupConn(); runCountdown(90); });
-            peer.on('call', async (call) => {
-                const s = await getStream();
-                call.answer(s);
+            // Incoming Data & Voice (Flipped Fix)
+            peer.on('connection', c => { conn = c; setupDataHandlers(); runCountdown(90); });
+            peer.on('call', async call => {
+                const stream = await getMicStream();
+                call.answer(stream);
                 call.on('stream', rs => { const a = new Audio(); a.srcObject = rs; a.play(); });
             });
         };
 
-        async function connectTo(tid) {
+        async function initiateConnection(tid) {
             conn = peer.connect(tid);
-            setupConn();
-            const s = await getStream();
-            peer.call(tid, s);
+            setupDataHandlers();
+            const stream = await getMicStream();
+            peer.call(tid, stream); // Call the opponent
             runCountdown(90);
         }
 
-        function setupConn() {
+        function setupDataHandlers() {
             conn.on('data', d => { if(d.type === 'kill') { oppScore = d.score; document.getElementById('score2').innerText = oppScore; } });
         }
 
         function runCountdown(t) {
             timeLeft = t;
-            document.getElementById('status-msg').classList.add('hidden');
             const cd = document.getElementById('countdown-text');
             cd.classList.remove('hidden');
+            document.getElementById('status-msg').classList.add('hidden');
             let c = 3;
             const i = setInterval(() => {
                 c--;
                 if(c > 0) cd.innerText = c;
-                else if(c === 0) cd.innerText = "GO!";
                 else { clearInterval(i); document.getElementById('status-screen').classList.add('hidden'); document.getElementById('game-room').classList.remove('hidden'); startGame(); }
             }, 1000);
         }
 
         function startGame() {
             gameActive = true;
+            buzz.play(); // मच्छर की आवाज़ शुरू
             setInterval(() => { if(gameActive) spawn(); }, 700);
-            const clock = setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft; if(timeLeft<=0){clearInterval(clock); endGame();} }, 1000);
+            const clock = setInterval(() => { 
+                timeLeft--; 
+                document.getElementById('timer').innerText = timeLeft; 
+                if(timeLeft <= 0) { clearInterval(clock); endGame(); } 
+            }, 1000);
         }
 
         function spawn() {
@@ -197,15 +177,15 @@
             m.style.top = Math.random() * (window.innerHeight - 300) + 'px';
             m.onclick = () => { 
                 myScore += 10; document.getElementById('score1').innerText = myScore;
-                slap.currentTime = 0; slap.play();
+                slap.currentTime = 0; slap.play(); // थप्पड़ की आवाज़
                 if(conn) conn.send({type:'kill', score:myScore});
                 m.remove();
             };
             area.appendChild(m);
-            setTimeout(() => m.remove(), 2500);
+            setTimeout(() => { if(m.parentNode) m.remove(); }, 2000);
         }
 
-        function endGame() { gameActive = false; alert("गेम समाप्त!"); location.reload(); }
+        function endGame() { gameActive = false; buzz.pause(); alert("Game Over!"); location.reload(); }
     </script>
 </body>
 </html>
