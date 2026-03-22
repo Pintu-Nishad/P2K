@@ -14,23 +14,37 @@
         .room-bg { 
             background-size: cover; background-position: center; 
             height: 100vh; width: 100vw; position: relative; 
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://picsum.photos/1200/800?grayscale');
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://picsum.photos/1200/800?blur=2');
         }
 
         .mosquito {
             position: absolute; font-size: 3.5rem; z-index: 50; cursor: pointer;
             animation: flyAround 3s infinite ease-in-out, wingVibrate 0.05s infinite;
             filter: drop-shadow(0 10px 5px rgba(0,0,0,0.8));
+            user-select: none;
+        }
+
+        /* Blood Splat Effect */
+        .blood-splat {
+            position: absolute; width: 60px; height: 60px;
+            background: radial-gradient(circle, rgba(220,38,38,0.8) 0%, rgba(153,27,27,0) 70%);
+            border-radius: 50%; z-index: 40; pointer-events: none;
+            animation: splat 0.5s ease-out forwards;
+        }
+
+        @keyframes splat {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
         @keyframes flyAround {
             0%, 100% { transform: translate(0, 0) rotate(5deg); }
-            50% { transform: translate(20px, -20px) rotate(-10deg); }
+            50% { transform: translate(30px, -30px) rotate(-10deg); }
         }
 
         @keyframes wingVibrate {
             0%, 100% { skewX: 0deg; scale: 1; }
-            50% { skewX: 10deg; scale: 1.1; }
+            50% { skewX: 12deg; scale: 1.1; }
         }
 
         .mic-container { position: absolute; bottom: 160px; left: 50%; transform: translateX(-50%); z-index: 100; }
@@ -38,11 +52,11 @@
 </head>
 <body>
 
-    <audio id="slap-sound" src="https://assets.mixkit.co/active_storage/sfx/2157/2157-preview.mp3"></audio>
-    <audio id="buzz-sound" src="https://www.soundjay.com/nature/sounds/mosquito-flying-01.mp3" loop></audio>
+    <audio id="slap-sound" src="kill.mp3" preload="auto"></audio>
+    <audio id="buzz-sound" src="mos.mp3" loop preload="auto"></audio>
 
     <div id="home-screen" class="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-slate-950 p-6 text-center">
-        <h1 class="text-6xl text-red-600 game-font mb-4">MOSQUITO<br><span class="text-white text-4xl">KILLER 3D</span></h1>
+        <h1 class="text-6xl text-red-600 game-font mb-4 drop-shadow-lg">MOSQUITO<br><span class="text-white text-4xl">KILLER 3D</span></h1>
         <p class="text-blue-400 mb-12 text-xs tracking-widest font-bold">NISHAD CRAFTS ENGINE</p>
         
         <div class="flex flex-col gap-6 w-full max-w-xs">
@@ -95,9 +109,13 @@
         const slap = document.getElementById('slap-sound');
         const buzz = document.getElementById('buzz-sound');
 
-        // ऑडियो अनलॉक फंक्शन
-        async function initAudio() {
-            try { await buzz.play(); buzz.volume = 0.4; } catch(e) { console.log("Audio waiting"); }
+        // ऑडियो अनलॉक और वॉल्यूम एडजस्टमेंट
+        async function startAudio() {
+            try {
+                buzz.volume = 0.3; // बैकग्राउंड म्यूज़िक हल्का (30%)
+                await buzz.play();
+                slap.volume = 1.0; // मारने की आवाज़ फुल
+            } catch(e) { console.log("Audio waiting for user click"); }
         }
 
         window.toggleMic = function() {
@@ -111,10 +129,9 @@
 
         window.startMode = async function(m) {
             mode = m;
-            await initAudio();
-            // पक्का बैकग्राउंड चेंज (Picsum)
+            await startAudio();
             const randomID = Math.floor(Math.random() * 1000);
-            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.6)), url('https://picsum.photos/seed/${randomID}/1200/800')`;
+            document.querySelector('.room-bg').style.backgroundImage = `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url('https://picsum.photos/seed/${randomID}/1200/800')`;
             
             document.getElementById('home-screen').classList.add('hidden');
             document.getElementById('status-screen').classList.remove('hidden');
@@ -132,16 +149,11 @@
                     if(snap.exists()) {
                         for(let key in snap.val()) { if(key !== id) { tid = key; break; } }
                     }
-                    if(tid) { 
-                        connectToPeer(tid); 
-                        remove(ref(db, 'lobby/' + tid)); 
-                    } else { 
-                        set(ref(db, 'lobby/' + id), { status: 'waiting' }); 
-                    }
+                    if(tid) { connectToPeer(tid); remove(ref(db, 'lobby/' + tid)); }
+                    else { set(ref(db, 'lobby/' + id), { status: 'waiting' }); }
                 });
             });
 
-            // Incoming connection & voice
             peer.on('connection', c => { conn = c; handleSync(); runCountdown(90); });
             peer.on('call', async call => {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -185,7 +197,7 @@
             gameActive = true;
             if(mode === 'ai') document.getElementById('p2-label').innerText = "COMPUTER";
             setInterval(() => { if(gameActive) spawn(); }, 700);
-            if(mode === 'ai') setInterval(() => { if(gameActive) { oppScore += 10; document.getElementById('score2').innerText = oppScore; } }, 1200);
+            if(mode === 'ai') setInterval(() => { if(gameActive) { oppScore += 10; document.getElementById('score2').innerText = oppScore; } }, 1300);
             const clk = setInterval(() => { 
                 timeLeft--; 
                 document.getElementById('timer').innerText = timeLeft; 
@@ -200,14 +212,29 @@
             m.style.left = Math.random() * (window.innerWidth - 80) + 'px';
             m.style.top = Math.random() * (window.innerHeight - 450) + 'px';
             
-            m.onclick = () => { 
+            m.onclick = (e) => { 
                 myScore += 10; document.getElementById('score1').innerText = myScore;
+                
+                // Kill Sound (kill.mp3)
                 slap.currentTime = 0; slap.play();
+                
+                // Blood Effect
+                createBlood(e.clientX, e.clientY);
+                
                 if(conn) conn.send({type:'kill', score:myScore});
                 m.remove();
             };
             area.appendChild(m);
-            setTimeout(() => { if(m.parentNode) m.remove(); }, 2000);
+            setTimeout(() => { if(m.parentNode) m.remove(); }, 2500);
+        }
+
+        function createBlood(x, y) {
+            const splat = document.createElement('div');
+            splat.className = 'blood-splat';
+            splat.style.left = (x - 30) + 'px';
+            splat.style.top = (y - 30) + 'px';
+            document.getElementById('room-area').appendChild(splat);
+            setTimeout(() => splat.remove(), 500);
         }
 
         function endGame() { gameActive = false; buzz.pause(); alert("Game Over! Score: " + myScore); location.reload(); }
