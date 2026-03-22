@@ -3,50 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nishad Crafts - Ultimate Killer</title>
+    <title>Nishad Crafts - Ultimate Battle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
-        body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #000; margin: 0; }
+        body { font-family: sans-serif; overflow: hidden; touch-action: none; background: #000; color: white; margin: 0; }
         .game-font { font-family: 'Bungee', cursive; }
         
         .room-bg { 
-            height: 100vh; width: 100vw; position: relative;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://picsum.photos/seed/room99/1200/800') center/cover;
+            height: 100vh; width: 100vw; position: relative; 
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://picsum.photos/seed/nishad_battle/1200/800') center/cover;
         }
 
-        /* 10 अलग मच्छर प्रजातियाँ */
-        .mosquito { position: absolute; z-index: 50; cursor: pointer; user-select: none; font-size: 3rem; }
-        .sp-1 { filter: sepia(1); animation: fly1 3s infinite; }
-        .sp-2 { filter: hue-rotate(90deg); animation: fly2 1.5s infinite; }
-        .sp-3 { filter: brightness(0.5); animation: fly3 4s infinite; }
-        .sp-4 { filter: hue-rotate(180deg); animation: fly1 2.5s infinite; }
-        .sp-5 { filter: drop-shadow(0 0 5px red); animation: fly2 3s infinite; }
-        .sp-6 { filter: invert(0.8); animation: fly3 2s infinite; }
-        .sp-7 { filter: saturate(8); animation: fly1 2s infinite; }
-        .sp-8 { opacity: 0.5; animation: fly2 0.8s infinite; }
-        .sp-9 { filter: contrast(2); animation: fly3 3.5s infinite; }
-        .sp-10 { filter: hue-rotate(300deg); animation: fly1 4s infinite; }
+        .mosquito { position: absolute; z-index: 50; cursor: pointer; user-select: none; font-size: 3.5rem; transition: transform 0.1s; }
+        /* 10 Species Animations */
+        .sp-1 { filter: sepia(1); animation: m1 3s infinite; }
+        .sp-2 { filter: hue-rotate(90deg); animation: m2 1.5s infinite; }
+        .sp-3 { filter: brightness(0.6); animation: m3 4s infinite; }
+        .sp-4 { filter: invert(1); animation: m1 2s infinite; }
+        .sp-5 { filter: drop-shadow(0 0 8px red); animation: m2 3s infinite; }
+        .sp-6 { filter: hue-rotate(200deg); animation: m3 2.5s infinite; }
+        .sp-7 { filter: saturate(5); animation: m1 1.8s infinite; }
+        .sp-8 { opacity: 0.6; animation: m2 1s infinite; }
+        .sp-9 { filter: contrast(2); animation: m3 3.5s infinite; }
+        .sp-10 { filter: hue-rotate(320deg); animation: m1 4.5s infinite; }
 
-        @keyframes fly1 { 0%,100% { transform: translate(0,0) rotate(0); } 50% { transform: translate(50px, 50px) rotate(20deg); } }
-        @keyframes fly2 { 0%,100% { transform: scale(1); } 50% { transform: scale(1.4) translate(-30px, 20px); } }
-        @keyframes fly3 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-60px) rotate(-15deg); } }
+        @keyframes m1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px, 40px); } }
+        @keyframes m2 { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3) rotate(15deg); } }
+        @keyframes m3 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-80px) rotate(-10deg); } }
 
-        /* असली ब्लड स्प्लैश */
         .blood-stain {
             position: absolute; pointer-events: none; z-index: 40;
-            width: 120px; height: 120px;
-            background: url('https://www.transparentpng.com/download/blood/red-blood-splatter-png-21.png') no-repeat center/contain;
-            animation: splatFade 1s forwards;
+            width: 140px; height: 140px;
+            background: url('blood.png') no-repeat center/contain; /* आपकी blood.png फाइल यहाँ काम करेगी */
+            animation: splat 1.2s forwards;
         }
-        @keyframes splatFade { 
-            0% { transform: scale(0.1); opacity: 0; } 
-            20% { transform: scale(1); opacity: 1; } 
-            100% { transform: translateY(30px); opacity: 0; } 
-        }
-
-        .mic-ui { position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
+        @keyframes splat { 0% { transform: scale(0); opacity: 0; } 20% { transform: scale(1.2); opacity: 1; } 100% { transform: translateY(40px); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -54,26 +47,33 @@
     <audio id="slap-sound" src="kill.mp3" preload="auto"></audio>
     <audio id="buzz-sound" src="mos.mp3" loop preload="auto"></audio>
 
-    <div id="home-screen" class="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-black p-6">
-        <h1 class="text-5xl text-red-600 game-font mb-8 text-center">NISHAD CRAFTS<br><span class="text-white text-3xl">MOSQUITO KILLER</span></h1>
-        <div class="flex flex-col gap-4 w-full max-w-xs">
-            <button onclick="startApp('ai')" class="bg-red-700 p-5 rounded-2xl font-bold text-xl shadow-[0_6px_0_#450a0a] active:translate-y-1">AI COMPUTER</button>
-            <button onclick="startApp('user')" class="bg-blue-600 p-5 rounded-2xl font-bold text-xl shadow-[0_6px_0_#1e3a8a] active:translate-y-1">ONLINE MULTIPLAYER</button>
+    <div id="home-screen" class="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-slate-950 p-6 text-center">
+        <h1 class="text-5xl text-red-600 game-font mb-4">NISHAD CRAFTS<br><span class="text-white text-3xl">MULTIPLAYER 3.0</span></h1>
+        <div id="loading-status" class="text-blue-400 text-xs mb-8 tracking-widest font-bold">SYSTEM READY</div>
+        
+        <div class="flex flex-col gap-6 w-full max-w-xs">
+            <button onclick="initGame('ai')" class="bg-red-800 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#450a0a] active:translate-y-1">AI COMPUTER</button>
+            <button onclick="initGame('user')" class="bg-blue-700 p-6 rounded-3xl font-black text-2xl shadow-[0_8px_0_#1e3a8a] active:translate-y-1">ONLINE PLAYER</button>
         </div>
     </div>
 
+    <div id="status-screen" class="hidden fixed inset-0 z-[110] flex flex-col items-center justify-center bg-black/95">
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+        <div id="status-msg" class="text-xl font-bold text-blue-400">SEARCHING FOR OPPONENT...</div>
+    </div>
+
     <div id="game-room" class="hidden room-bg flex flex-col">
-        <div class="p-4 flex justify-between items-center bg-black/80 border-b border-red-900/50 backdrop-blur-md">
-            <div class="text-center"><p class="text-xs text-blue-400">YOU</p><div id="score1" class="text-3xl font-black">0</div></div>
-            <div id="timer" class="text-4xl font-bold text-yellow-500 game-font">30</div>
-            <div class="text-center"><p id="p2-label" class="text-xs text-red-500">ENEMY</p><div id="score2" class="text-3xl font-black">0</div></div>
+        <div class="w-full p-4 flex justify-between items-center bg-black/90 border-b-2 border-red-900/40">
+            <div class="text-center"><p class="text-[10px] text-blue-400 font-bold">YOU</p><div id="score1" class="text-4xl font-black text-white">0</div></div>
+            <div id="timer" class="text-5xl font-black text-yellow-500 game-font">30</div>
+            <div class="text-center"><p id="p2-label" class="text-[10px] text-red-500 font-bold">ENEMY</p><div id="score2" class="text-4xl font-black text-white">0</div></div>
         </div>
         
         <div id="room-area" class="relative flex-grow overflow-hidden"></div>
 
-        <div id="mic-section" class="hidden mic-ui">
-            <button id="mic-btn" onclick="toggleMic()" class="bg-red-600 p-4 rounded-full shadow-lg mb-2">🎙️</button>
-            <p id="conn-status" class="text-[10px] text-white font-bold">READY TO CONNECT</p>
+        <div id="voice-ui" class="hidden absolute bottom-40 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+            <button id="mic-btn" onclick="toggleMic()" class="bg-red-600 p-5 rounded-full shadow-2xl">🎙️</button>
+            <span id="mic-tag" class="text-[10px] font-bold text-white uppercase bg-black/50 px-3 py-1 rounded">Voice: On</span>
         </div>
     </div>
 
@@ -98,40 +98,37 @@
         const slap = document.getElementById('slap-sound');
         const buzz = document.getElementById('buzz-sound');
 
-        window.startApp = async function(m) {
+        window.initGame = async function(m) {
             mode = m;
             document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('game-room').classList.remove('hidden');
-
-            // साउंड अनलॉक
-            buzz.volume = 0.3;
-            buzz.play().catch(() => console.log("Sound error"));
+            
+            // साउंड एक्टिवेशन
+            try { buzz.volume = 0.3; await buzz.play(); } catch(e) {}
 
             if(mode === 'user') {
-                document.getElementById('mic-section').classList.remove('hidden');
-                initMultiplayer();
+                document.getElementById('status-screen').classList.remove('hidden');
+                setupPeer();
+            } else {
+                document.getElementById('game-room').classList.remove('hidden');
+                startGame();
             }
-            startEngine();
-        }
+        };
 
-        function initMultiplayer() {
+        function setupPeer() {
             peer = new Peer();
             peer.on('open', (id) => {
                 onDisconnect(ref(db, 'lobby/' + id)).remove();
                 get(ref(db, 'lobby')).then(snap => {
-                    let target = null;
-                    if(snap.exists()) { for(let k in snap.val()) { if(k !== id) { target = k; break; } } }
-                    if(target) { connectTo(target); remove(ref(db, 'lobby/' + target)); }
+                    let tid = null;
+                    if(snap.exists()) {
+                        for(let k in snap.val()) { if(k !== id) { tid = k; break; } }
+                    }
+                    if(tid) { connectTo(tid); remove(ref(db, 'lobby/' + tid)); }
                     else { set(ref(db, 'lobby/' + id), { status: 'waiting' }); }
                 });
             });
 
-            peer.on('connection', c => { 
-                conn = c; 
-                document.getElementById('conn-status').innerText = "CONNECTED";
-                setupData(); 
-            });
-
+            peer.on('connection', c => { conn = c; handleReady(); });
             peer.on('call', async call => {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 call.answer(localStream);
@@ -141,29 +138,33 @@
 
         async function connectTo(tid) {
             conn = peer.connect(tid);
-            setupData();
-            document.getElementById('conn-status').innerText = "CONNECTED";
+            handleReady();
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const call = peer.call(tid, localStream);
             call.on('stream', s => { const a = new Audio(); a.srcObject = s; a.play(); });
         }
 
-        function setupData() {
-            conn.on('data', d => {
-                if(d.type === 'kill') {
-                    oppScore = d.val;
-                    document.getElementById('score2').innerText = oppScore;
-                }
+        function handleReady() {
+            conn.on('open', () => {
+                document.getElementById('status-screen').classList.add('hidden');
+                document.getElementById('game-room').classList.remove('hidden');
+                document.getElementById('voice-ui').classList.remove('hidden');
+                startGame();
+                conn.on('data', d => {
+                    if(d.type === 'kill') {
+                        oppScore = d.val;
+                        document.getElementById('score2').innerText = oppScore;
+                    }
+                });
             });
         }
 
-        function startEngine() {
+        function startGame() {
             gameActive = true;
             if(mode === 'ai') document.getElementById('p2-label').innerText = "COMPUTER";
             
-            // मच्छरों का आना शुरू
-            setInterval(() => { if(gameActive) spawnMosquito(); }, 700);
-            if(mode === 'ai') setInterval(() => { if(gameActive) { oppScore += 10; document.getElementById('score2').innerText = oppScore; } }, 1400);
+            setInterval(() => { if(gameActive) spawn(); }, 700);
+            if(mode === 'ai') setInterval(() => { if(gameActive) { oppScore += 10; document.getElementById('score2').innerText = oppScore; } }, 1300);
 
             const timerInt = setInterval(() => {
                 timeLeft--;
@@ -172,35 +173,35 @@
             }, 1000);
         }
 
-        function spawnMosquito() {
+        function spawn() {
             const area = document.getElementById('room-area');
             const m = document.createElement('div');
-            const spId = Math.floor(Math.random() * 10) + 1;
-            m.className = `mosquito sp-${spId}`;
+            const sid = Math.floor(Math.random() * 10) + 1;
+            m.className = `mosquito sp-${sid}`;
             m.innerHTML = '🦟';
-            m.style.left = Math.random() * (window.innerWidth - 60) + 'px';
-            m.style.top = Math.random() * (window.innerHeight - 400) + 'px';
+            m.style.left = Math.random() * (window.innerWidth - 80) + 'px';
+            m.style.top = Math.random() * (window.innerHeight - 450) + 'px';
             
             m.onclick = (e) => {
                 myScore += 10;
                 document.getElementById('score1').innerText = myScore;
-                slap.currentTime = 0; slap.play(); // थप्पड़ की आवाज़
-                createSplat(e.clientX, e.clientY); // खून का छींटा
-                if(conn) conn.send({type: 'kill', val: myScore});
+                slap.currentTime = 0; slap.play().catch(e=>{});
+                createSplat(e.clientX, e.clientY);
+                if(conn && conn.open) conn.send({type: 'kill', val: myScore});
                 m.remove();
             };
             area.appendChild(m);
-            setTimeout(() => { if(m.parentNode) m.remove(); }, 2500);
+            setTimeout(() => { if(m.parentNode) m.remove(); }, 2800);
         }
 
         function createSplat(x, y) {
             const s = document.createElement('div');
             s.className = 'blood-stain';
-            s.style.left = (x - 60) + 'px';
-            s.style.top = (y - 60) + 'px';
+            s.style.left = (x - 70) + 'px';
+            s.style.top = (y - 70) + 'px';
             s.style.transform = `rotate(${Math.random() * 360}deg)`;
             document.getElementById('room-area').appendChild(s);
-            setTimeout(() => s.remove(), 1000);
+            setTimeout(() => s.remove(), 1200);
         }
 
         window.toggleMic = function() {
@@ -208,9 +209,10 @@
             const track = localStream.getAudioTracks()[0];
             track.enabled = !track.enabled;
             document.getElementById('mic-btn').innerText = track.enabled ? "🎙️" : "🔇";
+            document.getElementById('mic-tag').innerText = track.enabled ? "Voice: On" : "Voice: Off";
         }
 
-        function finish() { gameActive = false; buzz.pause(); alert("GAME OVER! YOUR SCORE: " + myScore); location.reload(); }
+        function finish() { gameActive = false; buzz.pause(); alert("Nishad Crafts Game Over! Your Score: " + myScore); location.reload(); }
     </script>
 </body>
 </html>
